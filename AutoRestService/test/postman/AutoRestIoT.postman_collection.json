@@ -1,0 +1,200 @@
+{
+	"info": {
+		"_postman_id": "119ccec9-a715-4e98-91f8-3d4a32af16e8",
+		"name": "AutoRestIoT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "DEV: get health",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "00d61e0b-3b8d-4692-aeac-22f164cd1b1d",
+						"exec": [
+							"var responseJSON;",
+							"",
+							"try { ",
+							"    responseJSON = JSON.parse(responseBody); ",
+							"    tests['response is valid JSON'] = true;",
+							"}",
+							"catch (e) { ",
+							"    responseJSON = {}; ",
+							"    tests['response is valid JSON'] = false;",
+							"}",
+							"",
+							"",
+							"tests['response has post data'] = _.has(responseJSON, 'form');",
+							"tests['response matches the data posted'] = (responseJSON.form && responseJSON.form.strange === 'boom');"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "akteon00",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "w.klaas@gmx.de",
+							"type": "string"
+						},
+						{
+							"key": "saveHelperData",
+							"type": "any"
+						},
+						{
+							"key": "showPassword",
+							"value": false,
+							"type": "boolean"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic ZGV2dGVzdEBlYXN5LmRlOmVhc3lzcGlyaXQ="
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					},
+					{
+						"key": "X-mcs-apikey",
+						"value": "235778b0afd23afd1606f169a1b4d2ff"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/postman/GoMicro.postman_collection.json"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/health/health",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"health",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "healthcheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://127.0.0.1:8443/health/health",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8443",
+					"path": [
+						"health",
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "readiness",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://127.0.0.1:8443/health/readiness",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8443",
+					"path": [
+						"health",
+						"readiness"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetConfig",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-es-tenant",
+						"value": "EASY",
+						"type": "text"
+					},
+					{
+						"key": "X-es-apikey",
+						"value": "9db6b3e13c150d6c000776a89409661e",
+						"equals": true
+					},
+					{
+						"key": "X-es-system",
+						"value": "easy1",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://127.0.0.1:8443/api/v1/config/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8443",
+					"path": [
+						"api",
+						"v1",
+						"config",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
