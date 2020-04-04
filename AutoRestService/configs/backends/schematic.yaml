@@ -1,0 +1,28 @@
+applicationname: schematic
+models:
+    - name: schematic
+      fields: 
+        - name: manufacturer
+          type: string
+          mandantory: true
+          collection: false
+        - name: model
+          type: string
+          mandantory: true
+          collection: false
+        - name: tags
+          type: string
+          mandantory: false
+          collection: true
+      indexes:
+        - name: fulltext
+          fields:
+            - manufactuer
+            - model
+            - tags
+        - name: manufacturer
+          fields:
+            - manufacturer
+        - name: tags
+          fields:
+            - tags

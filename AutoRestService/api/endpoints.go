@@ -97,10 +97,3 @@ func GetConfigSizeEndpoint(response http.ResponseWriter, req *http.Request) {
 
 	render.JSON(response, req, tenant)
 }
-
-/*
-getTenant getting the tenant from the request
-*/
-func getTenant(req *http.Request) string {
-	return req.Header.Get(TenantHeader)
-}

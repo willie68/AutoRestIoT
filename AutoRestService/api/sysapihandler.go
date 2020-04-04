@@ -1,8 +1,10 @@
 package api
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -59,4 +61,45 @@ AddHeader adding gefault header for system and apikey
 func AddHeader(response http.ResponseWriter, apikey string, system string) {
 	response.Header().Add(APIKeyHeader, apikey)
 	response.Header().Add(SystemHeader, system)
+}
+
+var (
+	contextKeyOffset = contextKey("offset")
+	contextKeyLimit  = contextKey("limit")
+)
+
+// Paginate is a middleware logic for populating the context with offset and limit values
+func Paginate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		offsetStr := r.URL.Query().Get("offset")
+		limitStr := r.URL.Query().Get("limit")
+		if offsetStr != "" {
+			offset, err := strconv.Atoi(offsetStr)
+			if err != nil {
+				Msg(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			ctx = context.WithValue(ctx, contextKeyOffset, offset)
+		} else {
+			ctx = context.WithValue(ctx, contextKeyOffset, 0)
+		}
+		if limitStr != "" {
+			limit, err := strconv.Atoi(limitStr)
+			if err != nil {
+				Msg(w, http.StatusBadRequest, err.Error())
+				return
+			}
+			ctx = context.WithValue(ctx, contextKeyLimit, limit)
+		} else {
+			ctx = context.WithValue(ctx, contextKeyLimit, 0)
+		}
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+type contextKey string
+
+func (c contextKey) String() string {
+	return "api" + string(c)
 }

@@ -3,23 +3,28 @@ package main
 import (
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
 	api "github.com/willie68/AutoRestIoT/api"
 	"github.com/willie68/AutoRestIoT/health"
+	"gopkg.in/yaml.v3"
 
 	"github.com/willie68/AutoRestIoT/internal/crypt"
 
 	consulApi "github.com/hashicorp/consul/api"
 	config "github.com/willie68/AutoRestIoT/config"
 	"github.com/willie68/AutoRestIoT/logging"
+	"github.com/willie68/AutoRestIoT/models"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -71,6 +76,7 @@ func routes() *chi.Mux {
 	)
 
 	router.Route("/", func(r chi.Router) {
+		r.Mount(baseURL+"/models", api.ModelRoutes())
 		r.Mount(baseURL+"/config", api.ConfigRoutes())
 		r.Mount("/health", health.Routes())
 	})
@@ -144,6 +150,8 @@ func main() {
 		return nil
 	}
 
+	//fmt.Println(docgen.MarkdownRoutesDoc(router, docgen.MarkdownOpts{}))
+
 	if err := chi.Walk(router, walkFunc); err != nil {
 		log.Alertf("Logging err: %s", err.Error())
 	}
@@ -152,6 +160,8 @@ func main() {
 	if err := chi.Walk(healthRouter, walkFunc); err != nil {
 		log.Alertf("Logging err: %s", err.Error())
 	}
+
+	initAutoRest()
 
 	var sslsrv *http.Server
 	var srv *http.Server
@@ -284,4 +294,40 @@ func getApikey() string {
 	value := fmt.Sprintf("%s_%s", servicename, serviceConfig.SystemID)
 	apikey := fmt.Sprintf("%x", md5.Sum([]byte(value)))
 	return strings.ToLower(apikey)
+}
+
+func initAutoRest() {
+	backendPath := serviceConfig.BackendPath
+
+	var files []string
+	err := filepath.Walk(backendPath, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			if strings.HasSuffix(info.Name(), ".yaml") {
+				files = append(files, path)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	data, err := yaml.Marshal(application)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(data))
+
+	for _, value := range files {
+		fmt.Printf("path: %s\n", value)
+		data, err := ioutil.ReadFile(value)
+		bemodel := models.Application{}
+		err = yaml.Unmarshal(data, &bemodel)
+		if err != nil {
+			fmt.Println(err)
+		}
+		jsonData, err := json.Marshal(bemodel)
+		fmt.Println(string(jsonData))
+		fmt.Println("--------------------------------------------------------------------------------")
+	}
 }

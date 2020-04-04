@@ -6,6 +6,7 @@ require (
 	github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a
 	github.com/aphistic/sweet v0.3.0 // indirect
 	github.com/go-chi/chi v4.0.3+incompatible
+	github.com/go-chi/docgen v1.0.5
 	github.com/go-chi/render v1.0.1
 	github.com/go-delve/delve v1.4.0 // indirect
 	github.com/google/uuid v1.1.1 // indirect

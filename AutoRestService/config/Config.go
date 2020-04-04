@@ -11,10 +11,12 @@ type Config struct {
 	//this is the url where to register this service
 	RegistryURL string `yaml:"registryURL"`
 	//this is the url where to register this service
-	SystemID string `yaml:"systemID"`
+	SystemID    string `yaml:"systemID"`
+	BackendPath string `yaml:"backendpath"`
 
-	SecretFile string  `yaml:"secretfile"`
-	Logging    Logging `yaml:"logging"`
+	SecretFile string `yaml:"secretfil`
+
+	Logging Logging `yaml:"logging"`
 
 	HealthCheck HealthCheck `yaml:"healthcheck"`
 }

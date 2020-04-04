@@ -10,6 +10,8 @@ registryURL:
 systemID: autorest-srv
 #sercret file for storing usernames and passwords
 secretfile: configs/secret.yaml
+#where the configuration of the backends are
+backendpath: configs/backends
 
 logging:
     gelf-url: 

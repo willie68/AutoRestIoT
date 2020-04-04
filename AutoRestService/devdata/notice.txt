@@ -1,0 +1,44 @@
+
+application := models.Application{
+		ApplicationName: "hallo",
+		Models: []models.BEModel{
+			models.BEModel{
+				Name: "test",
+				Fields: []models.Field{
+					models.Field{
+						Name:       "manufacturer",
+						Type:       "string",
+						Mandantory: true,
+						Collection: false,
+					},
+					models.Field{
+						Name:       "model",
+						Type:       "string",
+						Mandantory: true,
+						Collection: false,
+					},
+					models.Field{
+						Name:       "tags",
+						Type:       "string",
+						Mandantory: false,
+						Collection: true,
+					},
+				},
+				Indexes: []models.Index{
+					models.Index{
+						Name:   "fulltest",
+						Fields: []string{"manufacturer", "model", "tags"},
+					},
+					models.Index{
+						Name:   "manufacturer",
+						Fields: []string{"manufacturer"},
+					},
+					models.Index{
+						Name:   "tags",
+						Fields: []string{"tags"},
+					},
+				},
+			},
+		},
+	}
+    
