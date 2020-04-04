@@ -16,7 +16,9 @@ import (
 	"time"
 
 	api "github.com/willie68/AutoRestIoT/api"
+	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/health"
+	"github.com/willie68/AutoRestIoT/model"
 	"gopkg.in/yaml.v3"
 
 	"github.com/willie68/AutoRestIoT/internal/crypt"
@@ -24,7 +26,6 @@ import (
 	consulApi "github.com/hashicorp/consul/api"
 	config "github.com/willie68/AutoRestIoT/config"
 	"github.com/willie68/AutoRestIoT/logging"
-	"github.com/willie68/AutoRestIoT/models"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -76,8 +77,10 @@ func routes() *chi.Mux {
 	)
 
 	router.Route("/", func(r chi.Router) {
-		r.Mount(baseURL+"/models", api.ModelRoutes())
-		r.Mount(baseURL+"/config", api.ConfigRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/models", api.ModelRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/config", api.ConfigRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/files", api.UsersRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/users", api.UsersRoutes())
 		r.Mount("/health", health.Routes())
 	})
 	return router
@@ -112,8 +115,6 @@ func main() {
 
 	healthCheckConfig := health.CheckConfig(serviceConfig.HealthCheck)
 
-	health.InitHealthSystem(healthCheckConfig)
-
 	defer log.Close()
 
 	if serviceConfig.SystemID == "" {
@@ -121,7 +122,7 @@ func main() {
 	}
 
 	gc := crypt.GenerateCertificate{
-		Organization: "EASY SOFTWARE",
+		Organization: "MCS Media Computer Spftware",
 		Host:         "127.0.0.1",
 		ValidFor:     10 * 365 * 24 * time.Hour,
 		IsCA:         false,
@@ -134,7 +135,11 @@ func main() {
 		log.Info("ssl active")
 	}
 
+	storage := &dao.MongoDAO{}
+	storage.InitDAO(config.Get().MongoDB)
+	dao.Storage = storage
 	api.SystemID = serviceConfig.SystemID
+	health.InitHealthSystem(healthCheckConfig)
 	apikey = getApikey()
 	api.APIKey = apikey
 	log.Infof("systemid: %s", serviceConfig.SystemID)
@@ -218,9 +223,9 @@ func main() {
 		initRegistry()
 	}
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	<-c
+	osc := make(chan os.Signal, 1)
+	signal.Notify(osc, os.Interrupt)
+	<-osc
 
 	log.Info("waiting for clients")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
@@ -312,16 +317,10 @@ func initAutoRest() {
 		fmt.Println(err)
 	}
 
-	data, err := yaml.Marshal(application)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(data))
-
 	for _, value := range files {
 		fmt.Printf("path: %s\n", value)
 		data, err := ioutil.ReadFile(value)
-		bemodel := models.Application{}
+		bemodel := model.Application{}
 		err = yaml.Unmarshal(data, &bemodel)
 		if err != nil {
 			fmt.Println(err)

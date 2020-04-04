@@ -17,3 +17,10 @@ logging:
 
 healthcheck:
     period: 30
+mongodb:
+    host: 127.0.0.1
+    port: 27017
+    username:
+    password:
+    authdb: schematics
+    database: schematics

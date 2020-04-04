@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/logging"
 )
 
+// global storage definition
 var myhealthy bool
 var log logging.ServiceLogger
 
@@ -17,13 +19,12 @@ This is the healtchcheck you will have to provide.
 */
 func check() (bool, string) {
 	// TODO implement here your healthcheck.
-	myhealthy = !myhealthy
+	myhealthy = true
 	message := ""
-	if myhealthy {
-		log.Info("healthy")
-	} else {
-		log.Info("not healthy")
-		message = "ungesund"
+	err := dao.GetStorage().Ping()
+	if err != nil {
+		myhealthy = false
+		message = err.Error()
 	}
 	return myhealthy, message
 }

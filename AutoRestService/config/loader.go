@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/willie68/AutoRestIoT/logging"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,6 +21,7 @@ var config = Config{
 
 // File the config file
 var File = "config/service.yaml"
+var log logging.ServiceLogger
 
 // Get returns loaded config
 func Get() Config {
@@ -40,7 +42,10 @@ func Load() error {
 	if err != nil {
 		return fmt.Errorf("can't unmarshal config file: %s", err.Error())
 	}
-	return readSecret()
+	readSecret()
+	value, _ := yaml.Marshal(config)
+	log.Infof("using configfile %s. \nconfiguration:\n%s\n", File, string(value))
+	return nil
 }
 
 func readSecret() error {
@@ -61,6 +66,6 @@ func readSecret() error {
 }
 
 func mergeSecret(secret Secret) {
-	//	config.MongoDB.Username = secret.MongoDB.Username
-	//	config.MongoDB.Password = secret.MongoDB.Password
+	config.MongoDB.Username = secret.MongoDB.Username
+	config.MongoDB.Password = secret.MongoDB.Password
 }

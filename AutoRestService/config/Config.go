@@ -19,6 +19,8 @@ type Config struct {
 	Logging Logging `yaml:"logging"`
 
 	HealthCheck HealthCheck `yaml:"healthcheck"`
+
+	MongoDB MongoDB `yaml: "mongodb"`
 }
 
 type Logging struct {
@@ -28,4 +30,13 @@ type Logging struct {
 
 type HealthCheck struct {
 	Period int `yaml:"period"`
+}
+
+type MongoDB struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	AuthDB   string `yaml:"authdb"`
+	Database string `yaml:"database"`
 }

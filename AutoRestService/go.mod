@@ -14,6 +14,7 @@ require (
 	github.com/hashicorp/consul/api v1.4.0
 	github.com/prometheus/client_golang v1.4.1 // indirect
 	github.com/spf13/pflag v1.0.5
+	go.mongodb.org/mongo-driver v1.3.1
 	golang.org/x/net v0.0.0-20200202094626-16171245cfb2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200121175148-a6ecf24a6d71
 )

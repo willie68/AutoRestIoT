@@ -1,0 +1,15 @@
+use backend1
+db.createUser({ user: "backend1", pwd: "backend1", roles: [ "readWrite", "dbAdmin", { role: "dbOwner", db: "backend1" } ]})
+
+db.runCommand({compact: "attachments.files"})
+db.runCommand({compact: "attachments.chunks"})
+
+use admin
+
+query with Collation {locale: "en", strength : 2}
+
+{$or: [{$text : {$search : "blue"}} , { manufacturer: "swr"}, {model: "OM"}]}
+
+https://127.0.0.1:9443/api/v1/schematics?query={"$fulltext":"\"blue \" \"Mesa\""}&offset=0&limit=10
+
+{"name": "w.klaas@gmx.de", "password":"akteon0000", "admin": true}
