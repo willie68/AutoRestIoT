@@ -3,7 +3,7 @@ package slicesutils_test
 import (
 	"testing"
 
-	slicesutils "github.com/willie68/schematic-service-go/internal"
+	slicesutils "github.com/willie68/AutoRestIoT/internal"
 )
 
 func TestContains(t *testing.T) {

@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 )
+
+const DeleteRefHeader = "X-mcs-deleteref"
 
 /*
 ModelRoutes getting all routes for the config endpoint
@@ -108,7 +111,8 @@ func DeleteModelEndpoint(response http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
 	model := chi.URLParam(req, "model")
 	modelid := chi.URLParam(req, "modelid")
-	fmt.Printf("DELETE: path: %s, be: %s, model: %s, modelid: %s  \n", req.URL.Path, backend, model, modelid)
+	deleteRef := isDeleteRef(req)
+	fmt.Printf("DELETE: path: %s, be: %s, model: %s, modelid: %s, delRef: %t  \n", req.URL.Path, backend, model, modelid, deleteRef)
 	tenant := getTenant(req)
 	if tenant == "" {
 		Msg(response, http.StatusBadRequest, "tenant not set")
@@ -122,4 +126,15 @@ getTenant getting the tenant from the request
 */
 func getTenant(req *http.Request) string {
 	return req.Header.Get(TenantHeader)
+}
+
+func isDeleteRef(req *http.Request) bool {
+	deleteRef := true
+	if req.Header.Get(DeleteRefHeader) != "" {
+		b, err := strconv.ParseBool(req.Header.Get(DeleteRefHeader))
+		if err == nil {
+			deleteRef = b
+		}
+	}
+	return deleteRef
 }
