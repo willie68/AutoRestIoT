@@ -19,11 +19,11 @@ ModelRoutes getting all routes for the config endpoint
 */
 func ModelRoutes() *chi.Mux {
 	router := chi.NewRouter()
-	router.Post("/{bename}/{model}/", PostModelEndpoint)
-	router.With(Paginate).Get("/{bename}/{model}/", GetManyModelsEndpoint)
-	router.Get("/{bename}/{model}/{modelid}", GetModelEndpoint)
-	router.Put("/{bename}/{model}/{modelid}", PutModelEndpoint)
-	router.Delete("/{bename}/{model}/{modelid}", DeleteModelEndpoint)
+	router.With(RoleCheck([]string{"edit"})).Post("/{bename}/{model}/", PostModelEndpoint)
+	router.With(RoleCheck([]string{"edit", "read"})).With(Paginate).Get("/{bename}/{model}/", GetManyModelsEndpoint)
+	router.With(RoleCheck([]string{"edit", "read"})).Get("/{bename}/{model}/{modelid}", GetModelEndpoint)
+	router.With(RoleCheck([]string{"edit"})).Put("/{bename}/{model}/{modelid}", PutModelEndpoint)
+	router.With(RoleCheck([]string{"edit"})).Delete("/{bename}/{model}/{modelid}", DeleteModelEndpoint)
 	return router
 }
 
@@ -69,7 +69,7 @@ func PostModelEndpoint(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	bemodel["id"] = modelid
+	bemodel["_id"] = modelid
 	route.Identity = modelid
 
 	buildLocationHeader(res, req, route)
@@ -103,7 +103,7 @@ func GetManyModelsEndpoint(response http.ResponseWriter, req *http.Request) {
 GetManyModelsEndpoint getting if a store for a tenant is initialised
 because of the automatic store creation, the value is more likely that data is stored for this tenant
 */
-func GetModelEndpoint(response http.ResponseWriter, req *http.Request) {
+func GetModelEndpoint(res http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
 	mymodel := chi.URLParam(req, "model")
 	modelid := chi.URLParam(req, "modelid")
@@ -115,7 +115,20 @@ func GetModelEndpoint(response http.ResponseWriter, req *http.Request) {
 	route = enrichRouteInformation(req, route)
 	fmt.Printf("GET: path: %s, route: %s \n", req.URL.Path, route.String())
 
-	render.JSON(response, req, route)
+	model, err := worker.Get(route)
+	if err != nil {
+		if err == dao.ErrNotImplemented {
+			Msg(res, http.StatusNotImplemented, err.Error())
+			return
+		}
+		if err == dao.ErrNoDocument {
+			render.Render(res, req, ErrNotFound)
+			return
+		}
+		Msg(res, http.StatusInternalServerError, err.Error())
+		return
+	}
+	render.JSON(res, req, model)
 }
 
 /*

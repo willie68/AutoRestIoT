@@ -17,3 +17,11 @@ func Store(route model.Route, data model.JsonMap) (string, error) {
 	}
 	return modelid, nil
 }
+
+func Get(route model.Route) (model.JsonMap, error) {
+	model, err := dao.GetStorage().GetModel(route)
+	if err != nil {
+		return nil, err
+	}
+	return model, nil
+}

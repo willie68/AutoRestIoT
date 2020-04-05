@@ -13,8 +13,8 @@ import (
 //SchematicsRoutes getting all routes for the config endpoint
 func FilesRoutes() *chi.Mux {
 	router := chi.NewRouter()
-	router.Get("/{bename}/{fileId}", GetFileHandler)
-	router.Post("/{bename}/", PostFileEndpoint)
+	router.With(RoleCheck([]string{"edit", "read"})).Get("/{bename}/{fileId}", GetFileHandler)
+	router.With(RoleCheck([]string{"edit"})).Post("/{bename}/", PostFileEndpoint)
 	return router
 }
 

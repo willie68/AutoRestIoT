@@ -651,7 +651,27 @@ func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, e
 }
 
 func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
-	return nil, ErrNotImplemented
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+	objectID, _ := primitive.ObjectIDFromHex(route.Identity)
+	result := collection.FindOne(ctx, bson.M{"_id": objectID})
+	err := result.Err()
+	if err == mongo.ErrNoDocuments {
+		log.Print(err)
+		return nil, ErrNoDocument
+	}
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+	var bemodel model.JsonMap
+	if err := result.Decode(&bemodel); err != nil {
+		log.Print(err)
+		return nil, err
+	} else {
+		return bemodel, nil
+	}
 }
 
 func (m *MongoDAO) Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
