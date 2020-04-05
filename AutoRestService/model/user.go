@@ -9,4 +9,5 @@ type User struct {
 	NewPassword string             `json:"newpassword" bson:"-"`
 	Admin       bool               `json:"admin" bson:"admin,omitempty"`
 	Guest       bool               `json:"guest" bson:"guest,omitempty"`
+	Roles       []string           `json:"roles" bson:"roles,omitempty"`
 }

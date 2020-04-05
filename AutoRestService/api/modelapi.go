@@ -7,7 +7,9 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/model"
+	"github.com/willie68/AutoRestIoT/worker"
 )
 
 const DeleteRefHeader = "X-mcs-deleteref"
@@ -41,10 +43,37 @@ func PostModelEndpoint(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	bemodel := data
+	bemodel := *data
 
 	fmt.Printf("POST: path: %s, route: %s \n", req.URL.Path, route.String())
-	//worker.Modelworker.Validate(route)
+	valid, err := worker.Validate(route, bemodel)
+	if err != nil {
+		if err == dao.ErrNotImplemented {
+			Msg(res, http.StatusNotImplemented, err.Error())
+			return
+		}
+		Msg(res, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !valid {
+		Msg(res, http.StatusBadRequest, "data model not valid")
+		return
+	}
+	modelid, err := worker.Store(route, bemodel)
+	if err != nil {
+		if err == dao.ErrNotImplemented {
+			Msg(res, http.StatusNotImplemented, err.Error())
+			return
+		}
+		Msg(res, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	bemodel["id"] = modelid
+	route.Identity = modelid
+
+	buildLocationHeader(res, req, route)
+
 	render.Status(req, http.StatusCreated)
 	render.JSON(res, req, bemodel)
 }
@@ -143,4 +172,10 @@ func enrichRouteInformation(req *http.Request, route model.Route) model.Route {
 		route.SystemID = req.Header.Get(SystemHeader)
 	}
 	return route
+}
+
+func buildLocationHeader(res http.ResponseWriter, req *http.Request, route model.Route) {
+
+	loc := fmt.Sprintf("%s/%s", req.URL.Path, route.Identity)
+	res.Header().Add("Location", loc)
 }

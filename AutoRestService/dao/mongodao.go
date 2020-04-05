@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/willie68/AutoRestIoT/config"
+	slicesutils "github.com/willie68/AutoRestIoT/internal"
 	"github.com/willie68/AutoRestIoT/model"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -179,16 +180,26 @@ func (m *MongoDAO) reloadUsers() {
 	m.users = localUsers
 	if len(m.users) == 0 {
 		admin := model.User{
-			Name:     "w.klaas@gmx.de",
-			Password: "akteon0000",
+			Name:     "admin",
+			Password: "admin",
 			Admin:    true,
+			Roles:    []string{"admin"},
 		}
 		m.AddUser(admin)
+		editor := model.User{
+			Name:     "editor",
+			Password: "editor",
+			Admin:    false,
+			Guest:    false,
+			Roles:    []string{"edit"},
+		}
+		m.AddUser(editor)
 		guest := model.User{
-			Name:     "gast",
-			Password: "gast1234",
+			Name:     "guest",
+			Password: "guest",
 			Admin:    false,
 			Guest:    true,
+			Roles:    []string{"read"},
 		}
 		m.AddUser(guest)
 	}
@@ -206,6 +217,47 @@ func (m *MongoDAO) AddFile(filename string, reader io.Reader) (string, error) {
 	log.Printf("Write file to DB was successful. File id: %s \n", fileID)
 	id := fileID.Hex()
 	return id, nil
+}
+
+//GetFile getting a single from the database with the id
+func (m *MongoDAO) GetFilename(fileid string) (string, error) {
+	objectID, err := primitive.ObjectIDFromHex(fileid)
+	if err != nil {
+		log.Print(err)
+		return "", err
+	}
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	cursor, err := m.bucket.Find(bson.M{"_id": objectID})
+	if err != nil {
+		log.Print(err)
+		return "", err
+	}
+	defer cursor.Close(ctx)
+	cursor.Next(ctx)
+	var file bson.M
+	var filename string
+	if err = cursor.Decode(&file); err != nil {
+		log.Print(err)
+		return "", err
+	} else {
+		filename = file["filename"].(string)
+	}
+	return filename, nil
+}
+
+//GetFile getting a single from the database with the id
+func (m *MongoDAO) GetFile(fileid string, stream io.Writer) error {
+	objectID, err := primitive.ObjectIDFromHex(fileid)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	_, err = m.bucket.DownloadToStream(objectID, stream)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
 }
 
 /*
@@ -316,47 +368,6 @@ func (m *MongoDAO) DeleteSchematic(schematicID string) error {
 	}
 }
 */
-//GetFile getting a single from the database with the id
-func (m *MongoDAO) GetFilename(fileid string) (string, error) {
-	objectID, err := primitive.ObjectIDFromHex(fileid)
-	if err != nil {
-		log.Print(err)
-		return "", err
-	}
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	cursor, err := m.bucket.Find(bson.M{"_id": objectID})
-	if err != nil {
-		log.Print(err)
-		return "", err
-	}
-	defer cursor.Close(ctx)
-	cursor.Next(ctx)
-	var file bson.M
-	var filename string
-	if err = cursor.Decode(&file); err != nil {
-		log.Print(err)
-		return "", err
-	} else {
-		filename = file["filename"].(string)
-	}
-	return filename, nil
-}
-
-//GetFile getting a single from the database with the id
-func (m *MongoDAO) GetFile(fileid string, stream io.Writer) error {
-	objectID, err := primitive.ObjectIDFromHex(fileid)
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-	_, err = m.bucket.DownloadToStream(objectID, stream)
-	if err != nil {
-		log.Print(err)
-		return err
-	}
-	return nil
-}
-
 /*
 // GetSchematics getting a sdingle schematic
 func (m *MongoDAO) GetSchematics(query string, offset int, limit int, owner string) (int64, []model.Schematic, error) {
@@ -489,6 +500,45 @@ func (m *MongoDAO) CheckUser(username string, password string) bool {
 	return false
 }
 
+func (m *MongoDAO) UserInRoles(username string, roles []string) bool {
+	user, ok := m.GetUser(username)
+	if !ok {
+		return false
+	}
+
+	for _, role := range roles {
+		if slicesutils.Contains(user.Roles, role) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetUser getting the usermolde
+func (m *MongoDAO) GetUsers() ([]model.User, error) {
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	usersCollection := m.database.Collection(usersCollectionName)
+	filter := bson.M{}
+	cursor, err := usersCollection.Find(ctx, filter)
+	if err != nil {
+		fmt.Printf("error: %s\n", err.Error())
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+	users := make([]model.User, 0)
+	for cursor.Next(ctx) {
+		var user model.User
+		if err = cursor.Decode(&user); err != nil {
+			log.Print(err)
+			return nil, err
+		} else {
+			user.Password = ""
+			users = append(users, user)
+		}
+	}
+	return users, nil
+}
+
 // GetUser getting the usermolde
 func (m *MongoDAO) GetUser(username string) (model.User, bool) {
 	username = strings.ToLower(username)
@@ -505,30 +555,6 @@ func (m *MongoDAO) GetUser(username string) (model.User, bool) {
 	hash := BuildPasswordHash(password)
 	m.users[username] = hash
 	return user, true
-}
-
-// DropAll dropping all data from the database
-func (m *MongoDAO) DropAll() {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	collectionNames, err := m.database.ListCollectionNames(ctx, bson.D{}, &options.ListCollectionsOptions{})
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, name := range collectionNames {
-		if name != usersCollectionName {
-			collection := m.database.Collection(name)
-			err = collection.Drop(ctx)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-	}
-}
-
-// Stop stopping the mongodao
-func (m *MongoDAO) Stop() {
-	m.ticker.Stop()
-	m.done <- true
 }
 
 // AddUser adding a new user to the system
@@ -608,6 +634,38 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 	return nil
 }
 
+func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, error) {
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+	result, err := collection.InsertOne(ctx, data)
+	if err != nil {
+		fmt.Printf("error: %s\n", err.Error())
+		return "", err
+	}
+	switch v := result.InsertedID.(type) {
+	case primitive.ObjectID:
+		return v.Hex(), nil
+	}
+	return "", ErrUnknownError
+}
+
+func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
+	return nil, ErrNotImplemented
+}
+
+func (m *MongoDAO) Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
+	return 0, nil, ErrNotImplemented
+}
+
+func (m *MongoDAO) UpdateModel(route model.Route, data model.JsonMap) error {
+	return ErrNotImplemented
+}
+
+func (m *MongoDAO) DeleteModel(route model.Route, dataId string) error {
+	return ErrNotImplemented
+}
+
 // Ping pinging the mongoDao
 func (m *MongoDAO) Ping() error {
 	if !m.initialised {
@@ -615,4 +673,28 @@ func (m *MongoDAO) Ping() error {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	return m.database.Client().Ping(ctx, nil)
+}
+
+// DropAll dropping all data from the database
+func (m *MongoDAO) DropAll() {
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collectionNames, err := m.database.ListCollectionNames(ctx, bson.D{}, &options.ListCollectionsOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, name := range collectionNames {
+		if name != usersCollectionName {
+			collection := m.database.Collection(name)
+			err = collection.Drop(ctx)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
+
+// Stop stopping the mongodao
+func (m *MongoDAO) Stop() {
+	m.ticker.Stop()
+	m.done <- true
 }

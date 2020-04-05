@@ -13,16 +13,27 @@ import (
 // TagsRoutes getting all routes for the tags endpoint
 func UsersRoutes() *chi.Mux {
 	router := chi.NewRouter()
-	router.Get("/", GetUserEndpoint)
-	router.Post("/", PostUserEndpoint)
-	router.Put("/{username}", PutUserEndpoint)
-	router.Delete("/{username}", DeleteUserEndpoint)
+	router.With(RoleCheck([]string{"admin"})).Get("/", GetUsersEndpoint)
+	router.With(RoleCheck([]string{"admin"})).Post("/", PostUserEndpoint)
+	router.With(RoleCheck([]string{"admin"})).Get("/{username}", GetUserEndpoint)
+	router.With(RoleCheck([]string{"admin"})).Put("/{username}", PutUserEndpoint)
+	router.With(RoleCheck([]string{"admin"})).Delete("/{username}", DeleteUserEndpoint)
 	return router
 }
 
-//PutUserEndpoint getting all tags back. No paging...
+//GetUsersEndpoint getting all tags back. No paging...
+func GetUsersEndpoint(response http.ResponseWriter, req *http.Request) {
+	users, err := dao.GetStorage().GetUsers()
+	if err != nil {
+		Msg(response, http.StatusInternalServerError, err.Error())
+		return
+	}
+	render.JSON(response, req, users)
+}
+
+//GetUserEndpoint getting all tags back. No paging...
 func GetUserEndpoint(response http.ResponseWriter, req *http.Request) {
-	username, _, _ := req.BasicAuth()
+	username := chi.URLParam(req, "username")
 	user, ok := dao.GetStorage().GetUser(username)
 	user.Password = ""
 	user.NewPassword = ""
@@ -33,7 +44,7 @@ func GetUserEndpoint(response http.ResponseWriter, req *http.Request) {
 	render.JSON(response, req, user)
 }
 
-//PutUserEndpoint getting all tags back. No paging...
+//PostUserEndpoint getting all tags back. No paging...
 func PostUserEndpoint(response http.ResponseWriter, req *http.Request) {
 	var user model.User
 	err := render.DefaultDecoder(req, &user)

@@ -53,3 +53,11 @@ models:  #definition of the different models
 ## Dateien
 
 Dateien können pro Backend in das reserviert Model files abgelegt werden. Sollen diese einem Modell zugeordnet werden, sollte man ein Attribut vom Typ ID anlegen. Der Service stellt dann automatisch die Referenzierung sicher. D.h. wird eine Modelinstanz aus den Modellen gelöscht, wird automatisch die referenzierte Instanz mit gelöscht. (Eine Referenzzählung wird nicht vorgenommen, d.h. wird ein und dieselbe Dateiinstanz in verschiedenen Modellen verwendet, und eines der Modelle gelöscht, wird die Dateiinstanz mit gelöscht.) Dieses Verhalten kann mit dem Header `X-mcs-deleteref: false` verhindert werden.
+
+## User
+
+Folgende User mit folgenden Rollen werden automatisch angelegt:
+
+- Admin, pwd: admin, roles: admin
+- Editor, pwd: editor, roles: edit
+- guest, pwd: guest, roles: read
