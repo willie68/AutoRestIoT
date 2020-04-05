@@ -2,12 +2,12 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/willie68/AutoRestIoT/model"
 )
 
 const DeleteRefHeader = "X-mcs-deleteref"
@@ -28,16 +28,15 @@ func ModelRoutes() *chi.Mux {
 //PostModelEndpoint , this method will always return 201
 func PostModelEndpoint(response http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
-	model := chi.URLParam(req, "model")
-	fmt.Printf("POST: path: %s, be: %s, model: %s \n", req.URL.Path, backend, model)
-	tenant := getTenant(req)
-	if tenant == "" {
-		Msg(response, http.StatusBadRequest, "tenant not set")
-		return
+	mymodel := chi.URLParam(req, "model")
+	route := model.Route{
+		Backend: backend,
+		Model:   mymodel,
 	}
-	log.Printf("create store for tenant %s", tenant)
+	route = enrichRouteInformation(req, route)
+	fmt.Printf("POST: path: %s, route: %s \n", req.URL.Path, route.String())
 	render.Status(req, http.StatusCreated)
-	render.JSON(response, req, tenant)
+	render.JSON(response, req, route)
 }
 
 /*
@@ -50,19 +49,15 @@ func GetManyModelsEndpoint(response http.ResponseWriter, req *http.Request) {
 	fmt.Printf("GET many: offset: %d, limit: %d\n", offset, limit)
 
 	backend := chi.URLParam(req, "bename")
-	model := chi.URLParam(req, "model")
-	fmt.Printf("GET many: path: %s, be: %s, model: %s \n", req.URL.Path, backend, model)
-	tenant := getTenant(req)
-	if tenant == "" {
-		Msg(response, http.StatusBadRequest, "tenant not set")
-		return
+	mymodel := chi.URLParam(req, "model")
+	route := model.Route{
+		Backend: backend,
+		Model:   mymodel,
 	}
-	c := ConfigDescription{
-		StoreID:  "myNewStore",
-		TenantID: tenant,
-		Size:     1234567,
-	}
-	render.JSON(response, req, c)
+	route = enrichRouteInformation(req, route)
+	fmt.Printf("GET many: path: %s, route: %s \n", req.URL.Path, route.String())
+
+	render.JSON(response, req, route)
 }
 
 /*
@@ -71,20 +66,17 @@ because of the automatic store creation, the value is more likely that data is s
 */
 func GetModelEndpoint(response http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
-	model := chi.URLParam(req, "model")
+	mymodel := chi.URLParam(req, "model")
 	modelid := chi.URLParam(req, "modelid")
-	fmt.Printf("GET: path: %s, be: %s, model: %s, modelid: %s  \n", req.URL.Path, backend, model, modelid)
-	tenant := getTenant(req)
-	if tenant == "" {
-		Msg(response, http.StatusBadRequest, "tenant not set")
-		return
+	route := model.Route{
+		Backend:  backend,
+		Model:    mymodel,
+		Identity: modelid,
 	}
-	c := ConfigDescription{
-		StoreID:  "myNewStore",
-		TenantID: tenant,
-		Size:     1234567,
-	}
-	render.JSON(response, req, c)
+	route = enrichRouteInformation(req, route)
+	fmt.Printf("GET: path: %s, route: %s \n", req.URL.Path, route.String())
+
+	render.JSON(response, req, route)
 }
 
 /*
@@ -92,16 +84,16 @@ GetConfigSizeEndpoint size of the store for a tenant
 */
 func PutModelEndpoint(response http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
-	model := chi.URLParam(req, "model")
+	mymodel := chi.URLParam(req, "model")
 	modelid := chi.URLParam(req, "modelid")
-	fmt.Printf("PUT: path: %s, be: %s, model: %s, modelid: %s  \n", req.URL.Path, backend, model, modelid)
-	tenant := getTenant(req)
-	if tenant == "" {
-		Msg(response, http.StatusBadRequest, "tenant not set")
-		return
+	route := model.Route{
+		Backend:  backend,
+		Model:    mymodel,
+		Identity: modelid,
 	}
-
-	render.JSON(response, req, tenant)
+	route = enrichRouteInformation(req, route)
+	fmt.Printf("PUT: path: %s, route: %s \n", req.URL.Path, route.String())
+	render.JSON(response, req, route)
 }
 
 /*
@@ -109,23 +101,17 @@ DeleteConfigEndpoint deleting store for a tenant, this will automatically delete
 */
 func DeleteModelEndpoint(response http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
-	model := chi.URLParam(req, "model")
+	mymodel := chi.URLParam(req, "model")
 	modelid := chi.URLParam(req, "modelid")
-	deleteRef := isDeleteRef(req)
-	fmt.Printf("DELETE: path: %s, be: %s, model: %s, modelid: %s, delRef: %t  \n", req.URL.Path, backend, model, modelid, deleteRef)
-	tenant := getTenant(req)
-	if tenant == "" {
-		Msg(response, http.StatusBadRequest, "tenant not set")
-		return
+	route := model.Route{
+		Backend:  backend,
+		Model:    mymodel,
+		Identity: modelid,
 	}
-	render.JSON(response, req, tenant)
-}
-
-/*
-getTenant getting the tenant from the request
-*/
-func getTenant(req *http.Request) string {
-	return req.Header.Get(TenantHeader)
+	route = enrichRouteInformation(req, route)
+	deleteRef := isDeleteRef(req)
+	fmt.Printf("DELETE: path: %s,  route: %s, delRef: %t  \n", req.URL.Path, route.String(), deleteRef)
+	render.JSON(response, req, route)
 }
 
 func isDeleteRef(req *http.Request) bool {
@@ -137,4 +123,14 @@ func isDeleteRef(req *http.Request) bool {
 		}
 	}
 	return deleteRef
+}
+
+func enrichRouteInformation(req *http.Request, route model.Route) model.Route {
+	if req.Header.Get(APIKeyHeader) != "" {
+		route.Apikey = req.Header.Get(APIKeyHeader)
+	}
+	if req.Header.Get(SystemHeader) != "" {
+		route.SystemID = req.Header.Get(SystemHeader)
+	}
+	return route
 }
