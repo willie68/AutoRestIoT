@@ -26,7 +26,7 @@ func ModelRoutes() *chi.Mux {
 }
 
 //PostModelEndpoint , this method will always return 201
-func PostModelEndpoint(response http.ResponseWriter, req *http.Request) {
+func PostModelEndpoint(res http.ResponseWriter, req *http.Request) {
 	backend := chi.URLParam(req, "bename")
 	mymodel := chi.URLParam(req, "model")
 	route := model.Route{
@@ -34,9 +34,19 @@ func PostModelEndpoint(response http.ResponseWriter, req *http.Request) {
 		Model:   mymodel,
 	}
 	route = enrichRouteInformation(req, route)
+	data := &model.JsonMap{}
+
+	if err := render.Decode(req, data); err != nil {
+		render.Render(res, req, ErrInvalidRequest(err))
+		return
+	}
+
+	bemodel := data
+
 	fmt.Printf("POST: path: %s, route: %s \n", req.URL.Path, route.String())
+	//worker.Modelworker.Validate(route)
 	render.Status(req, http.StatusCreated)
-	render.JSON(response, req, route)
+	render.JSON(res, req, bemodel)
 }
 
 /*
