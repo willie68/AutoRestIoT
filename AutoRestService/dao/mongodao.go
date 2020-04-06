@@ -202,8 +202,8 @@ func (m *MongoDAO) reloadUsers() {
 }
 
 // AddFile adding a file to the storage, stream like
-func (m *MongoDAO) AddFile(filename string, reader io.Reader) (string, error) {
-	uploadOpts := options.GridFSUpload().SetMetadata(bson.D{{"tag", "tag"}})
+func (m *MongoDAO) AddFile(backend string, filename string, reader io.Reader) (string, error) {
+	uploadOpts := options.GridFSUpload().SetMetadata(bson.D{{"backend", backend}})
 
 	fileID, err := m.bucket.UploadFromStream(filename, reader, uploadOpts)
 	if err != nil {
@@ -216,14 +216,14 @@ func (m *MongoDAO) AddFile(filename string, reader io.Reader) (string, error) {
 }
 
 //GetFile getting a single from the database with the id
-func (m *MongoDAO) GetFilename(fileid string) (string, error) {
+func (m *MongoDAO) GetFilename(backend string, fileid string) (string, error) {
 	objectID, err := primitive.ObjectIDFromHex(fileid)
 	if err != nil {
 		log.Print(err)
 		return "", err
 	}
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	cursor, err := m.bucket.Find(bson.M{"_id": objectID})
+	cursor, err := m.bucket.Find(bson.M{"_id": objectID, "metadata.backend": backend})
 	if err != nil {
 		log.Print(err)
 		return "", err
@@ -242,7 +242,13 @@ func (m *MongoDAO) GetFilename(fileid string) (string, error) {
 }
 
 //GetFile getting a single from the database with the id
-func (m *MongoDAO) GetFile(fileid string, stream io.Writer) error {
+func (m *MongoDAO) GetFile(backend string, fileid string, stream io.Writer) error {
+	_, err := m.GetFilename(backend, fileid)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+
 	objectID, err := primitive.ObjectIDFromHex(fileid)
 	if err != nil {
 		log.Print(err)
@@ -496,6 +502,7 @@ func (m *MongoDAO) CheckUser(username string, password string) bool {
 	return false
 }
 
+//UserInRoles is a user in the given role
 func (m *MongoDAO) UserInRoles(username string, roles []string) bool {
 	user, ok := m.GetUser(username)
 	if !ok {
@@ -510,7 +517,7 @@ func (m *MongoDAO) UserInRoles(username string, roles []string) bool {
 	return false
 }
 
-// GetUser getting the usermolde
+// GetUsers getting a list of users
 func (m *MongoDAO) GetUsers() ([]model.User, error) {
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	usersCollection := m.database.Collection(usersCollectionName)
@@ -535,7 +542,7 @@ func (m *MongoDAO) GetUsers() ([]model.User, error) {
 	return users, nil
 }
 
-// GetUser getting the usermolde
+// GetUser getting the usermodel
 func (m *MongoDAO) GetUser(username string) (model.User, bool) {
 	username = strings.ToLower(username)
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
@@ -690,6 +697,53 @@ func (m *MongoDAO) Ping() error {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
 	return m.database.Client().Ping(ctx, nil)
+}
+
+// DeleteBackend dropping all data from the backend
+func (m *MongoDAO) DeleteBackend(backend string) error {
+	if backend == attachmentsCollectionName || backend == usersCollectionName {
+		return errors.New("wrong backend name.")
+	}
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collectionNames, err := m.database.ListCollectionNames(ctx, bson.D{}, &options.ListCollectionsOptions{})
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	for _, name := range collectionNames {
+		if strings.HasPrefix(name, backend+".") {
+			collection := m.database.Collection(name)
+			err = collection.Drop(ctx)
+			if err != nil {
+				log.Fatal(err)
+				return err
+			}
+		}
+	}
+
+	filter := bson.M{"metadata.backend": backend}
+	cursor, err := m.bucket.Find(filter, &options.GridFSFindOptions{})
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var file bson.M
+		if err = cursor.Decode(&file); err != nil {
+			log.Print(err)
+			return err
+		} else {
+			if err = m.bucket.Delete(file["_id"]); err != nil {
+				log.Print(err)
+				return err
+			}
+		}
+
+	}
+
+	return nil
 }
 
 // DropAll dropping all data from the database

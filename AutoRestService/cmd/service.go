@@ -78,8 +78,9 @@ func routes() *chi.Mux {
 
 	router.Route("/", func(r chi.Router) {
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/models", api.ModelRoutes())
-		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/files", api.UsersRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/files", api.FilesRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/users", api.UsersRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/admin", api.AdminRoutes())
 		r.Mount("/health", health.Routes())
 	})
 	return router
@@ -136,7 +137,7 @@ func main() {
 
 	storage := &dao.MongoDAO{}
 	storage.InitDAO(config.Get().MongoDB)
-	dao.Storage = storage
+	dao.SetStorage(storage)
 	health.InitHealthSystem(healthCheckConfig)
 	apikey = getApikey()
 	log.Infof("systemid: %s", serviceConfig.SystemID)
@@ -219,6 +220,8 @@ func main() {
 	if serviceConfig.RegistryURL != "" {
 		initRegistry()
 	}
+
+	//go importData("E:/temp/backup/schematic/dev")
 
 	osc := make(chan os.Signal, 1)
 	signal.Notify(osc, os.Interrupt)

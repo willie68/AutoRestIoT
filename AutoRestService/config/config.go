@@ -23,15 +23,18 @@ type Config struct {
 	MongoDB MongoDB `yaml: "mongodb"`
 }
 
+//Logging configuration for the logging system (At the moment only for the gelf logger)
 type Logging struct {
 	Gelfurl  string `yaml:"gelf-url"`
 	Gelfport int    `yaml:"gelf-port"`
 }
 
+//HealthCheck configuration for the healthcheck system
 type HealthCheck struct {
 	Period int `yaml:"period"`
 }
 
+//MongoDB configuration for the mongodb stoirage
 type MongoDB struct {
 	Host     string `yaml:"host"`
 	Port     int    `yaml:"port"`

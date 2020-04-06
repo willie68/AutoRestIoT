@@ -10,7 +10,7 @@ import (
 	"github.com/willie68/AutoRestIoT/dao"
 )
 
-//SchematicsRoutes getting all routes for the config endpoint
+//FilesRoutes getting all routes for the config endpoint
 func FilesRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	router.With(RoleCheck([]string{"edit", "read"})).Get("/{bename}/{fileId}", GetFileHandler)
@@ -18,14 +18,18 @@ func FilesRoutes() *chi.Mux {
 	return router
 }
 
-// GetSchematicFileHandler gets a tenant
-func GetFileHandler(response http.ResponseWriter, req *http.Request) {
-	backend := chi.URLParam(req, "bename")
-	fileID := chi.URLParam(req, "fileId")
-	fmt.Printf("GET: path: %s, be: %s, fileID: %s \n", req.URL.Path, backend, fileID)
-	filename, err := dao.GetStorage().GetFilename(fileID)
+// GetFileHandler get a file
+func GetFileHandler(response http.ResponseWriter, request *http.Request) {
+	backend := chi.URLParam(request, "bename")
+	fileID := chi.URLParam(request, "fileId")
+	fmt.Printf("GET: path: %s, be: %s, fileID: %s \n", request.URL.Path, backend, fileID)
+	filename, err := dao.GetStorage().GetFilename(backend, fileID)
+	if filename == "" {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
 	response.Header().Add("Content-disposition", "attachment; filename=\""+filename+"\"")
-	err = dao.GetStorage().GetFile(fileID, response)
+	err = dao.GetStorage().GetFile(backend, fileID, response)
 	if err != nil {
 		Msg(response, http.StatusBadRequest, err.Error())
 		return
@@ -33,11 +37,11 @@ func GetFileHandler(response http.ResponseWriter, req *http.Request) {
 }
 
 //PostFileEndpoint create a new file, return the id
-func PostFileEndpoint(response http.ResponseWriter, req *http.Request) {
-	backend := chi.URLParam(req, "bename")
-	fmt.Printf("POST: path: %s, be: %s\n", req.URL.Path, backend)
-	req.ParseForm()
-	f, fileHeader, err := req.FormFile("file")
+func PostFileEndpoint(response http.ResponseWriter, request *http.Request) {
+	backend := chi.URLParam(request, "bename")
+	fmt.Printf("POST: path: %s, be: %s\n", request.URL.Path, backend)
+	request.ParseForm()
+	f, fileHeader, err := request.FormFile("file")
 	if err != nil {
 		Msg(response, http.StatusBadRequest, err.Error())
 		return
@@ -47,20 +51,20 @@ func PostFileEndpoint(response http.ResponseWriter, req *http.Request) {
 	filename := fileHeader.Filename
 	reader := bufio.NewReader(f)
 
-	fileid, err := dao.GetStorage().AddFile(filename, reader)
+	fileid, err := dao.GetStorage().AddFile(backend, filename, reader)
 	if err != nil {
 		fmt.Printf("%v\n", err)
 	} else {
 		fmt.Printf("fileid: %s\n", fileid)
 	}
 
-	location := fmt.Sprintf("/api/v1/files/%s", fileid)
+	location := fmt.Sprintf("/api/v1/files/%s/%s", backend, fileid)
 	response.Header().Add("Location", location)
-	render.Status(req, http.StatusCreated)
+	render.Status(request, http.StatusCreated)
 
 	m := make(map[string]interface{})
 	m["fileid"] = fileid
 	m["filename"] = filename
 
-	render.JSON(response, req, m)
+	render.JSON(response, request, m)
 }
