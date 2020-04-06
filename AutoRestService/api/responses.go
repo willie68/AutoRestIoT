@@ -8,7 +8,7 @@ import (
 /*
 Msg writes a response with a message as json
 */
-func Msg(w http.ResponseWriter, code int, message string) {
+func Msg1(w http.ResponseWriter, code int, message string) {
 	msg, err := json.Marshal(struct {
 		Message string `json:"message"`
 	}{message})

@@ -31,7 +31,7 @@ func GetFileHandler(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("Content-disposition", "attachment; filename=\""+filename+"\"")
 	err = dao.GetStorage().GetFile(backend, fileID, response)
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
 }
@@ -43,7 +43,7 @@ func PostFileEndpoint(response http.ResponseWriter, request *http.Request) {
 	request.ParseForm()
 	f, fileHeader, err := request.FormFile("file")
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
 
@@ -53,7 +53,8 @@ func PostFileEndpoint(response http.ResponseWriter, request *http.Request) {
 
 	fileid, err := dao.GetStorage().AddFile(backend, filename, reader)
 	if err != nil {
-		fmt.Printf("%v\n", err)
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
 	} else {
 		fmt.Printf("fileid: %s\n", fileid)
 	}

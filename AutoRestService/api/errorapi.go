@@ -41,11 +41,21 @@ func ErrInvalidRequest(err error) render.Renderer {
 func ErrRender(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
-		HTTPStatusCode: 422,
+		HTTPStatusCode: http.StatusUnprocessableEntity,
 		StatusText:     "Error rendering response.",
+		ErrorText:      err.Error(),
+	}
+}
+
+func ErrInternalServer(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: http.StatusInternalServerError,
+		StatusText:     "Internal server error.",
 		ErrorText:      err.Error(),
 	}
 }
 
 var ErrNotFound = &ErrResponse{HTTPStatusCode: http.StatusNotFound, StatusText: "Resource not found."}
 var ErrNotImplemted = &ErrResponse{HTTPStatusCode: http.StatusNotImplemented, StatusText: "Not im plemented yet."}
+var ErrForbidden = &ErrResponse{HTTPStatusCode: http.StatusForbidden, StatusText: "endpoint not permitted."}

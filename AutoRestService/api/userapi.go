@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -22,105 +22,110 @@ func UsersRoutes() *chi.Mux {
 }
 
 //GetUsersEndpoint getting all tags back. No paging...
-func GetUsersEndpoint(response http.ResponseWriter, req *http.Request) {
+func GetUsersEndpoint(response http.ResponseWriter, request *http.Request) {
 	users, err := dao.GetStorage().GetUsers()
 	if err != nil {
-		Msg(response, http.StatusInternalServerError, err.Error())
+		render.Render(response, request, ErrInternalServer(err))
 		return
 	}
-	render.JSON(response, req, users)
+	render.JSON(response, request, users)
 }
 
 //GetUserEndpoint getting all tags back. No paging...
-func GetUserEndpoint(response http.ResponseWriter, req *http.Request) {
-	username := chi.URLParam(req, "username")
+func GetUserEndpoint(response http.ResponseWriter, request *http.Request) {
+	username := chi.URLParam(request, "username")
 	user, ok := dao.GetStorage().GetUser(username)
 	user.Password = ""
 	user.NewPassword = ""
 	if !ok {
-		Msg(response, http.StatusInternalServerError, "")
+		render.Render(response, request, ErrInternalServer(errors.New("")))
 		return
 	}
-	render.JSON(response, req, user)
+	render.JSON(response, request, user)
 }
 
 //PostUserEndpoint getting all tags back. No paging...
-func PostUserEndpoint(response http.ResponseWriter, req *http.Request) {
+func PostUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	var user model.User
-	err := render.DefaultDecoder(req, &user)
+	err := render.DefaultDecoder(request, &user)
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
 
-	adminusername, _, _ := req.BasicAuth()
+	adminusername, _, _ := request.BasicAuth()
 	admin, ok := dao.GetStorage().GetUser(adminusername)
 	if !ok {
-		Msg(response, http.StatusInternalServerError, "")
+		render.Render(response, request, ErrInternalServer(errors.New("")))
 		return
 	}
 	if !admin.Admin {
-		Msg(response, http.StatusForbidden, "permission denied")
+		render.Render(response, request, ErrForbidden)
 		return
 	}
 
 	err = dao.GetStorage().AddUser(user)
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
-	Msg(response, http.StatusCreated, fmt.Sprintf("user \"%s\" created sucessfully", user.Name))
+	user.Password = "#####"
+	user.NewPassword = ""
+	render.Status(request, http.StatusCreated)
+	render.JSON(response, request, user)
 }
 
 //PutUserEndpoint getting all tags back. No paging...
-func PutUserEndpoint(response http.ResponseWriter, req *http.Request) {
-	username := chi.URLParam(req, "username")
+func PutUserEndpoint(response http.ResponseWriter, request *http.Request) {
+	username := chi.URLParam(request, "username")
 	var user model.User
-	err := render.DefaultDecoder(req, &user)
+	err := render.DefaultDecoder(request, &user)
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
 	if username != user.Name {
-		Msg(response, http.StatusBadRequest, "username should be identically")
+		render.Render(response, request, ErrInvalidRequest(errors.New("username should be identically.")))
 		return
 	}
-	adminusername, _, _ := req.BasicAuth()
+	adminusername, _, _ := request.BasicAuth()
 	admin, ok := dao.GetStorage().GetUser(adminusername)
 	if !ok {
-		Msg(response, http.StatusInternalServerError, "")
+		render.Render(response, request, ErrInternalServer(errors.New("")))
 		return
 	}
 	if (adminusername != username) && !admin.Admin {
-		Msg(response, http.StatusForbidden, "permission denied")
+		render.Render(response, request, ErrForbidden)
 		return
 	}
 
 	err = dao.GetStorage().ChangePWD(username, user.NewPassword, user.Password)
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
-	return
+	user.Password = "#####"
+	user.NewPassword = ""
+	render.JSON(response, request, user)
 }
 
 //PutUserEndpoint getting all tags back. No paging...
-func DeleteUserEndpoint(response http.ResponseWriter, req *http.Request) {
-	username := chi.URLParam(req, "username")
-	adminusername, _, _ := req.BasicAuth()
+func DeleteUserEndpoint(response http.ResponseWriter, request *http.Request) {
+	username := chi.URLParam(request, "username")
+	adminusername, _, _ := request.BasicAuth()
 	admin, ok := dao.GetStorage().GetUser(adminusername)
 	if !ok {
-		Msg(response, http.StatusInternalServerError, "")
+		render.Render(response, request, ErrInternalServer(errors.New("")))
 		return
 	}
 	if !admin.Admin {
-		Msg(response, http.StatusForbidden, "permission denied")
+		render.Render(response, request, ErrForbidden)
 		return
 	}
 
 	err := dao.GetStorage().DeleteUser(username)
 	if err != nil {
-		Msg(response, http.StatusBadRequest, err.Error())
+		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
 	return

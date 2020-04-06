@@ -2,10 +2,13 @@ package api
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/render"
 )
 
 // APIKeyHeader in this header thr right api key should be inserted
@@ -38,19 +41,19 @@ func NewSysAPIHandler(systemID string, apikey string) *SysAPIKey {
 Handler the handler checks systemid and apikey headers
 */
 func (s *SysAPIKey) Handler(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := strings.TrimSuffix(r.URL.Path, "/")
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		path := strings.TrimSuffix(request.URL.Path, "/")
 		if !strings.HasPrefix(path, "/health") {
-			if s.SystemID != r.Header.Get(SystemHeader) {
-				Msg(w, http.StatusBadRequest, "either system id or apikey not correct")
+			if s.SystemID != request.Header.Get(SystemHeader) {
+				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct.")))
 				return
 			}
-			if s.Apikey != strings.ToLower(r.Header.Get(APIKeyHeader)) {
-				Msg(w, http.StatusBadRequest, "either system id or apikey not correct")
+			if s.Apikey != strings.ToLower(request.Header.Get(APIKeyHeader)) {
+				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct.")))
 				return
 			}
 		}
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(response, request)
 	})
 
 }
@@ -70,14 +73,14 @@ var (
 
 // Paginate is a middleware logic for populating the context with offset and limit values
 func Paginate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		offsetStr := r.URL.Query().Get("offset")
-		limitStr := r.URL.Query().Get("limit")
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		ctx := request.Context()
+		offsetStr := request.URL.Query().Get("offset")
+		limitStr := request.URL.Query().Get("limit")
 		if offsetStr != "" {
 			offset, err := strconv.Atoi(offsetStr)
 			if err != nil {
-				Msg(w, http.StatusBadRequest, err.Error())
+				render.Render(response, request, ErrInvalidRequest(err))
 				return
 			}
 			ctx = context.WithValue(ctx, contextKeyOffset, offset)
@@ -87,14 +90,14 @@ func Paginate(next http.Handler) http.Handler {
 		if limitStr != "" {
 			limit, err := strconv.Atoi(limitStr)
 			if err != nil {
-				Msg(w, http.StatusBadRequest, err.Error())
+				render.Render(response, request, ErrInvalidRequest(err))
 				return
 			}
 			ctx = context.WithValue(ctx, contextKeyLimit, limit)
 		} else {
 			ctx = context.WithValue(ctx, contextKeyLimit, 0)
 		}
-		next.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(response, request.WithContext(ctx))
 	})
 }
 
