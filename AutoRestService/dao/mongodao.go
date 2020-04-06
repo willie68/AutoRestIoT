@@ -10,7 +10,8 @@ import (
 	"time"
 
 	"github.com/willie68/AutoRestIoT/config"
-	slicesutils "github.com/willie68/AutoRestIoT/internal"
+	"github.com/willie68/AutoRestIoT/internal"
+	"github.com/willie68/AutoRestIoT/internal/slicesutils"
 	"github.com/willie68/AutoRestIoT/model"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,12 +25,7 @@ import (
 const userReloadPeriod = 1 * time.Hour
 const timeout = 1 * time.Minute
 const attachmentsCollectionName = "attachments"
-const schematicsCollectionName = "schematics"
-const tagsCollectionName = "tags"
-const manufacturersCollectionName = "manufacturers"
 const usersCollectionName = "users"
-const effectsCollectionName = "effects"
-const effectTypesCollectionName = "effectTypes"
 
 // MongoDAO a mongodb based dao
 type MongoDAO struct {
@@ -670,6 +666,7 @@ func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 		log.Print(err)
 		return nil, err
 	} else {
+		bemodel[internal.AttributeID] = bemodel[internal.AttributeID].(primitive.ObjectID).Hex()
 		return bemodel, nil
 	}
 }

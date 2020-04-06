@@ -8,6 +8,7 @@ type Route struct {
 	Identity string
 	SystemID string
 	Apikey   string
+	Username string
 }
 
 func (r *Route) GetRouteName() string {

@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/willie68/AutoRestIoT/dao"
+	"github.com/willie68/AutoRestIoT/internal"
 	"github.com/willie68/AutoRestIoT/model"
 	"github.com/willie68/AutoRestIoT/worker"
 )
@@ -59,7 +60,7 @@ func PostModelEndpoint(res http.ResponseWriter, req *http.Request) {
 		Msg(res, http.StatusBadRequest, "data model not valid")
 		return
 	}
-	modelid, err := worker.Store(route, bemodel)
+	bemodel, err = worker.Store(route, bemodel)
 	if err != nil {
 		if err == dao.ErrNotImplemented {
 			Msg(res, http.StatusNotImplemented, err.Error())
@@ -69,8 +70,7 @@ func PostModelEndpoint(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	bemodel["_id"] = modelid
-	route.Identity = modelid
+	route.Identity = bemodel[internal.AttributeID].(string)
 
 	buildLocationHeader(res, req, route)
 
@@ -183,6 +183,10 @@ func enrichRouteInformation(req *http.Request, route model.Route) model.Route {
 	}
 	if req.Header.Get(SystemHeader) != "" {
 		route.SystemID = req.Header.Get(SystemHeader)
+	}
+	username, _, _ := req.BasicAuth()
+	if username != "" {
+		route.Username = username
 	}
 	return route
 }
