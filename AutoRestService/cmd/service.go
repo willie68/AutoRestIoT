@@ -19,6 +19,7 @@ import (
 	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/health"
 	"github.com/willie68/AutoRestIoT/model"
+	"github.com/willie68/AutoRestIoT/worker"
 	"gopkg.in/yaml.v3"
 
 	"github.com/willie68/AutoRestIoT/internal/crypt"
@@ -221,7 +222,7 @@ func main() {
 		initRegistry()
 	}
 
-	//go importData("E:/temp/backup/schematic/dev")
+	go importData("E:/temp/backup/schematic/dev")
 
 	osc := make(chan os.Signal, 1)
 	signal.Notify(osc, os.Interrupt)
@@ -320,13 +321,21 @@ func initAutoRest() {
 	for _, value := range files {
 		fmt.Printf("path: %s\n", value)
 		data, err := ioutil.ReadFile(value)
-		bemodel := model.Application{}
+		bemodel := model.Backend{}
 		err = yaml.Unmarshal(data, &bemodel)
 		if err != nil {
 			fmt.Println(err)
 		}
+		err = worker.ValidateBackend(bemodel)
+		if err != nil {
+			fmt.Printf("validating backend %s in %s, getting error: %v\n", bemodel.Backendname, value, err)
+			break
+		}
 		jsonData, err := json.Marshal(bemodel)
 		fmt.Println(string(jsonData))
 		fmt.Println("--------------------------------------------------------------------------------")
+
+		backendName := model.BackendList.Add(bemodel)
+		fmt.Printf("registering backend %s successfully.\n", backendName)
 	}
 }

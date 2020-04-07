@@ -29,7 +29,7 @@ func importData(importPath string) {
 					if schematic.Owner == "" {
 						schematic.Owner = "w.klaas@gmx.de"
 					}
-					fileids := make(map[string]string)
+					fileids := make([]string, 0)
 					for filename, _ := range schematic.Files {
 						file := path + "/" + filename
 						f, err := os.Open(file)
@@ -44,7 +44,7 @@ func importData(importPath string) {
 							fmt.Printf("%v\n", err)
 						} else {
 							fmt.Printf("fileid: %s\n", fileid)
-							fileids[filename] = fileid
+							fileids = append(fileids, fileid)
 						}
 					}
 					bemodel := model.JsonMap{}
@@ -57,7 +57,7 @@ func importData(importPath string) {
 					bemodel["PrivateFile"] = schematic.PrivateFile
 					bemodel["Subtitle"] = schematic.SubTitle
 					bemodel["Tags"] = schematic.Tags
-					bemodel["files"] = fileids
+					bemodel["Files"] = fileids
 
 					route := model.Route{
 						Backend:  "schematics",

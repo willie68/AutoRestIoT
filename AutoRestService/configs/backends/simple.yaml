@@ -1,12 +1,8 @@
-applicationname: hallo
+backendname: mybe
 models:
-  - name: test
+  - name: mymodel
     fields:
-      - name: manufacturer
-        type: string
-        mandantory: true
-        collection: false
-      - name: model
+      - name: title
         type: string
         mandantory: true
         collection: false
@@ -14,15 +10,18 @@ models:
         type: string
         mandantory: false
         collection: true
+      - name: file
+        type: file
+        mandantory: false
+        collection: false
     indexes:
       - name: fulltest
         fields:
-          - manufacturer
-          - model
+          - title
           - tags
-      - name: manufacturer
+      - name: title
         fields:
-          - manufacturer
+          - title
       - name: tags
         fields:
           - tags

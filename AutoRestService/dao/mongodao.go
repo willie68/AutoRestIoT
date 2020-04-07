@@ -262,6 +262,27 @@ func (m *MongoDAO) GetFile(backend string, fileid string, stream io.Writer) erro
 	return nil
 }
 
+//DeleteFile getting a single from the database with the id
+func (m *MongoDAO) DeleteFile(backend string, fileid string) error {
+	_, err := m.GetFilename(backend, fileid)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(fileid)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	err = m.bucket.Delete(objectID)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	return nil
+}
+
 /*
 // CreateSchematic creating a new schematic in the database
 func (m *MongoDAO) CreateSchematic(schematic model.Schematic) (string, error) {
@@ -682,12 +703,44 @@ func (m *MongoDAO) Query(route model.Route, query string, offset int, limit int)
 	return 0, nil, ErrNotImplemented
 }
 
-func (m *MongoDAO) UpdateModel(route model.Route, data model.JsonMap) error {
-	return ErrNotImplemented
+//UpdateModel updateing an existing datamodel in the mongo db
+func (m *MongoDAO) UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error) {
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+	objectID, _ := primitive.ObjectIDFromHex(route.Identity)
+	delete(data, internal.AttributeID)
+
+	filter := bson.M{internal.AttributeID: objectID}
+	updateResult, err := collection.ReplaceOne(ctx, filter, data)
+	if err != nil {
+		return nil, err
+	}
+	if updateResult.ModifiedCount == 0 {
+		return nil, ErrUnknownError
+	}
+	newModel, err := m.GetModel(route)
+	if err != nil {
+		return nil, err
+	}
+	return newModel, nil
 }
 
-func (m *MongoDAO) DeleteModel(route model.Route, dataId string) error {
-	return ErrNotImplemented
+func (m *MongoDAO) DeleteModel(route model.Route) error {
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+	objectID, _ := primitive.ObjectIDFromHex(route.Identity)
+
+	filter := bson.M{internal.AttributeID: objectID}
+	result, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount != 1 {
+		return ErrUnknownError
+	}
+	return nil
 }
 
 // Ping pinging the mongoDao

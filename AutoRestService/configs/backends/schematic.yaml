@@ -1,17 +1,21 @@
-applicationname: schematic
+backendname: schematics
 models:
     - name: schematic
       fields: 
-        - name: manufacturer
+        - name: Manufacturer
           type: string
           mandantory: true
           collection: false
-        - name: model
+        - name: Model
           type: string
           mandantory: true
           collection: false
-        - name: tags
+        - name: Tags
           type: string
+          mandantory: false
+          collection: true
+        - name: Files
+          type: file
           mandantory: false
           collection: true
       indexes:

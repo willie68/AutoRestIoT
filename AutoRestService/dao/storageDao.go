@@ -16,12 +16,13 @@ type StorageDao interface {
 	AddFile(backend string, filename string, reader io.Reader) (string, error)
 	GetFilename(backend string, fileid string) (string, error)
 	GetFile(backend string, fileid string, stream io.Writer) error
+	DeleteFile(backend string, fileid string) error
 
 	CreateModel(route model.Route, data model.JsonMap) (string, error)
 	GetModel(route model.Route) (model.JsonMap, error)
 	Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error)
-	UpdateModel(route model.Route, data model.JsonMap) error
-	DeleteModel(route model.Route, dataID string) error
+	UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error)
+	DeleteModel(route model.Route) error
 
 	CheckUser(username string, password string) bool
 	GetUser(username string) (model.User, bool)

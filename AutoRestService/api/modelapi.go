@@ -146,7 +146,6 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	}
 	route = enrichRouteInformation(request, route)
 	fmt.Printf("PUT: path: %s, route: %s \n", request.URL.Path, route.String())
-	render.JSON(response, request, route)
 	data := &model.JsonMap{}
 
 	if err := render.Decode(request, data); err != nil {
@@ -206,7 +205,21 @@ func DeleteModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	route = enrichRouteInformation(request, route)
 	deleteRef := isDeleteRef(request)
 	fmt.Printf("DELETE: path: %s,  route: %s, delRef: %t  \n", request.URL.Path, route.String(), deleteRef)
-	render.JSON(response, request, route)
+
+	err := worker.Delete(route, deleteRef)
+	if err != nil {
+		if err == dao.ErrNoDocument {
+			render.Render(response, request, ErrNotFound)
+			return
+		}
+		if err == dao.ErrNotImplemented {
+			render.Render(response, request, ErrNotImplemted)
+			return
+		}
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+	MsgResponse(response, http.StatusOK, "model deleted.")
 }
 
 func isDeleteRef(request *http.Request) bool {

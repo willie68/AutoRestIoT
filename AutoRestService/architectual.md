@@ -24,7 +24,7 @@ models:  #definition of the different models
       description: This are the different schematics # a model description
       fields: #definition of the fields/attributes
         - name: manufacturer #name of the field, , no whitespaces or special chars
-          type: string  #int, float, bool, map, id, more to come...
+          type: string  #string, int, float, bool, map, file, more to come...
           mandantory: true #internal validator for present
           collection: false #field is a collection of types 
         - name: model
