@@ -12,6 +12,8 @@ systemID: autorest-srv
 secretfile: configs/secret.yaml
 #where the configuration of the backends are
 backendpath: configs/backends
+#allow data saving without a registered backend
+allowAnonymousBackend: true
 
 logging:
     gelf-url: 

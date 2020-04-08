@@ -10,10 +10,12 @@ import (
 )
 
 var config = Config{
-	Port:       9080,
-	Sslport:    9443,
-	ServiceURL: "http://127.0.0.1",
-	SystemID:   "autorest-srv",
+	Port:                  9080,
+	Sslport:               9443,
+	ServiceURL:            "http://127.0.0.1",
+	SystemID:              "autorest-srv",
+	AllowAnonymousBackend: false,
+
 	HealthCheck: HealthCheck{
 		Period: 30,
 	},

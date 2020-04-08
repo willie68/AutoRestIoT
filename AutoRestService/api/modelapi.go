@@ -54,6 +54,10 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 			render.Render(response, request, ErrNotImplemted)
 			return
 		}
+		if err == worker.ErrBackendNotFound || err == worker.ErrBackendModelNotFound {
+			render.Render(response, request, ErrNotFound)
+			return
+		}
 		render.Render(response, request, ErrInternalServer(err))
 		return
 	}
@@ -203,6 +207,7 @@ func DeleteModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		Identity: modelid,
 	}
 	route = enrichRouteInformation(request, route)
+
 	deleteRef := isDeleteRef(request)
 	fmt.Printf("DELETE: path: %s,  route: %s, delRef: %t  \n", request.URL.Path, route.String(), deleteRef)
 
