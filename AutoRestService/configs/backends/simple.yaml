@@ -15,7 +15,7 @@ models:
         mandantory: false
         collection: false
     indexes:
-      - name: fulltest
+      - name: $fulltext
         fields:
           - title
           - tags

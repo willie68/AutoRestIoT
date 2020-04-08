@@ -24,6 +24,10 @@ type StorageDao interface {
 	UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error)
 	DeleteModel(route model.Route) error
 
+	GetIndexNames(route model.Route) ([]string, error)
+	DeleteIndex(route model.Route, name string) error
+	UpdateIndex(route model.Route, index model.Index) error
+
 	CheckUser(username string, password string) bool
 	GetUser(username string) (model.User, bool)
 	UserInRoles(username string, roles []string) bool

@@ -19,7 +19,7 @@ models:
           mandantory: false
           collection: true
       indexes:
-        - name: fulltext
+        - name: $fulltext
           fields:
             - manufactuer
             - model

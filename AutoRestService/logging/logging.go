@@ -104,7 +104,7 @@ func (s *ServiceLogger) Fatal(msg string) {
 	if s.gelfActive {
 		golf.Crit(msg)
 	}
-	log.Fatalf("Fatal: %s\n", msg)
+	log.Printf("Fatal: %s\n", msg)
 }
 
 // Fatalf logs a message at level Fatal on the standard logger.
@@ -112,7 +112,7 @@ func (s *ServiceLogger) Fatalf(format string, va ...interface{}) {
 	if s.gelfActive {
 		golf.Critf(format, va...)
 	}
-	log.Fatalf("Fatal: %s\n", fmt.Sprintf(format, va...))
+	log.Printf("Fatal: %s\n", fmt.Sprintf(format, va...))
 }
 
 /*
