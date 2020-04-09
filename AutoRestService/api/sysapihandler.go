@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,7 +20,6 @@ const SystemHeader = "X-mcs-system"
 SysAPIKey defining a handler for checking system id and api key
 */
 type SysAPIKey struct {
-	log      *log.Logger
 	SystemID string
 	Apikey   string
 }

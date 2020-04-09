@@ -415,7 +415,8 @@ func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 		log.Alertf("%v", err)
 		return nil, err
 	} else {
-		bemodel[internal.AttributeID] = bemodel[internal.AttributeID].(primitive.ObjectID).Hex()
+		//		bemodel[internal.AttributeID] = bemodel[internal.AttributeID].(primitive.ObjectID).Hex()
+		bemodel, _ = m.convertModel(bemodel)
 		return bemodel, nil
 	}
 }
@@ -639,4 +640,26 @@ func (m *MongoDAO) DropAll() {
 func (m *MongoDAO) Stop() {
 	m.ticker.Stop()
 	m.done <- true
+}
+
+func (m *MongoDAO) convertModel(srcModel model.JsonMap) (model.JsonMap, error) {
+	dstModel := srcModel
+	for k, v := range srcModel {
+		dstModel[k] = m.convertValue(v)
+	}
+	return dstModel, nil
+}
+
+func (m *MongoDAO) convertValue(value interface{}) interface{} {
+	switch v := value.(type) {
+	case primitive.ObjectID:
+		return v.Hex()
+	case primitive.A:
+		items := make([]interface{}, 0)
+		for _, itemValue := range v {
+			items = append(items, m.convertValue(itemValue))
+		}
+		return items
+	}
+	return value
 }

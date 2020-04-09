@@ -8,6 +8,7 @@ package worker
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/willie68/AutoRestIoT/config"
@@ -25,6 +26,14 @@ var ErrBackendNotFound = errors.New("Missing backend")
 
 //ErrBackendModelNotFound backend model with that name was not found
 var ErrBackendModelNotFound = errors.New("Missing backend model")
+
+type ErrValidationError struct {
+	message string
+}
+
+func (p ErrValidationError) Error() string {
+	return p.message
+}
 
 var log logging.ServiceLogger
 
@@ -45,15 +54,109 @@ func CheckRoute(route model.Route) error {
 	return nil
 }
 
-//Validate validates the model against the definition
-func Validate(route model.Route, data model.JsonMap) (bool, error) {
+//Validate validates the model against the definition, and convert attributes, if there is something to convert (like dateTime attributes)
+func Validate(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 	// return false, dao.ErrNotImplemented
 	err := CheckRoute(route)
 	if err != nil {
-		return false, err
+		return nil, err
+	}
+	modelDefinition, ok := model.BackendList.GetModel(route)
+	if !ok || !config.Get().AllowAnonymousBackend {
+		return nil, ErrBackendModelNotFound
+	}
+	log.Info(modelDefinition.Name)
+	// check fieldtypes, eventually convert
+	//TODO check field values
+	for key, value := range data {
+		field, ok := modelDefinition.GetField(key)
+		if !ok {
+			continue
+		}
+		if field.Mandatory {
+			if isEmpty(value) {
+				return nil, ErrValidationError{
+					message: fmt.Sprintf("mandatory field \"%s\" is empty", key),
+				}
+			}
+		}
+
+		if field.Collection {
+			if !isEmpty(value) {
+				//TODO check and convert every array entry
+				if reflect.TypeOf(value).Kind() != reflect.Slice {
+					return nil, ErrValidationError{
+						message: fmt.Sprintf("collection field \"%s\" is not a collection", key),
+					}
+				}
+			}
+		}
+
+		if field.Type == model.FieldTypeBool {
+			switch v := value.(type) {
+			case float64:
+				data[key] = v > 0
+			case int:
+				data[key] = v > 0
+			case bool:
+				data[key] = v
+			}
+		}
+
+		if field.Type == model.FieldTypeTime {
+			switch v := value.(type) {
+			case string:
+				layout := "2006-01-02T15:04:05.000Z07:00"
+				time, err := time.Parse(layout, v)
+				if err != nil {
+					return nil, ErrValidationError{
+						message: fmt.Sprintf("wrong time format: key: \"%s\", err: %v", key, err),
+					}
+				}
+				data[key] = time
+			case float64:
+				data[key] = time.Unix(0, int64(v)*int64(time.Millisecond))
+			}
+		}
 	}
 
-	return true, nil
+	//check mandatory fields
+	for _, field := range modelDefinition.Fields {
+		if field.Mandatory {
+			if isEmpty(data[field.Name]) {
+				return nil, ErrValidationError{
+					message: fmt.Sprintf("mandatory field \"%s\" is empty", field.Name),
+				}
+			}
+		}
+	}
+
+	/*
+		if dat["privateFile"] != nil {
+		}
+			if dat["lastModifiedAt"] != nil {
+			switch v := dat["lastModifiedAt"].(type) {
+			case string:
+				layout := "2006-01-02T15:04:05.000Z"
+				s.LastModifiedAt, _ = time.Parse(layout, v)
+			case float64:
+				s.LastModifiedAt = time.Unix(0, int64(v)*int64(time.Millisecond))
+			}
+		}
+
+	*/
+	return data, nil
+}
+
+func isEmpty(value interface{}) bool {
+	if value == nil {
+		return true
+	}
+	switch v := value.(type) {
+	case string:
+		return v == ""
+	}
+	return false
 }
 
 //Store create a new model

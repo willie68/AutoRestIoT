@@ -8,19 +8,19 @@ application := models.Application{
 					models.Field{
 						Name:       "manufacturer",
 						Type:       "string",
-						Mandantory: true,
+						Mandatory: true,
 						Collection: false,
 					},
 					models.Field{
 						Name:       "model",
 						Type:       "string",
-						Mandantory: true,
+						Mandatory: true,
 						Collection: false,
 					},
 					models.Field{
 						Name:       "tags",
 						Type:       "string",
-						Mandantory: false,
+						Mandatory: false,
 						Collection: true,
 					},
 				},

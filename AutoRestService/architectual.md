@@ -25,15 +25,15 @@ models:  #definition of the different models
       fields: #definition of the fields/attributes
         - name: manufacturer #name of the field, , no whitespaces or special chars
           type: string  #string, int, float, bool, map, file, more to come...
-          mandantory: true #internal validator for present
+          mandatory: true #internal validator for present
           collection: false #field is a collection of types 
         - name: model
           type: string
-          mandantory: true
+          mandatory: true
           collection: false
         - name: tags
           type: string
-          mandantory: false
+          mandatory: false
           collection: true
       indexes:
         - name: fulltext #revered name for the fulltext index

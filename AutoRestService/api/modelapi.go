@@ -48,8 +48,12 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	bemodel := *data
 
 	fmt.Printf("POST: path: %s, route: %s \n", request.URL.Path, route.String())
-	valid, err := worker.Validate(route, bemodel)
+	validModel, err := worker.Validate(route, bemodel)
 	if err != nil {
+		if pe, ok := err.(worker.ErrValidationError); ok {
+			render.Render(response, request, ErrInvalidRequest(pe))
+			return
+		}
 		if err == dao.ErrNotImplemented {
 			render.Render(response, request, ErrNotImplemted)
 			return
@@ -61,11 +65,11 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		render.Render(response, request, ErrInternalServer(err))
 		return
 	}
-	if !valid {
+	if validModel == nil {
 		render.Render(response, request, ErrInvalidRequest(errors.New("data model not valid")))
 		return
 	}
-	bemodel, err = worker.Store(route, bemodel)
+	validModel, err = worker.Store(route, validModel)
 	if err != nil {
 		if err == dao.ErrNotImplemented {
 			render.Render(response, request, ErrNotImplemted)
@@ -75,12 +79,12 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	route.Identity = bemodel[internal.AttributeID].(string)
+	route.Identity = validModel[internal.AttributeID].(string)
 
 	buildLocationHeader(response, request, route)
 
 	render.Status(request, http.StatusCreated)
-	render.JSON(response, request, bemodel)
+	render.JSON(response, request, validModel)
 }
 
 /*
@@ -158,7 +162,7 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	}
 
 	bemodel := *data
-	valid, err := worker.Validate(route, bemodel)
+	validModel, err := worker.Validate(route, bemodel)
 	if err != nil {
 		if err == dao.ErrNotImplemented {
 			render.Render(response, request, ErrNotImplemted)
@@ -167,12 +171,12 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		render.Render(response, request, ErrInternalServer(err))
 		return
 	}
-	if !valid {
+	if validModel == nil {
 		render.Render(response, request, ErrInvalidRequest(errors.New("data model not valid.")))
 		return
 	}
 
-	bemodel, err = worker.Update(route, bemodel)
+	validModel, err = worker.Update(route, validModel)
 	if err != nil {
 		if err == dao.ErrNoDocument {
 			render.Render(response, request, ErrNotFound)
@@ -186,12 +190,12 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	route.Identity = bemodel[internal.AttributeID].(string)
+	route.Identity = validModel[internal.AttributeID].(string)
 
 	buildLocationHeader(response, request, route)
 
 	render.Status(request, http.StatusCreated)
-	render.JSON(response, request, bemodel)
+	render.JSON(response, request, validModel)
 }
 
 /*

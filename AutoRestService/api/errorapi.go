@@ -56,6 +56,15 @@ func ErrInternalServer(err error) render.Renderer {
 	}
 }
 
+func ErrValidationError(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: http.StatusBadRequest,
+		StatusText:     "Validation error.",
+		ErrorText:      err.Error(),
+	}
+}
+
 var ErrNotFound = &ErrResponse{HTTPStatusCode: http.StatusNotFound, StatusText: "Resource not found."}
 var ErrNotImplemted = &ErrResponse{HTTPStatusCode: http.StatusNotImplemented, StatusText: "Not im plemented yet."}
 var ErrForbidden = &ErrResponse{HTTPStatusCode: http.StatusForbidden, StatusText: "endpoint not permitted."}

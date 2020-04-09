@@ -4,15 +4,27 @@ models:
     fields:
       - name: title
         type: string
-        mandantory: true
+        mandatory: true
         collection: false
-      - name: tags
+      - name: array
         type: string
-        mandantory: false
+        mandatory: false
         collection: true
       - name: file
         type: file
-        mandantory: false
+        mandatory: false
+        collection: false
+      - name: date
+        type: time
+        mandatory: false
+        collection: false
+      - name: bool_1
+        type: bool
+        mandatory: false
+        collection: false
+      - name: bool_2
+        type: bool
+        mandatory: false
         collection: false
     indexes:
       - name: $fulltext
@@ -22,6 +34,6 @@ models:
       - name: title
         fields:
           - title
-      - name: tags
+      - name: array
         fields:
-          - tags
+          - array

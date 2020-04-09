@@ -4,19 +4,19 @@ models:
       fields: 
         - name: Manufacturer
           type: string
-          mandantory: true
+          mandatory: true
           collection: false
         - name: Model
           type: string
-          mandantory: true
+          mandatory: true
           collection: false
         - name: Tags
           type: string
-          mandantory: false
+          mandatory: false
           collection: true
         - name: Files
           type: file
-          mandantory: false
+          mandatory: false
           collection: true
       indexes:
         - name: $fulltext

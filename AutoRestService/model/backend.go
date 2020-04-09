@@ -22,6 +22,7 @@ type Model struct {
 const FieldTypeString = "string"
 const FieldTypeInt = "int"
 const FieldTypeFloat = "float"
+const FieldTypeTime = "time"
 const FieldTypeBool = "bool"
 const FieldTypeMap = "map"
 const FieldTypeFile = "file"
@@ -29,7 +30,7 @@ const FieldTypeFile = "file"
 type Field struct {
 	Name       string `yaml: "name" json: "name"`
 	Type       string `yaml: "type" json: "type"`
-	Mandantory bool   `yaml: "mandantory" json: "mandantory"`
+	Mandatory  bool   `yaml: "mandatory" json: "mandatory"`
 	Collection bool   `yaml: "collection" json: "collection"`
 }
 
@@ -132,6 +133,14 @@ func (b *Backend) GetReferencedFiles(modelname string, data JsonMap) ([]string, 
 	return files, nil
 }
 
+func (b *Backends) GetModel(route Route) (Model, bool) {
+	backend, ok := b.Get(route.Backend)
+	if !ok {
+		return Model{}, false
+	}
+	return backend.GetModel(route.Model)
+}
+
 func (b *Backend) GetModel(modelname string) (Model, bool) {
 	for _, model := range b.Models {
 		if model.Name == modelname {
@@ -139,4 +148,13 @@ func (b *Backend) GetModel(modelname string) (Model, bool) {
 		}
 	}
 	return Model{}, false
+}
+
+func (m *Model) GetField(fieldname string) (Field, bool) {
+	for _, field := range m.Fields {
+		if field.Name == fieldname {
+			return field, true
+		}
+	}
+	return Field{}, false
 }
