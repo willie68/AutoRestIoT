@@ -225,7 +225,7 @@ func Update(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 
 	modelData, err := dao.GetStorage().UpdateModel(route, data)
 	if err != nil {
-		fmt.Printf("%v\n")
+		fmt.Printf("%v\n", err)
 		return nil, err
 	}
 	return modelData, nil
