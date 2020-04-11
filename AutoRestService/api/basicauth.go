@@ -17,7 +17,6 @@ func BasicAuth(realm string) func(next http.Handler) http.Handler {
 				basicAuthFailed(w, realm)
 				return
 			}
-			fmt.Printf("user: %s, password: %s\n", user, pass)
 			if !dao.GetStorage().CheckUser(user, pass) {
 				basicAuthFailed(w, realm)
 				return

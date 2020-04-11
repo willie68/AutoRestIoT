@@ -3,7 +3,7 @@ package slicesutils_test
 import (
 	"testing"
 
-	slicesutils "github.com/willie68/AutoRestIoT/internal"
+	"github.com/willie68/AutoRestIoT/internal/slicesutils"
 )
 
 func TestContains(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/willie68/AutoRestIoT/model"
 )
 
-// TagsRoutes getting all routes for the tags endpoint
+// UsersRoutes routes to the user interface
 func UsersRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	router.With(RoleCheck([]string{"admin"})).Get("/", GetUsersEndpoint)
@@ -21,7 +21,7 @@ func UsersRoutes() *chi.Mux {
 	return router
 }
 
-//GetUsersEndpoint getting all tags back. No paging...
+//GetUsersEndpoint getting all user infos
 func GetUsersEndpoint(response http.ResponseWriter, request *http.Request) {
 	users, err := dao.GetStorage().GetUsers()
 	if err != nil {
@@ -31,7 +31,7 @@ func GetUsersEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, users)
 }
 
-//GetUserEndpoint getting all tags back. No paging...
+//GetUserEndpoint getting a user info
 func GetUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	username := chi.URLParam(request, "username")
 	user, ok := dao.GetStorage().GetUser(username)
@@ -44,7 +44,7 @@ func GetUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, user)
 }
 
-//PostUserEndpoint getting all tags back. No paging...
+//PostUserEndpoint adding a new user
 func PostUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	var user model.User
 	err := render.DefaultDecoder(request, &user)
@@ -75,7 +75,7 @@ func PostUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, user)
 }
 
-//PutUserEndpoint getting all tags back. No paging...
+//PutUserEndpoint change password of user
 func PutUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	username := chi.URLParam(request, "username")
 	var user model.User
@@ -109,7 +109,7 @@ func PutUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, user)
 }
 
-//PutUserEndpoint getting all tags back. No paging...
+//DeleteUserEndpoint deleting a user
 func DeleteUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	username := chi.URLParam(request, "username")
 	adminusername, _, _ := request.BasicAuth()

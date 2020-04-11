@@ -22,7 +22,7 @@ func FilesRoutes() *chi.Mux {
 func GetFileHandler(response http.ResponseWriter, request *http.Request) {
 	backend := chi.URLParam(request, "bename")
 	fileID := chi.URLParam(request, "fileId")
-	fmt.Printf("GET: path: %s, be: %s, fileID: %s \n", request.URL.Path, backend, fileID)
+	log.Infof("GET: path: %s, be: %s, fileID: %s", request.URL.Path, backend, fileID)
 	filename, err := dao.GetStorage().GetFilename(backend, fileID)
 	if filename == "" {
 		render.Render(response, request, ErrNotFound)
@@ -39,7 +39,7 @@ func GetFileHandler(response http.ResponseWriter, request *http.Request) {
 //PostFileEndpoint create a new file, return the id
 func PostFileEndpoint(response http.ResponseWriter, request *http.Request) {
 	backend := chi.URLParam(request, "bename")
-	fmt.Printf("POST: path: %s, be: %s\n", request.URL.Path, backend)
+	log.Infof("POST: path: %s, be: %s", request.URL.Path, backend)
 	request.ParseForm()
 	f, fileHeader, err := request.FormFile("file")
 	if err != nil {
@@ -55,9 +55,8 @@ func PostFileEndpoint(response http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
 		return
-	} else {
-		fmt.Printf("fileid: %s\n", fileid)
 	}
+	log.Infof("fileid: %s", fileid)
 
 	location := fmt.Sprintf("/api/v1/files/%s/%s", backend, fileid)
 	response.Header().Add("Location", location)

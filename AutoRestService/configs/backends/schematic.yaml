@@ -21,12 +21,12 @@ models:
       indexes:
         - name: $fulltext
           fields:
-            - manufactuer
-            - model
-            - tags
-        - name: manufacturer
+            - Manufacturer
+            - Model
+            - Tags
+        - name: Manufacturer
           fields:
-            - manufacturer
-        - name: tags
+            - Manufacturer
+        - name: Tags
           fields:
-            - tags
+            - Tags

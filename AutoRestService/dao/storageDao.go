@@ -20,7 +20,7 @@ type StorageDao interface {
 
 	CreateModel(route model.Route, data model.JsonMap) (string, error)
 	GetModel(route model.Route) (model.JsonMap, error)
-	Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error)
+	QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error)
 	UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error)
 	DeleteModel(route model.Route) error
 

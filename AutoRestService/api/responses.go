@@ -6,14 +6,13 @@ import (
 	"net/http"
 )
 
+//
 type SimpleResponseMessage struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`
 }
 
-/*
-Msg writes a response with a message as json
-*/
+//MsgResponse writes a response with a message as json
 func MsgResponse(w http.ResponseWriter, code int, message string) {
 	m := SimpleResponseMessage{
 		Message: message,

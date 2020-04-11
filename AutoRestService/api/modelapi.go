@@ -47,7 +47,7 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 
 	bemodel := *data
 
-	fmt.Printf("POST: path: %s, route: %s \n", request.URL.Path, route.String())
+	log.Infof("POST: path: %s, route: %s \n", request.URL.Path, route.String())
 	validModel, err := worker.Validate(route, bemodel)
 	if err != nil {
 		if pe, ok := err.(worker.ErrValidationError); ok {
@@ -87,31 +87,48 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, validModel)
 }
 
-/*
-GetManyModelsEndpoint getting if a store for a tenant is initialised
-because of the automatic store creation, the value is more likely that data is stored for this tenant
-*/
-func GetManyModelsEndpoint(response http.ResponseWriter, req *http.Request) {
-	offset := req.Context().Value(contextKeyOffset)
-	limit := req.Context().Value(contextKeyLimit)
-	fmt.Printf("GET many: offset: %d, limit: %d\n", offset, limit)
+//GetManyModelsEndpoint searching for a list of model instances
+func GetManyModelsEndpoint(response http.ResponseWriter, request *http.Request) {
+	offset := request.Context().Value(contextKeyOffset)
+	limit := request.Context().Value(contextKeyLimit)
+	log.Infof("GET many: offset: %d, limit: %d", offset, limit)
 
-	backend := chi.URLParam(req, "bename")
-	mymodel := chi.URLParam(req, "model")
+	backend := chi.URLParam(request, "bename")
+	mymodel := chi.URLParam(request, "model")
 	route := model.Route{
 		Backend: backend,
 		Model:   mymodel,
 	}
-	route = enrichRouteInformation(req, route)
-	fmt.Printf("GET many: path: %s, route: %s \n", req.URL.Path, route.String())
+	route = enrichRouteInformation(request, route)
+	log.Infof("GET many: path: %s, route: %s", request.URL.Path, route.String())
 
-	render.JSON(response, req, route)
+	query := request.URL.Query().Get("query")
+
+	log.Infof("query: %s, offset: %d, limit: %d", query, offset, limit)
+	//owner, _, _ := request.BasicAuth()
+
+	n, models, err := worker.Query(route, query, offset.(int), limit.(int))
+	if err != nil {
+		if err == dao.ErrNotImplemented {
+			render.Render(response, request, ErrNotImplemted)
+			return
+		}
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+
+	m := make(map[string]interface{})
+	m["data"] = models
+	m["found"] = n
+	m["count"] = len(models)
+	m["query"] = query
+	m["offset"] = offset
+	m["limit"] = limit
+
+	render.JSON(response, request, m)
 }
 
-/*
-GetManyModelsEndpoint getting if a store for a tenant is initialised
-because of the automatic store creation, the value is more likely that data is stored for this tenant
-*/
+//GetModelEndpoint getting a model with an identifier
 func GetModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	backend := chi.URLParam(request, "bename")
 	mymodel := chi.URLParam(request, "model")
@@ -122,7 +139,7 @@ func GetModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		Identity: modelid,
 	}
 	route = enrichRouteInformation(request, route)
-	fmt.Printf("GET: path: %s, route: %s \n", request.URL.Path, route.String())
+	log.Infof("GET: path: %s, route: %s", request.URL.Path, route.String())
 
 	model, err := worker.Get(route)
 	if err != nil {
@@ -140,9 +157,7 @@ func GetModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, model)
 }
 
-/*
-GetConfigSizeEndpoint size of the store for a tenant
-*/
+//PutModelEndpoint change a model
 func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	backend := chi.URLParam(request, "bename")
 	mymodel := chi.URLParam(request, "model")
@@ -153,7 +168,7 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		Identity: modelid,
 	}
 	route = enrichRouteInformation(request, route)
-	fmt.Printf("PUT: path: %s, route: %s \n", request.URL.Path, route.String())
+	log.Infof("PUT: path: %s, route: %s", request.URL.Path, route.String())
 	data := &model.JsonMap{}
 
 	if err := render.Decode(request, data); err != nil {
@@ -213,7 +228,7 @@ func DeleteModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	route = enrichRouteInformation(request, route)
 
 	deleteRef := isDeleteRef(request)
-	fmt.Printf("DELETE: path: %s,  route: %s, delRef: %t  \n", request.URL.Path, route.String(), deleteRef)
+	log.Infof("DELETE: path: %s,  route: %s, delRef: %t", request.URL.Path, route.String(), deleteRef)
 
 	err := worker.Delete(route, deleteRef)
 	if err != nil {

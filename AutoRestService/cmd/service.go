@@ -222,7 +222,7 @@ func main() {
 		initRegistry()
 	}
 
-	go importData("E:/temp/backup/schematic/dev")
+	//go importData("E:/temp/backup/schematic/dev")
 
 	osc := make(chan os.Signal, 1)
 	signal.Notify(osc, os.Interrupt)

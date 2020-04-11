@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -421,8 +422,67 @@ func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 	}
 }
 
-func (m *MongoDAO) Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
-	return 0, nil, ErrNotImplemented
+//QueryModel query for the right models
+func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+
+	var queryM map[string]interface{}
+	err := json.Unmarshal([]byte(query), &queryM)
+	if err != nil {
+		log.Alertf("%v", err)
+		return 0, nil, err
+	}
+	queryDoc := bson.M{}
+	for k, v := range queryM {
+		if k == "$fulltext" {
+			queryDoc["$text"] = bson.M{"$search": v}
+		} else {
+			switch v := v.(type) {
+			//			case float64:
+			//			case int:
+			//			case bool:
+			case string:
+				queryDoc[k] = bson.M{"$regex": v}
+			}
+			//queryDoc[k] = v
+		}
+	}
+	data, _ := json.Marshal(queryDoc)
+	log.Infof("mongoquery: %s", string(data))
+	n, err := collection.CountDocuments(ctx, queryDoc, &options.CountOptions{Collation: &options.Collation{Locale: "en", Strength: 2}})
+	if err != nil {
+		log.Alertf("%v", err)
+		return 0, nil, err
+	}
+	cursor, err := collection.Find(ctx, queryDoc, &options.FindOptions{Collation: &options.Collation{Locale: "en", Strength: 2}})
+	if err != nil {
+		log.Alertf("%v", err)
+		return 0, nil, err
+	}
+	defer cursor.Close(ctx)
+	models := make([]model.JsonMap, 0)
+	count := 0
+	docs := 0
+	for cursor.Next(ctx) {
+		if count >= offset {
+			if docs < limit {
+				var model model.JsonMap
+				if err = cursor.Decode(&model); err != nil {
+					log.Alertf("%v", err)
+					return 0, nil, err
+				} else {
+					models = append(models, model)
+					docs++
+				}
+			} else {
+				break
+			}
+		}
+		count++
+	}
+	return int(n), models, nil
 }
 
 //UpdateModel updateing an existing datamodel in the mongo db

@@ -269,3 +269,18 @@ func Delete(route model.Route, deleteRef bool) error {
 	}
 	return nil
 }
+
+//Query query for existing models
+func Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
+	err := CheckRoute(route)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	n, dataModels, err := dao.GetStorage().QueryModel(route, query, offset, limit)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return n, dataModels, nil
+}
