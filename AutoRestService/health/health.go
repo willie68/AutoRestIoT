@@ -18,7 +18,6 @@ var log logging.ServiceLogger
 This is the healtchcheck you will have to provide.
 */
 func check() (bool, string) {
-	// TODO implement here your healthcheck.
 	myhealthy = true
 	message := ""
 	err := dao.GetStorage().Ping()

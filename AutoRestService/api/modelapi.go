@@ -22,6 +22,8 @@ ModelRoutes getting all routes for the config endpoint
 func ModelRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	router.With(RoleCheck([]string{"edit"})).Post("/{bename}/{model}/", PostModelEndpoint)
+	//TODO insert bulk import api
+	router.With(RoleCheck([]string{"edit", "read"})).Get("/{bename}/{model}/count", GetModelCountEndpoint)
 	router.With(RoleCheck([]string{"edit", "read"})).With(Paginate).Get("/{bename}/{model}/", GetManyModelsEndpoint)
 	router.With(RoleCheck([]string{"edit", "read"})).Get("/{bename}/{model}/{modelid}", GetModelEndpoint)
 	router.With(RoleCheck([]string{"edit"})).Put("/{bename}/{model}/{modelid}", PutModelEndpoint)
@@ -124,6 +126,36 @@ func GetManyModelsEndpoint(response http.ResponseWriter, request *http.Request) 
 	m["query"] = query
 	m["offset"] = offset
 	m["limit"] = limit
+
+	render.JSON(response, request, m)
+}
+
+//GetModelCountEndpoint getting a model with an identifier
+func GetModelCountEndpoint(response http.ResponseWriter, request *http.Request) {
+	backend := chi.URLParam(request, "bename")
+	mymodel := chi.URLParam(request, "model")
+	route := model.Route{
+		Backend: backend,
+		Model:   mymodel,
+	}
+	route = enrichRouteInformation(request, route)
+	log.Infof("GET count: path: %s, route: %s", request.URL.Path, route.String())
+
+	modelCount, err := worker.GetCount(route)
+	if err != nil {
+		if err == dao.ErrNotImplemented {
+			render.Render(response, request, ErrNotImplemted)
+			return
+		}
+		if err == dao.ErrNoDocument {
+			render.Render(response, request, ErrNotFound)
+			return
+		}
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+	m := make(map[string]interface{})
+	m["found"] = modelCount
 
 	render.JSON(response, request, m)
 }

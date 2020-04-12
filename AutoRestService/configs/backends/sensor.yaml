@@ -1,0 +1,23 @@
+backendname: sensors
+description: sensor model für storing and retrieving sensor data
+models:
+  - name: temperatur
+    fields:
+      - name: temperatur
+        type: float
+        mandatory: true
+        collection: false
+      - name: source
+        type: string
+        mandatory: false
+        collection: false
+    indexes:
+      - name: $fulltext
+        fields:
+          - temperatur
+      - name: source
+        fields:
+          - source
+      - name: temperatur
+        fields:
+          - temperatur

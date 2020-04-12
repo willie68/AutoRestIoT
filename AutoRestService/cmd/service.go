@@ -223,6 +223,7 @@ func main() {
 	}
 
 	//go importData("E:/temp/backup/schematic/dev")
+	go generateTempData()
 
 	osc := make(chan os.Signal, 1)
 	signal.Notify(osc, os.Interrupt)

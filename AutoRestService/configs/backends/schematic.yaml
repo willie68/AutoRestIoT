@@ -1,4 +1,5 @@
 backendname: schematics
+description: Willies World Schematics Database
 models:
     - name: schematic
       fields: 

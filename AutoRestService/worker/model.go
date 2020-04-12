@@ -166,11 +166,6 @@ func Store(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 		return nil, err
 	}
 
-	if data[internal.AttributeID] != nil {
-		//modelid := data["_id"]
-		//		Get(route)
-	}
-
 	// adding system attributes
 	data[internal.AttributeOwner] = route.Username
 	data[internal.AttributeCreated] = time.Now()
@@ -186,6 +181,29 @@ func Store(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 		return nil, err
 	}
 	return modelData, nil
+}
+
+//StoreMany create a bunch of new model
+func StoreMany(route model.Route, datas []model.JsonMap) ([]string, error) {
+	err := CheckRoute(route)
+	if err != nil {
+		return nil, err
+	}
+	now := time.Now()
+	for _, data := range datas {
+
+		// adding system attributes
+		data[internal.AttributeOwner] = route.Username
+		data[internal.AttributeCreated] = now
+		data[internal.AttributeModified] = now
+
+	}
+
+	modelids, err := dao.GetStorage().CreateModels(route, datas)
+	if err != nil {
+		return nil, err
+	}
+	return modelids, nil
 }
 
 func Get(route model.Route) (model.JsonMap, error) {
@@ -283,4 +301,19 @@ func Query(route model.Route, query string, offset int, limit int) (int, []model
 	}
 
 	return n, dataModels, nil
+}
+
+//GetCount query for existing models
+func GetCount(route model.Route) (int, error) {
+	err := CheckRoute(route)
+	if err != nil {
+		return 0, err
+	}
+
+	n, err := dao.GetStorage().CountModel(route)
+	if err != nil {
+		return 0, err
+	}
+
+	return n, nil
 }

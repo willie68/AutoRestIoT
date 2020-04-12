@@ -15,5 +15,5 @@ Liste der Features
 - automatische Anbindung an MQTT Server als Datenquelle
 - Admin Interface zum Anlegen von Usern, Rollen, Backend
 - Admin Interface zur Änderung von Indexen
-- 
+- Attributvalidierung
 

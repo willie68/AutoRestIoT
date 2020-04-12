@@ -19,6 +19,8 @@ type StorageDao interface {
 	DeleteFile(backend string, fileid string) error
 
 	CreateModel(route model.Route, data model.JsonMap) (string, error)
+	CreateModels(route model.Route, datas []model.JsonMap) ([]string, error)
+	CountModel(route model.Route) (int, error)
 	GetModel(route model.Route) (model.JsonMap, error)
 	QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error)
 	UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error)

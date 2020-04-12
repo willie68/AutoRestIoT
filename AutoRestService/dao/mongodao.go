@@ -396,6 +396,30 @@ func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, e
 	return "", ErrUnknownError
 }
 
+//CreateModels creates a bunch of models
+func (m *MongoDAO) CreateModels(route model.Route, datas []model.JsonMap) ([]string, error) {
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+	models := make([]interface{}, 0)
+	for _, data := range datas {
+		models = append(models, data)
+	}
+	result, err := collection.InsertMany(ctx, models, &options.InsertManyOptions{})
+	if err != nil {
+		fmt.Printf("error: %s\n", err.Error())
+		return nil, err
+	}
+	modelids := make([]string, 0)
+	for _, id := range result.InsertedIDs {
+		switch v := id.(type) {
+		case primitive.ObjectID:
+			modelids = append(modelids, v.Hex())
+		}
+	}
+	return modelids, nil
+}
+
 func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 	collectionName := route.GetRouteName()
 	ctx, _ := context.WithTimeout(context.Background(), timeout)
@@ -420,6 +444,23 @@ func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 		bemodel, _ = m.convertModel(bemodel)
 		return bemodel, nil
 	}
+}
+
+//CountModel counting all medelsin this collection
+func (m *MongoDAO) CountModel(route model.Route) (int, error) {
+	collectionName := route.GetRouteName()
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	collection := m.database.Collection(collectionName)
+	n, err := collection.CountDocuments(ctx, bson.M{}, &options.CountOptions{})
+	if err == mongo.ErrNoDocuments {
+		log.Alertf("%v", err)
+		return 0, ErrNoDocument
+	}
+	if err != nil {
+		log.Alertf("%v", err)
+		return 0, err
+	}
+	return int(n), nil
 }
 
 //QueryModel query for the right models
@@ -601,7 +642,7 @@ func (m *MongoDAO) UpdateIndex(route model.Route, index model.Index) error {
 					Value: 1,
 				})
 			}
-			// TODO here must be im pleneted the right language
+			// TODO here must be implemented the right language
 			indexmodel = mongo.IndexModel{
 				Keys:    keys,
 				Options: options.Index().SetName(index.Name).SetCollation(&options.Collation{Locale: "en", Strength: 2}),

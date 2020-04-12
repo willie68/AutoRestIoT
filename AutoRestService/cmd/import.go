@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
@@ -14,6 +15,44 @@ import (
 	"github.com/willie68/AutoRestIoT/worker"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+//var log logging.ServiceLogger
+
+func generateTempData() {
+	route := model.Route{
+		Backend:  "sensors",
+		Model:    "temperatur",
+		Username: "w.klaas@gmx.de",
+		SystemID: "autorest-srv",
+	}
+	rand.Seed(time.Now().UnixNano())
+
+	min := 150
+	max := 300
+
+	c, err := worker.GetCount(route)
+	if err != nil {
+		log.Alertf("%v", err)
+	}
+	datas := make([]model.JsonMap, 0)
+
+	if c < 10000 {
+		for i := 0; i < (10000 - c); i++ {
+
+			n := min + rand.Intn(max-min+1)
+			bemodel := model.JsonMap{}
+
+			bemodel["temperatur"] = float32(n) / 10.0
+			bemodel["source"] = "outdoor/garden"
+			datas = append(datas, bemodel)
+		}
+		ids, err := worker.StoreMany(route, datas)
+		if err != nil {
+			log.Alertf("%v", err)
+		}
+		log.Infof("inserted %d temperatures", len(ids))
+	}
+}
 
 func importData(importPath string) {
 	count := 0
