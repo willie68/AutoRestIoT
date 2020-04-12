@@ -624,7 +624,7 @@ func (m *MongoDAO) UpdateIndex(route model.Route, index model.Index) error {
 		if index.Name == fulltextIndexName {
 			keys := bson.D{}
 			for _, field := range index.Fields {
-				//TODO here must be im plemented the right field type
+				//TODO here must be implemented the right field type
 				keys = append(keys, primitive.E{
 					Key:   field,
 					Value: "text",
