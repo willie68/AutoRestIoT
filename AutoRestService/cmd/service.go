@@ -320,11 +320,9 @@ func initAutoRest() {
 	}
 
 	for _, value := range files {
-		fmt.Printf("path: %s\n", value)
 		data, err := ioutil.ReadFile(value)
 		bemodel := model.Backend{}
 		bemodel.DataSources = make([]model.DataSource, 0)
-		fmt.Printf("file content:\n%s\n", string(data))
 		err = yaml.Unmarshal(data, &bemodel)
 		if err != nil {
 			log.Alertf("%v", err)
@@ -346,7 +344,7 @@ func initAutoRest() {
 		}
 		err = worker.ValidateBackend(bemodel)
 		if err != nil {
-			fmt.Printf("validating backend %s in %s, getting error: %v\n", bemodel.Backendname, value, err)
+			log.Alertf("validating backend %s in %s, getting error: %v", bemodel.Backendname, value, err)
 			break
 		}
 		jsonData, err := json.Marshal(bemodel)
@@ -354,7 +352,7 @@ func initAutoRest() {
 		fmt.Println("--------------------------------------------------------------------------------")
 		err = worker.RegisterBackend(bemodel)
 		if err != nil {
-			log.Alertf("error registering backend %s successfully. %v\n", bemodel.Backendname, err)
+			log.Alertf("error registering backend %s successfully. %v", bemodel.Backendname, err)
 			fmt.Println(err)
 		} else {
 			backendName := model.BackendList.Add(bemodel)

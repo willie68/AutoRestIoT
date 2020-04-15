@@ -41,10 +41,10 @@ type Index struct {
 }
 
 type DataSource struct {
-	Name             string      `yaml: "name" json: "name"`
-	Type             string      `yaml: "type" json: "type"`
-	DestinationModel string      `yaml: "destination" json: "destination"`
-	Config           interface{} `yaml: "config" json: "config"`
+	Name        string      `yaml: "name" json: "name"`
+	Type        string      `yaml: "type" json: "type"`
+	Destination string      `yaml: "destination" json: "destination"`
+	Config      interface{} `yaml: "config" json: "config"`
 }
 
 type DataSourceConfigMQTT struct {

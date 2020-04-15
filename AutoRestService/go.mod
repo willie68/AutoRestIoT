@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/aphistic/golf v0.0.0-20180712155816-02c07f170c5a
 	github.com/aphistic/sweet v0.3.0 // indirect
+	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-chi/chi v4.0.3+incompatible
 	github.com/go-chi/docgen v1.0.5
 	github.com/go-chi/render v1.0.1
