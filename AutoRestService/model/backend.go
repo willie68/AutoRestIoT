@@ -7,9 +7,10 @@ import (
 )
 
 type Backend struct {
-	Backendname string  `yaml: "backendname" json: "backendname"`
-	Description string  `yaml: "description" json: "description"`
-	Models      []Model `yaml: "models" json: "models"`
+	Backendname string       `yaml: "backendname" json: "backendname"`
+	Description string       `yaml: "description" json: "description"`
+	Models      []Model      `yaml: "models" json: "models"`
+	DataSources []DataSource `yaml: "datasources" json: "datasources"`
 }
 
 type Model struct {
@@ -37,6 +38,19 @@ type Field struct {
 type Index struct {
 	Name   string   `yaml: "name" json: "name"`
 	Fields []string `yaml: "fields" json: "fields"`
+}
+
+type DataSource struct {
+	Name             string      `yaml: "name" json: "name"`
+	Type             string      `yaml: "type" json: "type"`
+	DestinationModel string      `yaml: "destination" json: "destination"`
+	Config           interface{} `yaml: "config" json: "config"`
+}
+
+type DataSourceConfigMQTT struct {
+	Broker  string `yaml: "broker" json: "broker"`
+	Topic   string `yaml: "topic" json: "topic"`
+	Payload string `yaml: "payload" json: "payload"`
 }
 
 var ErrModelNotFound = errors.New("model not found")

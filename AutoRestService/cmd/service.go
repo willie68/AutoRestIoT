@@ -323,9 +323,26 @@ func initAutoRest() {
 		fmt.Printf("path: %s\n", value)
 		data, err := ioutil.ReadFile(value)
 		bemodel := model.Backend{}
+		bemodel.DataSources = make([]model.DataSource, 0)
+		fmt.Printf("file content:\n%s\n", string(data))
 		err = yaml.Unmarshal(data, &bemodel)
 		if err != nil {
-			fmt.Println(err)
+			log.Alertf("%v", err)
+			break
+		}
+		for i, dataSource := range bemodel.DataSources {
+			configJson, err := json.Marshal(dataSource.Config)
+			switch dataSource.Type {
+			case "mqtt":
+				var config model.DataSourceConfigMQTT
+				if err = json.Unmarshal(configJson, &config); err != nil {
+					log.Alertf("%v", err)
+				}
+				bemodel.DataSources[i].Config = config
+			default:
+				log.Alertf("unknown message type: %q", dataSource.Type)
+				break
+			}
 		}
 		err = worker.ValidateBackend(bemodel)
 		if err != nil {
