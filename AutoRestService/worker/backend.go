@@ -18,6 +18,26 @@ func RegisterBackend(backend model.Backend) error {
 	models := backend.Models
 	for _, bemodel := range models {
 		indexes := bemodel.Indexes
+		// define stardard fulltext index
+		_, ok := bemodel.GetIndex(dao.FulltextIndexName)
+		if !ok {
+			fulltextIndex := model.Index{
+				Name:   dao.FulltextIndexName,
+				Fields: bemodel.GetFieldNames(),
+			}
+			indexes = append(indexes, fulltextIndex)
+		}
+		// define stardard indexes
+		for _, field := range bemodel.Fields {
+			_, ok := bemodel.GetIndex(dao.FulltextIndexName)
+			if !ok {
+				index := model.Index{
+					Name:   field.Name,
+					Fields: []string{field.Name},
+				}
+				indexes = append(indexes, index)
+			}
+		}
 		// Delete unused indexes
 		route := model.Route{
 			Backend: backend.Backendname,

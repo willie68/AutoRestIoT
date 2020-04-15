@@ -61,3 +61,7 @@ Folgende User mit folgenden Rollen werden automatisch angelegt:
 - Admin, pwd: admin, roles: admin
 - Editor, pwd: editor, roles: edit
 - guest, pwd: guest, roles: read
+
+## Indizes
+
+zur schnelleren Suche definiert das System automatisch diverse Indizes. Zu jedem definierten Attribut wird automatisch ein Index erstellt. Und zusätzlich wird noch ein spezieller Volltextindex über alle definierten Attribute erzeugt. Durch eine eigene Definition von einem Index mit dem gleichen Namen können die automatisch erzeugten Indizes überschrieben werden. Bitte denken Sie daran, dass eine Änderung eines Index nicht möglich ist. Will man einen Index ändern, muss dieser vorher aus dem System gelöscht werden. Entweder per API oder aber direkt auf der Datenbank.

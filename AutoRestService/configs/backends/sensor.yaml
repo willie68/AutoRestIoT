@@ -12,12 +12,3 @@ models:
         mandatory: false
         collection: false
     indexes:
-      - name: $fulltext
-        fields:
-          - temperatur
-      - name: source
-        fields:
-          - source
-      - name: temperatur
-        fields:
-          - temperatur

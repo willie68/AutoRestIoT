@@ -27,7 +27,6 @@ const userReloadPeriod = 1 * time.Hour
 const timeout = 1 * time.Minute
 const attachmentsCollectionName = "attachments"
 const usersCollectionName = "users"
-const fulltextIndexName = "$fulltext"
 
 // MongoDAO a mongodb based dao
 type MongoDAO struct {
@@ -587,7 +586,7 @@ func (m *MongoDAO) GetIndexNames(route model.Route) ([]string, error) {
 		name := index["name"].(string)
 		if !strings.HasPrefix(name, "_") {
 			if name == "$text" {
-				name = fulltextIndexName
+				name = FulltextIndexName
 			}
 			myIndexes = append(myIndexes, name)
 		}
@@ -621,7 +620,7 @@ func (m *MongoDAO) UpdateIndex(route model.Route, index model.Index) error {
 
 	if !slicesutils.Contains(myIndexes, index.Name) {
 		var indexmodel mongo.IndexModel
-		if index.Name == fulltextIndexName {
+		if index.Name == FulltextIndexName {
 			keys := bson.D{}
 			for _, field := range index.Fields {
 				//TODO here must be implemented the right field type

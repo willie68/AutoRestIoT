@@ -158,3 +158,20 @@ func (m *Model) GetField(fieldname string) (Field, bool) {
 	}
 	return Field{}, false
 }
+
+func (m *Model) GetIndex(indexname string) (Index, bool) {
+	for _, index := range m.Indexes {
+		if index.Name == indexname {
+			return index, true
+		}
+	}
+	return Index{}, false
+}
+
+func (m *Model) GetFieldNames() []string {
+	fields := make([]string, 0)
+	for _, field := range m.Fields {
+		fields = append(fields, field.Name)
+	}
+	return fields
+}

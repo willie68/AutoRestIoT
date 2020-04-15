@@ -9,6 +9,8 @@ import (
 	"github.com/willie68/AutoRestIoT/model"
 )
 
+const FulltextIndexName = "$fulltext"
+
 /*
 StorageDao this is the interface which all method implementation of a storage engine has to fulfill
 */
