@@ -45,7 +45,7 @@ var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 
 func main() {
 	flag.Parse()
-	mqtt.DEBUG = log.New(os.Stdout, "", 0)
+	//mqtt.DEBUG = log.New(os.Stdout, "", 0)
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 	opts := mqtt.NewClientOptions().AddBroker(mqttbroker).SetClientID(clientid)
 	opts.SetKeepAlive(2 * time.Second)
@@ -78,9 +78,10 @@ func main() {
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
+		fmt.Printf("sending %d payload: %s\n", i, string(payloadbytes))
 		token := c.Publish(topic, 0, false, payloadbytes)
 		token.Wait()
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	/*
