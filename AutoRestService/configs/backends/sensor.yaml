@@ -12,7 +12,7 @@ models:
         mandatory: false
         collection: false
 datasources:
-  - name: temp_Wohnzimmer
+  - name: temp_wohnzimmer
     type: mqtt
     destination: temperatur
     config: 

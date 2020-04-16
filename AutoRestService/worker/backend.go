@@ -8,6 +8,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/model"
+	"gopkg.in/square/go-jose.v2/json"
 )
 
 //ValidateBackend validate if a backend definition is valid
@@ -40,7 +41,7 @@ func RegisterBackend(backend model.Backend) error {
 func createDatasource(datasource model.DataSource, backendname string) error {
 	switch datasource.Type {
 	case "mqtt":
-		err := registerMQTTTopic(backendname, datasource.Destination, datasource.Config.(model.DataSourceConfigMQTT))
+		err := registerMQTTTopic(datasource.Name, backendname, datasource.Destination, datasource.Config.(model.DataSourceConfigMQTT))
 		if err != nil {
 			return err
 		}
@@ -55,20 +56,32 @@ type MqttDatasource struct {
 	Backend string
 	Model   string
 	Topic   string
+	Payload string
 }
 
 var mqttClients = make([]MqttDatasource, 0)
 
 func f(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
-	log.Infof("model %s.%s", datasource.Backend, datasource.Model)
-	log.Infof("TOPIC: %s\n", msg.Topic())
-	log.Infof("MSG: %s\n", msg.Payload())
+	log.Infof("MODEL: %s.%s TOPIC: %s  MSG: %s", datasource.Backend, datasource.Model, msg.Topic(), msg.Payload())
+	route := model.Route{
+		Backend: datasource.Backend,
+		Model:   datasource.Model,
+	}
+	if datasource.Payload == "application/json" {
+		var data model.JsonMap
+		err := json.Unmarshal(msg.Payload(), &data)
+		if err != nil {
+			log.Alertf("%v", err)
+		} else {
+			Store(route, data)
+		}
+	}
 }
 
-func registerMQTTTopic(backendname string, destinationmodel string, config model.DataSourceConfigMQTT) error {
-	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
+func registerMQTTTopic(clientID string, backendname string, destinationmodel string, config model.DataSourceConfigMQTT) error {
+	//	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
 	mqtt.ERROR = orglog.New(os.Stdout, "ERROR", 0)
-	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID("AutoRestIoT")
+	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(clientID)
 	opts.SetKeepAlive(2 * time.Second)
 	//opts.SetDefaultPublishHandler(f)
 	opts.SetPingTimeout(1 * time.Second)
@@ -85,6 +98,7 @@ func registerMQTTTopic(backendname string, destinationmodel string, config model
 		Backend: backendname,
 		Model:   destinationmodel,
 		Topic:   config.Topic,
+		Payload: config.Payload,
 	}
 	mqttClients = append(mqttClients, datasource)
 
