@@ -19,6 +19,8 @@ datasources:
       broker: tcp://127.0.0.1:1883
       topic: data/temperatur/wohnzimmer
       payload: application/json
+      username: temp
+      password: temp
   - name: temp_kueche
     type: mqtt
     destination: temperatur
@@ -26,3 +28,5 @@ datasources:
       broker: tcp://127.0.0.1:1883
       topic: data/temperatur/kueche
       payload: application/json
+      username: temp
+      password: temp

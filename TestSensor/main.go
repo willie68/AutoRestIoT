@@ -30,12 +30,16 @@ import (
 var mqttbroker string
 var clientid string
 var topic string
+var username string
+var password string
 
 func init() {
 	// variables for parameter override
 	flag.StringVarP(&mqttbroker, "broker", "b", "", "this is the address of the mqtt broker")
 	flag.StringVarP(&clientid, "clientid", "c", "", "this is the client id to use")
 	flag.StringVarP(&topic, "topic", "t", "", "this is the topic to use")
+	flag.StringVarP(&username, "user", "u", "", "username to use")
+	flag.StringVarP(&password, "password", "p", "", "password to use")
 }
 
 var f mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
@@ -51,6 +55,9 @@ func main() {
 	opts.SetKeepAlive(2 * time.Second)
 	opts.SetDefaultPublishHandler(f)
 	opts.SetPingTimeout(1 * time.Second)
+	opts.CredentialsProvider = func() (string, string) {
+		return username, password
+	}
 
 	c := mqtt.NewClient(opts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
@@ -67,7 +74,7 @@ func main() {
 	min := 150
 	max := 300
 
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100000; i++ {
 		payload := make(map[string]interface{})
 		n := min + rand.Intn(max-min+1)
 
@@ -79,9 +86,9 @@ func main() {
 			fmt.Printf("%v\n", err)
 		}
 		fmt.Printf("sending %d payload: %s\n", i, string(payloadbytes))
-		token := c.Publish(topic, 0, false, payloadbytes)
+		token := c.Publish(topic, 1, false, payloadbytes)
 		token.Wait()
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1 * time.Millisecond)
 	}
 
 	/*

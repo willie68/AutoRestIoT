@@ -53,6 +53,7 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 
 type MqttDatasource struct {
 	Client  mqtt.Client
+	Broker  string
 	Backend string
 	Model   string
 	Topic   string
@@ -62,7 +63,7 @@ type MqttDatasource struct {
 var mqttClients = make([]MqttDatasource, 0)
 
 func f(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
-	log.Infof("MODEL: %s.%s TOPIC: %s  MSG: %s", datasource.Backend, datasource.Model, msg.Topic(), msg.Payload())
+	//log.Infof("MODEL: %s.%s TOPIC: %s  MSG: %s", datasource.Backend, datasource.Model, msg.Topic(), msg.Payload())
 	route := model.Route{
 		Backend: datasource.Backend,
 		Model:   datasource.Model,
@@ -78,6 +79,33 @@ func f(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
 	}
 }
 
+func connectLost(datasource MqttDatasource, c mqtt.Client, e error) {
+	connected := false
+	for !connected {
+		token := c.Connect()
+		token.Wait()
+		err := token.Error()
+		if err != nil {
+			log.Alertf("%v", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		token = c.Subscribe(datasource.Topic, 0, func(c mqtt.Client, m mqtt.Message) {
+			f(datasource, c, m)
+		})
+		token.Wait()
+		err = token.Error()
+		if err != nil {
+			log.Alertf("%v", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		connected = true
+	}
+	log.Infof("registering topic %s on %s for model %s", datasource.Topic, datasource.Broker, datasource.Model)
+}
+
 func registerMQTTTopic(clientID string, backendname string, destinationmodel string, config model.DataSourceConfigMQTT) error {
 	//	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
 	mqtt.ERROR = orglog.New(os.Stdout, "ERROR", 0)
@@ -85,6 +113,22 @@ func registerMQTTTopic(clientID string, backendname string, destinationmodel str
 	opts.SetKeepAlive(2 * time.Second)
 	//opts.SetDefaultPublishHandler(f)
 	opts.SetPingTimeout(1 * time.Second)
+	opts.AutoReconnect = true
+	datasource := MqttDatasource{
+		Broker:  config.Broker,
+		Backend: backendname,
+		Model:   destinationmodel,
+		Topic:   config.Topic,
+		Payload: config.Payload,
+	}
+	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+		connectLost(datasource, c, err)
+	})
+	if config.Username != "" {
+		opts.CredentialsProvider = func() (string, string) {
+			return config.Username, config.Password
+		}
+	}
 
 	c := mqtt.NewClient(opts)
 	token := c.Connect()
@@ -93,15 +137,9 @@ func registerMQTTTopic(clientID string, backendname string, destinationmodel str
 	if err != nil {
 		return err
 	}
-	datasource := MqttDatasource{
-		Client:  c,
-		Backend: backendname,
-		Model:   destinationmodel,
-		Topic:   config.Topic,
-		Payload: config.Payload,
-	}
 	mqttClients = append(mqttClients, datasource)
 
+	datasource.Client = c
 	token = c.Subscribe(config.Topic, 0, func(c mqtt.Client, m mqtt.Message) {
 		f(datasource, c, m)
 	})

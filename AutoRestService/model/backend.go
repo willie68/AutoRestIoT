@@ -48,9 +48,11 @@ type DataSource struct {
 }
 
 type DataSourceConfigMQTT struct {
-	Broker  string `yaml: "broker" json: "broker"`
-	Topic   string `yaml: "topic" json: "topic"`
-	Payload string `yaml: "payload" json: "payload"`
+	Broker   string `yaml: "broker" json: "broker"`
+	Topic    string `yaml: "topic" json: "topic"`
+	Payload  string `yaml: "payload" json: "payload"`
+	Username string `yaml: "username" json: "username"`
+	Password string `yaml: "password" json: "password"`
 }
 
 var ErrModelNotFound = errors.New("model not found")
