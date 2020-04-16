@@ -1,13 +1,11 @@
 package worker
 
 import (
-	orglog "log"
-	"os"
 	"time"
 
 	"encoding/json"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/goiiot/libmqtt"
 	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/model"
 )
@@ -53,7 +51,7 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 }
 
 type MqttDatasource struct {
-	Client  mqtt.Client
+	Client  libmqtt.Client
 	Broker  string
 	Backend string
 	Model   string
@@ -63,7 +61,7 @@ type MqttDatasource struct {
 
 var mqttClients = make([]MqttDatasource, 0)
 
-func f(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
+func storeMessage(datasource MqttDatasource, topic string, msg []byte) {
 	//log.Infof("MODEL: %s.%s TOPIC: %s  MSG: %s", datasource.Backend, datasource.Model, msg.Topic(), msg.Payload())
 	route := model.Route{
 		Backend: datasource.Backend,
@@ -71,7 +69,7 @@ func f(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
 	}
 	if datasource.Payload == "application/json" {
 		var data model.JsonMap
-		err := json.Unmarshal(msg.Payload(), &data)
+		err := json.Unmarshal(msg, &data)
 		if err != nil {
 			log.Alertf("%v", err)
 		} else {
@@ -80,92 +78,72 @@ func f(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
 	}
 }
 
-func connectLost(datasource MqttDatasource, c mqtt.Client, e error) {
-	connected := false
-	for !connected {
-		err := reconnect(c)
-		if err != nil {
-			log.Alertf("%v", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		connected = c.IsConnected()
-	}
-
-	subscribed := false
-	for !subscribed {
-		if !c.IsConnected() {
-			reconnect(c)
-		}
-		token := c.Subscribe(datasource.Topic, 0, func(c mqtt.Client, m mqtt.Message) {
-			f(datasource, c, m)
-		})
-		token.Wait()
-		err := token.Error()
-		if err != nil {
-			log.Alertf("%v", err)
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		subscribed = true
-	}
-	log.Infof("registering topic %s on %s for model %s", datasource.Topic, datasource.Broker, datasource.Model)
-}
-
-func reconnect(c mqtt.Client) error {
-	if !c.IsConnected() {
-		token := c.Connect()
-		token.Wait()
-		err := token.Error()
-		return err
-	}
-	return nil
-}
-
 func registerMQTTTopic(clientID string, backendname string, destinationmodel string, config model.DataSourceConfigMQTT) error {
 	//	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
-	mqtt.ERROR = orglog.New(os.Stdout, "ERROR", 0)
-	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(clientID)
-	opts.SetKeepAlive(2 * time.Second)
-	//opts.SetDefaultPublishHandler(f)
-	opts.SetPingTimeout(1 * time.Second)
-	opts.AutoReconnect = true
+	client, err := libmqtt.NewClient(
+		// try MQTT 5.0 and fallback to MQTT 3.1.1
+		libmqtt.WithVersion(libmqtt.V5, true),
+		// enable keepalive (10s interval) with 20% tolerance
+		libmqtt.WithKeepalive(10, 1.2),
+		// enable auto reconnect and set backoff strategy
+		libmqtt.WithAutoReconnect(true),
+		libmqtt.WithBackoffStrategy(time.Second, 5*time.Second, 1.2),
+		libmqtt.WithIdentity(config.Username, config.Password),
+		libmqtt.WithConnHandleFunc(func(client libmqtt.Client, server string, code byte, err error) {
+			if err != nil {
+				log.Alertf("connect to server [%v] failed: %v", server, err)
+				return
+			}
+
+			if code != libmqtt.CodeSuccess {
+				log.Alertf("connect to server [%v] failed with server code [%v]", server, code)
+				return
+			}
+
+			go subscribe(config.Topic, client)
+		}),
+		libmqtt.WithNetHandleFunc(netHandler),
+		libmqtt.WithSubHandleFunc(subHandler),
+		libmqtt.WithUnsubHandleFunc(unSubHandler),
+		libmqtt.WithPubHandleFunc(pubHandler),
+		libmqtt.WithPersistHandleFunc(persistHandler),
+	)
+
+	if err != nil {
+		return err
+	}
+
 	datasource := MqttDatasource{
+		Client:  client,
 		Broker:  config.Broker,
 		Backend: backendname,
 		Model:   destinationmodel,
 		Topic:   config.Topic,
 		Payload: config.Payload,
 	}
-	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		connectLost(datasource, c, err)
-	})
-	if config.Username != "" {
-		opts.CredentialsProvider = func() (string, string) {
-			return config.Username, config.Password
-		}
-	}
 
-	c := mqtt.NewClient(opts)
-	token := c.Connect()
-	token.Wait()
-	err := token.Error()
-	if err != nil {
-		return err
-	}
+	// handle every subscribed message (just for example)
+	client.HandleTopic(config.Topic, func(client libmqtt.Client, topic string, qos libmqtt.QosLevel, msg []byte) {
+		//log.Infof("[%v] message: %v", topic, string(msg))
+		storeMessage(datasource, topic, msg)
+	})
+
+	err = client.ConnectServer(config.Broker)
+
 	mqttClients = append(mqttClients, datasource)
 
-	datasource.Client = c
-	token = c.Subscribe(config.Topic, 0, func(c mqtt.Client, m mqtt.Message) {
-		f(datasource, c, m)
-	})
-	token.Wait()
-	err = token.Error()
-	if err != nil {
-		return err
-	}
 	log.Infof("registering topic %s on %s for model %s", config.Topic, config.Broker, destinationmodel)
 	return nil
+}
+
+func subscribe(topic string, client libmqtt.Client) {
+	go func() {
+		// subscribe to some topics
+		client.Subscribe(&libmqtt.Topic{
+			Name: topic,
+			Qos:  libmqtt.Qos1,
+		})
+	}()
 }
 
 func createIndex(bemodel model.Model, backendname string) error {
@@ -218,4 +196,49 @@ func createIndex(bemodel model.Model, backendname string) error {
 		}
 	}
 	return nil
+}
+
+func netHandler(client libmqtt.Client, server string, err error) {
+	if err != nil {
+		log.Alertf("error happened to connection to server [%v]: %v", server, err)
+	}
+}
+
+func persistHandler(client libmqtt.Client, packet libmqtt.Packet, err error) {
+	if err != nil {
+		log.Alertf("session persist error: %v", err)
+	}
+}
+
+func subHandler(client libmqtt.Client, topics []*libmqtt.Topic, err error) {
+	if err != nil {
+		for _, t := range topics {
+			log.Alertf("subscribe to topic [%v] failed: %v", t.Name, err)
+		}
+	} else {
+		for _, t := range topics {
+			log.Infof("subscribe to topic [%v] success: %v", t.Name, err)
+		}
+	}
+}
+
+func unSubHandler(client libmqtt.Client, topic []string, err error) {
+	if err != nil {
+		// handle unsubscribe failure
+		for _, t := range topic {
+			log.Alertf("unsubscribe to topic [%v] failed: %v", t, err)
+		}
+	} else {
+		for _, t := range topic {
+			log.Alertf("unsubscribe to topic [%v] failed: %v", t, err)
+		}
+	}
+}
+
+func pubHandler(client libmqtt.Client, topic string, err error) {
+	if err != nil {
+		log.Alertf("publish packet to topic [%v] failed: %v", topic, err)
+	} else {
+		log.Infof("publish packet to topic [%v] success: %v", topic, err)
+	}
 }

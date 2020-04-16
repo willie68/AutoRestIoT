@@ -10,6 +10,7 @@ require (
 	github.com/go-chi/docgen v1.0.5
 	github.com/go-chi/render v1.0.1
 	github.com/go-delve/delve v1.4.0 // indirect
+	github.com/goiiot/libmqtt v0.9.5
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/hashicorp/consul v1.7.1 // indirect
 	github.com/hashicorp/consul/api v1.4.0
