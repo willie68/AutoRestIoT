@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"fmt"
 	orglog "log"
 	"os"
 	"time"
@@ -53,7 +54,8 @@ func RegisterBackend(backend model.Backend) error {
 func createDatasource(datasource model.DataSource, backendname string) error {
 	switch datasource.Type {
 	case "mqtt":
-		err := mqttRegisterTopic(datasource.Name, backendname, datasource.Destination, datasource.Config.(model.DataSourceConfigMQTT))
+		clientID := fmt.Sprintf("autorestIoT.%s", datasource.Name)
+		err := mqttRegisterTopic(clientID, backendname, datasource.Destination, datasource.Config.(model.DataSourceConfigMQTT))
 		if err != nil {
 			return err
 		}
