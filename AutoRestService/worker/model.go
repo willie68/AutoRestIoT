@@ -130,21 +130,6 @@ func Validate(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 			}
 		}
 	}
-
-	/*
-		if dat["privateFile"] != nil {
-		}
-			if dat["lastModifiedAt"] != nil {
-			switch v := dat["lastModifiedAt"].(type) {
-			case string:
-				layout := "2006-01-02T15:04:05.000Z"
-				s.LastModifiedAt, _ = time.Parse(layout, v)
-			case float64:
-				s.LastModifiedAt = time.Unix(0, int64(v)*int64(time.Millisecond))
-			}
-		}
-
-	*/
 	return data, nil
 }
 
@@ -206,6 +191,7 @@ func StoreMany(route model.Route, datas []model.JsonMap) ([]string, error) {
 	return modelids, nil
 }
 
+//Get getting one model
 func Get(route model.Route) (model.JsonMap, error) {
 	err := CheckRoute(route)
 	if err != nil {

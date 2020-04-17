@@ -469,11 +469,16 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 	collection := m.database.Collection(collectionName)
 
 	var queryM map[string]interface{}
-	err := json.Unmarshal([]byte(query), &queryM)
-	if err != nil {
-		log.Alertf("%v", err)
-		return 0, nil, err
+	if query == "" {
+		queryM = make(map[string]interface{})
+	} else {
+		err := json.Unmarshal([]byte(query), &queryM)
+		if err != nil {
+			log.Alertf("%v", err)
+			return 0, nil, err
+		}
 	}
+
 	queryDoc := bson.M{}
 	for k, v := range queryM {
 		if k == "$fulltext" {
