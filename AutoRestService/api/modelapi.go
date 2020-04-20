@@ -77,6 +77,10 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 			render.Render(response, request, ErrNotImplemted)
 			return
 		}
+		if err == dao.ErrUniqueIndexError {
+			render.Render(response, request, ErrUniqueIndexError)
+			return
+		}
 		render.Render(response, request, ErrInternalServer(err))
 		return
 	}

@@ -25,11 +25,7 @@ models:
             - Manufacturer
             - Model
             - Tags
-        - name: Manufacturer
+        - name: Foreignid
           unique: true
           fields:
-            - Manufacturer
-        - name: Tags
-          unique: true
-          fields:
-            - Tags
+            - Foreignid

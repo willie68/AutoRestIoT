@@ -385,6 +385,12 @@ func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, e
 	collection := m.database.Collection(collectionName)
 	result, err := collection.InsertOne(ctx, data)
 	if err != nil {
+		switch v := err.(type) {
+		case mongo.WriteException:
+			if v.WriteErrors[0].Code == 11000 {
+				return "", ErrUniqueIndexError
+			}
+		}
 		fmt.Printf("error: %s\n", err.Error())
 		return "", err
 	}

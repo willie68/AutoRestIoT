@@ -347,9 +347,9 @@ func initAutoRest() {
 			log.Alertf("validating backend %s in %s, getting error: %v", bemodel.Backendname, value, err)
 			break
 		}
-		jsonData, err := json.Marshal(bemodel)
-		fmt.Println(string(jsonData))
-		fmt.Println("--------------------------------------------------------------------------------")
+		//		jsonData, err := json.Marshal(bemodel)
+		//		fmt.Println(string(jsonData))
+		//		fmt.Println("--------------------------------------------------------------------------------")
 		err = worker.RegisterBackend(bemodel)
 		if err != nil {
 			log.Alertf("error registering backend %s successfully. %v", bemodel.Backendname, err)

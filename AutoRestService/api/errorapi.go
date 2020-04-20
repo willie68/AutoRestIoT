@@ -59,4 +59,5 @@ func ErrValidationError(err error) render.Renderer {
 
 var ErrNotFound = &ErrResponse{HTTPStatusCode: http.StatusNotFound, StatusText: "Resource not found."}
 var ErrNotImplemted = &ErrResponse{HTTPStatusCode: http.StatusNotImplemented, StatusText: "Not im plemented yet."}
+var ErrUniqueIndexError = &ErrResponse{HTTPStatusCode: http.StatusBadRequest, StatusText: "Unique index violation."}
 var ErrForbidden = &ErrResponse{HTTPStatusCode: http.StatusForbidden, StatusText: "endpoint not permitted."}
