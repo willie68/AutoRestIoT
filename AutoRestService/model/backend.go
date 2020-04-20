@@ -37,6 +37,7 @@ type Field struct {
 
 type Index struct {
 	Name   string   `yaml: "name" json: "name"`
+	Unique bool     `yaml: "unique" json: "unique"`
 	Fields []string `yaml: "fields" json: "fields"`
 }
 

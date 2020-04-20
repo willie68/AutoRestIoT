@@ -647,9 +647,13 @@ func (m *MongoDAO) UpdateIndex(route model.Route, index model.Index) error {
 				})
 			}
 			// TODO here must be implemented the right language
+			idxOptions := options.Index().SetName(index.Name).SetCollation(&options.Collation{Locale: "en", Strength: 2})
+			if index.Unique {
+				idxOptions = idxOptions.SetUnique(true)
+			}
 			indexmodel = mongo.IndexModel{
 				Keys:    keys,
-				Options: options.Index().SetName(index.Name).SetCollation(&options.Collation{Locale: "en", Strength: 2}),
+				Options: idxOptions,
 			}
 		}
 
