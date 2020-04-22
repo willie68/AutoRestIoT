@@ -17,16 +17,18 @@ datasources:
     destination: temperatur
     config: 
       broker: 127.0.0.1:1883
-      topic: data/temperatur/wohnzimmer
+      topic: stat/temperatur/wohnzimmer
       payload: application/json
       username: temp
       password: temp
+      addTopicAsAttribute: topic
   - name: temp_kueche
     type: mqtt
     destination: temperatur
     config: 
       broker: 127.0.0.1:1883
-      topic: data/temperatur/kueche
+      topic: stat/temperatur/kueche
       payload: application/json
       username: temp
       password: temp
+      addTopicAsAttribute: topic

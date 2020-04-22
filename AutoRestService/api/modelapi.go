@@ -41,7 +41,7 @@ func PostModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		Model:   mymodel,
 	}
 	route = enrichRouteInformation(request, route)
-	data := &model.JsonMap{}
+	data := &model.JSONMap{}
 
 	if err := render.Decode(request, data); err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
@@ -206,7 +206,7 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	}
 	route = enrichRouteInformation(request, route)
 	log.Infof("PUT: path: %s, route: %s", request.URL.Path, route.String())
-	data := &model.JsonMap{}
+	data := &model.JSONMap{}
 
 	if err := render.Decode(request, data); err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))

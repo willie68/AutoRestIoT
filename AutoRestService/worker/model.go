@@ -55,7 +55,7 @@ func CheckRoute(route model.Route) error {
 }
 
 //Validate validates the model against the definition, and convert attributes, if there is something to convert (like dateTime attributes)
-func Validate(route model.Route, data model.JsonMap) (model.JsonMap, error) {
+func Validate(route model.Route, data model.JSONMap) (model.JSONMap, error) {
 	// return false, dao.ErrNotImplemented
 	err := CheckRoute(route)
 	if err != nil {
@@ -145,7 +145,7 @@ func isEmpty(value interface{}) bool {
 }
 
 //Store create a new model
-func Store(route model.Route, data model.JsonMap) (model.JsonMap, error) {
+func Store(route model.Route, data model.JSONMap) (model.JSONMap, error) {
 	err := CheckRoute(route)
 	if err != nil {
 		return nil, err
@@ -169,7 +169,7 @@ func Store(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 }
 
 //StoreMany create a bunch of new model
-func StoreMany(route model.Route, datas []model.JsonMap) ([]string, error) {
+func StoreMany(route model.Route, datas []model.JSONMap) ([]string, error) {
 	err := CheckRoute(route)
 	if err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ func StoreMany(route model.Route, datas []model.JsonMap) ([]string, error) {
 }
 
 //Get getting one model
-func Get(route model.Route) (model.JsonMap, error) {
+func Get(route model.Route) (model.JSONMap, error) {
 	err := CheckRoute(route)
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func Get(route model.Route) (model.JsonMap, error) {
 }
 
 //Update update an existing model
-func Update(route model.Route, data model.JsonMap) (model.JsonMap, error) {
+func Update(route model.Route, data model.JSONMap) (model.JSONMap, error) {
 	err := CheckRoute(route)
 	if err != nil {
 		return nil, err
@@ -275,7 +275,7 @@ func Delete(route model.Route, deleteRef bool) error {
 }
 
 //Query query for existing models
-func Query(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
+func Query(route model.Route, query string, offset int, limit int) (int, []model.JSONMap, error) {
 	err := CheckRoute(route)
 	if err != nil {
 		return 0, nil, err

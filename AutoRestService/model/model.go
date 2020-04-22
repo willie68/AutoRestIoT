@@ -1,3 +1,4 @@
 package model
 
-type JsonMap map[string]interface{}
+//JSONMap structure for json objects
+type JSONMap map[string]interface{}

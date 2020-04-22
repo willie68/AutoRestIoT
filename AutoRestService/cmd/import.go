@@ -34,13 +34,13 @@ func generateTempData() {
 	if err != nil {
 		log.Alertf("%v", err)
 	}
-	datas := make([]model.JsonMap, 0)
+	datas := make([]model.JSONMap, 0)
 
 	if c < 10000 {
 		for i := 0; i < (10000 - c); i++ {
 
 			n := min + rand.Intn(max-min+1)
-			bemodel := model.JsonMap{}
+			bemodel := model.JSONMap{}
 
 			bemodel["temperatur"] = float32(n) / 10.0
 			bemodel["source"] = "outdoor/garden"
@@ -86,7 +86,7 @@ func importData(importPath string) {
 							fileids = append(fileids, fileid)
 						}
 					}
-					bemodel := model.JsonMap{}
+					bemodel := model.JSONMap{}
 
 					bemodel["Foreignid"] = schematic.ID.Hex()
 					bemodel["Description"] = schematic.Description

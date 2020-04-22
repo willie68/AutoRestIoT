@@ -21,12 +21,12 @@ type StorageDao interface {
 	GetFile(backend string, fileid string, stream io.Writer) error
 	DeleteFile(backend string, fileid string) error
 
-	CreateModel(route model.Route, data model.JsonMap) (string, error)
-	CreateModels(route model.Route, datas []model.JsonMap) ([]string, error)
+	CreateModel(route model.Route, data model.JSONMap) (string, error)
+	CreateModels(route model.Route, datas []model.JSONMap) ([]string, error)
 	CountModel(route model.Route) (int, error)
-	GetModel(route model.Route) (model.JsonMap, error)
-	QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error)
-	UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error)
+	GetModel(route model.Route) (model.JSONMap, error)
+	QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JSONMap, error)
+	UpdateModel(route model.Route, data model.JSONMap) (model.JSONMap, error)
 	DeleteModel(route model.Route) error
 
 	GetIndexNames(route model.Route) ([]string, error)

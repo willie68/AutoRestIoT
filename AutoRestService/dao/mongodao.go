@@ -136,7 +136,7 @@ func (m *MongoDAO) reloadUsers() {
 
 // AddFile adding a file to the storage, stream like
 func (m *MongoDAO) AddFile(backend string, filename string, reader io.Reader) (string, error) {
-	uploadOpts := options.GridFSUpload().SetMetadata(bson.D{{"backend", backend}})
+	uploadOpts := options.GridFSUpload().SetMetadata(bson.D{{Key: "backend", Value: backend}})
 
 	fileID, err := m.bucket.UploadFromStream(filename, reader, uploadOpts)
 	if err != nil {
@@ -373,7 +373,7 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 	defer cancel()
 	collection := m.database.Collection(usersCollectionName)
 	filter := bson.M{"name": username}
-	update := bson.D{{"$set", bson.D{{"password", newpassword}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "password", Value: newpassword}}}}
 	result := collection.FindOneAndUpdate(ctx, filter, update)
 	if result.Err() != nil {
 		fmt.Printf("error: %s\n", result.Err().Error())
@@ -384,7 +384,7 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 }
 
 //CreateModel creating a new model
-func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, error) {
+func (m *MongoDAO) CreateModel(route model.Route, data model.JSONMap) (string, error) {
 	collectionName := route.GetRouteName()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -408,7 +408,7 @@ func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, e
 }
 
 //CreateModels creates a bunch of models
-func (m *MongoDAO) CreateModels(route model.Route, datas []model.JsonMap) ([]string, error) {
+func (m *MongoDAO) CreateModels(route model.Route, datas []model.JSONMap) ([]string, error) {
 	collectionName := route.GetRouteName()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -433,7 +433,7 @@ func (m *MongoDAO) CreateModels(route model.Route, datas []model.JsonMap) ([]str
 }
 
 //GetModel getting requested model from the storage
-func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
+func (m *MongoDAO) GetModel(route model.Route) (model.JSONMap, error) {
 	collectionName := route.GetRouteName()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -449,7 +449,7 @@ func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 		log.Alertf("%v", err)
 		return nil, err
 	}
-	var bemodel model.JsonMap
+	var bemodel model.JSONMap
 	if err := result.Decode(&bemodel); err != nil {
 		log.Alertf("%v", err)
 		return nil, err
@@ -478,7 +478,7 @@ func (m *MongoDAO) CountModel(route model.Route) (int, error) {
 }
 
 //QueryModel query for the right models
-func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
+func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JSONMap, error) {
 	collectionName := route.GetRouteName()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -523,13 +523,13 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 		return 0, nil, err
 	}
 	defer cursor.Close(ctx)
-	models := make([]model.JsonMap, 0)
+	models := make([]model.JSONMap, 0)
 	count := 0
 	docs := 0
 	for cursor.Next(ctx) {
 		if count >= offset {
 			if docs < limit {
-				var model model.JsonMap
+				var model model.JSONMap
 				if err = cursor.Decode(&model); err != nil {
 					log.Alertf("%v", err)
 					return 0, nil, err
@@ -546,7 +546,7 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 }
 
 //UpdateModel updateing an existing datamodel in the mongo db
-func (m *MongoDAO) UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error) {
+func (m *MongoDAO) UpdateModel(route model.Route, data model.JSONMap) (model.JSONMap, error) {
 	collectionName := route.GetRouteName()
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -771,7 +771,7 @@ func (m *MongoDAO) Stop() {
 	m.done <- true
 }
 
-func (m *MongoDAO) convertModel(srcModel model.JsonMap) (model.JsonMap, error) {
+func (m *MongoDAO) convertModel(srcModel model.JSONMap) (model.JSONMap, error) {
 	dstModel := srcModel
 	for k, v := range srcModel {
 		dstModel[k] = m.convertValue(v)

@@ -1,0 +1,65 @@
+backendname: effects
+description: Willies World Effects Database
+models:
+    - name: effects
+      fields: 
+        - name: manufacturer
+          type: string
+          mandatory: true
+          collection: false
+        - name: effectType
+          type: string
+          mandatory: true
+          collection: false
+        - name: model
+          type: string
+          mandatory: true
+          collection: false
+        - name: comment
+          type: string
+          mandatory: true
+          collection: false
+        - name: image
+          type: file
+          mandatory: false
+          collection: false
+        - name: connector
+          type: string
+          mandatory: false
+          collection: false
+        - name: voltage
+          type: string
+          mandatory: false
+          collection: false
+        - name: current
+          type: string
+          mandatory: false
+          collection: false
+      indexes:
+        - name: $fulltext
+          fields:
+            - manufacturer
+            - effectType
+            - model
+            - comment
+            - voltage
+            - current
+    - name: effectTypes
+      fields: 
+        - name: typeName
+          type: string
+          mandatory: true
+          collection: false
+        - name: nls
+          type: map
+          mandatory: false
+          collection: false
+        - name: typeImage
+          type: file
+          mandatory: false
+          collection: false
+      indexes:
+        - name: $fulltext
+          fields:
+            - typeName
+            - nls

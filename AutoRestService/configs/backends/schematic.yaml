@@ -29,3 +29,25 @@ models:
           unique: true
           fields:
             - Foreignid
+    - name: manufacturers
+      fields: 
+        - name: name
+          type: string
+          mandatory: true
+          collection: false
+      indexes:
+        - name: name
+          unique: true
+          fields:
+            - name
+    - name: tags
+      fields: 
+        - name: name
+          type: string
+          mandatory: true
+          collection: false
+      indexes:
+        - name: name
+          unique: true
+          fields:
+            - name

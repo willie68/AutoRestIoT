@@ -13,6 +13,18 @@ import (
 	"github.com/willie68/AutoRestIoT/model"
 )
 
+type MqttDatasource struct {
+	Client         mqtt.Client
+	Broker         string
+	Backend        string
+	Model          string
+	Topic          string
+	Payload        string
+	TopicAttribute string
+}
+
+var mqttClients = make([]MqttDatasource, 0)
+
 func init() {
 	//	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
 	mqtt.ERROR = orglog.New(os.Stdout, "ERROR", 0)
@@ -65,17 +77,6 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 	return nil
 }
 
-type MqttDatasource struct {
-	Client  mqtt.Client
-	Broker  string
-	Backend string
-	Model   string
-	Topic   string
-	Payload string
-}
-
-var mqttClients = make([]MqttDatasource, 0)
-
 func mqttStoreMessage(datasource MqttDatasource, client mqtt.Client, msg mqtt.Message) {
 	//log.Infof("MODEL: %s.%s TOPIC: %s  MSG: %s", datasource.Backend, datasource.Model, msg.Topic(), msg.Payload())
 	route := model.Route{
@@ -83,8 +84,11 @@ func mqttStoreMessage(datasource MqttDatasource, client mqtt.Client, msg mqtt.Me
 		Model:   datasource.Model,
 	}
 	if datasource.Payload == "application/json" {
-		var data model.JsonMap
+		var data model.JSONMap
 		err := json.Unmarshal(msg.Payload(), &data)
+		if datasource.TopicAttribute != "" {
+			data[datasource.TopicAttribute] = datasource.Topic
+		}
 		if err != nil {
 			log.Alertf("%v", err)
 		} else {
@@ -147,12 +151,14 @@ func mqttRegisterTopic(clientID string, backendname string, destinationmodel str
 	opts.SetPingTimeout(1 * time.Second)
 	opts.AutoReconnect = true
 	datasource := MqttDatasource{
-		Broker:  config.Broker,
-		Backend: backendname,
-		Model:   destinationmodel,
-		Topic:   config.Topic,
-		Payload: config.Payload,
+		Broker:         config.Broker,
+		Backend:        backendname,
+		Model:          destinationmodel,
+		Topic:          config.Topic,
+		Payload:        config.Payload,
+		TopicAttribute: config.AddTopicAsAttribute,
 	}
+
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
 		mqttConnectionLost(datasource, c, err)
 	})
