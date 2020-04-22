@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-//
+//SimpleResponseMessage a simple message as response
 type SimpleResponseMessage struct {
 	Message string `json:"message"`
 	Code    int    `json:"code"`

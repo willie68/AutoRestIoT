@@ -42,7 +42,7 @@ type MongoDAO struct {
 
 var log logging.ServiceLogger
 
-// InitDAO initialise the mongodb connection, build up all collections and indexes
+//InitDAO initialise the mongodb connection, build up all collections and indexes
 func (m *MongoDAO) InitDAO(MongoConfig config.MongoDB) {
 	m.initialised = false
 	m.mongoConfig = MongoConfig
@@ -80,14 +80,15 @@ func (m *MongoDAO) initUsers() {
 
 	go func() {
 		background := time.NewTicker(userReloadPeriod)
-		for _ = range background.C {
+		for range background.C {
 			m.reloadUsers()
 		}
 	}()
 }
 
 func (m *MongoDAO) reloadUsers() {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	usersCollection := m.database.Collection(usersCollectionName)
 	cursor, err := usersCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -147,14 +148,15 @@ func (m *MongoDAO) AddFile(backend string, filename string, reader io.Reader) (s
 	return id, nil
 }
 
-//GetFile getting a single from the database with the id
+//GetFilename getting the filename of an attachment from the database with the id
 func (m *MongoDAO) GetFilename(backend string, fileid string) (string, error) {
 	objectID, err := primitive.ObjectIDFromHex(fileid)
 	if err != nil {
 		log.Alertf("%v", err)
 		return "", err
 	}
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	cursor, err := m.bucket.Find(bson.M{"_id": objectID, "metadata.backend": backend})
 	if err != nil {
 		log.Alertf("%v", err)
@@ -167,13 +169,12 @@ func (m *MongoDAO) GetFilename(backend string, fileid string) (string, error) {
 	if err = cursor.Decode(&file); err != nil {
 		log.Alertf("%v", err)
 		return "", err
-	} else {
-		filename = file["filename"].(string)
 	}
+	filename = file["filename"].(string)
 	return filename, nil
 }
 
-//GetFile getting a single from the database with the id
+//GetFile getting a single file from the database with the id
 func (m *MongoDAO) GetFile(backend string, fileid string, stream io.Writer) error {
 	_, err := m.GetFilename(backend, fileid)
 	if err != nil {
@@ -215,19 +216,18 @@ func (m *MongoDAO) DeleteFile(backend string, fileid string) error {
 	return nil
 }
 
-// CheckUser checking username and password... returns true if the user is active and the password for this user is correct
+//CheckUser checking username and password... returns true if the user is active and the password for this user is correct
 func (m *MongoDAO) CheckUser(username string, password string) bool {
 	username = strings.ToLower(username)
 	pwd, ok := m.users[username]
 	if ok {
 		if pwd == password {
 			return true
-		} else {
-			user, ok := m.GetUser(username)
-			if ok {
-				if user.Password == password {
-					return true
-				}
+		}
+		user, ok := m.GetUser(username)
+		if ok {
+			if user.Password == password {
+				return true
 			}
 		}
 	}
@@ -259,9 +259,10 @@ func (m *MongoDAO) UserInRoles(username string, roles []string) bool {
 	return false
 }
 
-// GetUsers getting a list of users
+//GetUsers getting a list of users
 func (m *MongoDAO) GetUsers() ([]model.User, error) {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	usersCollection := m.database.Collection(usersCollectionName)
 	filter := bson.M{}
 	cursor, err := usersCollection.Find(ctx, filter)
@@ -276,18 +277,18 @@ func (m *MongoDAO) GetUsers() ([]model.User, error) {
 		if err = cursor.Decode(&user); err != nil {
 			log.Alertf("%v", err)
 			return nil, err
-		} else {
-			user.Password = ""
-			users = append(users, user)
 		}
+		user.Password = ""
+		users = append(users, user)
 	}
 	return users, nil
 }
 
-// GetUser getting the usermodel
+//GetUser getting the usermodel
 func (m *MongoDAO) GetUser(username string) (model.User, bool) {
 	username = strings.ToLower(username)
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	usersCollection := m.database.Collection(usersCollectionName)
 	var user model.User
 	filter := bson.M{"name": username}
@@ -315,7 +316,8 @@ func (m *MongoDAO) AddUser(user model.User) error {
 
 	user.Password = BuildPasswordHash(user.Password)
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(usersCollectionName)
 	_, err := collection.InsertOne(ctx, user)
 	if err != nil {
@@ -337,7 +339,8 @@ func (m *MongoDAO) DeleteUser(username string) error {
 		return errors.New("username not exists")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(usersCollectionName)
 	filter := bson.M{"name": username}
 	_, err := collection.DeleteOne(ctx, filter)
@@ -366,7 +369,8 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 		return errors.New("actual password incorrect")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(usersCollectionName)
 	filter := bson.M{"name": username}
 	update := bson.D{{"$set", bson.D{{"password", newpassword}}}}
@@ -379,9 +383,11 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 	return nil
 }
 
+//CreateModel creating a new model
 func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, error) {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 	result, err := collection.InsertOne(ctx, data)
 	if err != nil {
@@ -404,7 +410,8 @@ func (m *MongoDAO) CreateModel(route model.Route, data model.JsonMap) (string, e
 //CreateModels creates a bunch of models
 func (m *MongoDAO) CreateModels(route model.Route, datas []model.JsonMap) ([]string, error) {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 	models := make([]interface{}, 0)
 	for _, data := range datas {
@@ -425,9 +432,11 @@ func (m *MongoDAO) CreateModels(route model.Route, datas []model.JsonMap) ([]str
 	return modelids, nil
 }
 
+//GetModel getting requested model from the storage
 func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 	objectID, _ := primitive.ObjectIDFromHex(route.Identity)
 	result := collection.FindOne(ctx, bson.M{"_id": objectID})
@@ -444,17 +453,17 @@ func (m *MongoDAO) GetModel(route model.Route) (model.JsonMap, error) {
 	if err := result.Decode(&bemodel); err != nil {
 		log.Alertf("%v", err)
 		return nil, err
-	} else {
-		//		bemodel[internal.AttributeID] = bemodel[internal.AttributeID].(primitive.ObjectID).Hex()
-		bemodel, _ = m.convertModel(bemodel)
-		return bemodel, nil
 	}
+	//		bemodel[internal.AttributeID] = bemodel[internal.AttributeID].(primitive.ObjectID).Hex()
+	bemodel, _ = m.convertModel(bemodel)
+	return bemodel, nil
 }
 
 //CountModel counting all medelsin this collection
 func (m *MongoDAO) CountModel(route model.Route) (int, error) {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 	n, err := collection.CountDocuments(ctx, bson.M{}, &options.CountOptions{})
 	if err == mongo.ErrNoDocuments {
@@ -471,7 +480,8 @@ func (m *MongoDAO) CountModel(route model.Route) (int, error) {
 //QueryModel query for the right models
 func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit int) (int, []model.JsonMap, error) {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 
 	var queryM map[string]interface{}
@@ -523,10 +533,9 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 				if err = cursor.Decode(&model); err != nil {
 					log.Alertf("%v", err)
 					return 0, nil, err
-				} else {
-					models = append(models, model)
-					docs++
 				}
+				models = append(models, model)
+				docs++
 			} else {
 				break
 			}
@@ -539,7 +548,8 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 //UpdateModel updateing an existing datamodel in the mongo db
 func (m *MongoDAO) UpdateModel(route model.Route, data model.JsonMap) (model.JsonMap, error) {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 	objectID, _ := primitive.ObjectIDFromHex(route.Identity)
 	delete(data, internal.AttributeID)
@@ -559,9 +569,11 @@ func (m *MongoDAO) UpdateModel(route model.Route, data model.JsonMap) (model.Jso
 	return newModel, nil
 }
 
+//DeleteModel deleting the requested model from the storage
 func (m *MongoDAO) DeleteModel(route model.Route) error {
 	collectionName := route.GetRouteName()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(collectionName)
 	objectID, _ := primitive.ObjectIDFromHex(route.Identity)
 
@@ -580,7 +592,8 @@ func (m *MongoDAO) DeleteModel(route model.Route) error {
 func (m *MongoDAO) GetIndexNames(route model.Route) ([]string, error) {
 	collection := m.database.Collection(route.GetRouteName())
 	indexView := collection.Indexes()
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	cursor, err := indexView.List(ctx)
 	if err != nil {
 		log.Alertf("%v", err)
@@ -608,7 +621,8 @@ func (m *MongoDAO) GetIndexNames(route model.Route) ([]string, error) {
 
 // DeleteIndex delete one search index
 func (m *MongoDAO) DeleteIndex(route model.Route, name string) error {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collection := m.database.Collection(route.GetRouteName())
 	_, err := collection.Indexes().DropOne(ctx, name)
 	if err != nil {
@@ -680,16 +694,18 @@ func (m *MongoDAO) Ping() error {
 	if !m.initialised {
 		return errors.New("mongo client not initialised")
 	}
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	return m.database.Client().Ping(ctx, nil)
 }
 
 // DeleteBackend dropping all data from the backend
 func (m *MongoDAO) DeleteBackend(backend string) error {
 	if backend == attachmentsCollectionName || backend == usersCollectionName {
-		return errors.New("wrong backend name.")
+		return errors.New("wrong backend name")
 	}
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collectionNames, err := m.database.ListCollectionNames(ctx, bson.D{}, &options.ListCollectionsOptions{})
 	if err != nil {
 		log.Alertf("%v", err)
@@ -719,21 +735,19 @@ func (m *MongoDAO) DeleteBackend(backend string) error {
 		if err = cursor.Decode(&file); err != nil {
 			log.Alertf("%v", err)
 			return err
-		} else {
-			if err = m.bucket.Delete(file["_id"]); err != nil {
-				log.Alertf("%v", err)
-				return err
-			}
 		}
-
+		if err = m.bucket.Delete(file["_id"]); err != nil {
+			log.Alertf("%v", err)
+			return err
+		}
 	}
-
 	return nil
 }
 
 // DropAll dropping all data from the database
 func (m *MongoDAO) DropAll() {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	collectionNames, err := m.database.ListCollectionNames(ctx, bson.D{}, &options.ListCollectionsOptions{})
 	if err != nil {
 		log.Alertf("%v", err)

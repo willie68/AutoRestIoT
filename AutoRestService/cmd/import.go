@@ -69,7 +69,7 @@ func importData(importPath string) {
 						schematic.Owner = "w.klaas@gmx.de"
 					}
 					fileids := make([]string, 0)
-					for filename, _ := range schematic.Files {
+					for filename := range schematic.Files {
 						file := path + "/" + filename
 						f, err := os.Open(file)
 						if err != nil {
@@ -154,6 +154,7 @@ func uploadFile(filename string, file string) (string, error) {
 	return fileid, nil
 }
 
+//Schematic model for the schematic backend
 type Schematic struct {
 	ID             primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 	ForeignID      string             `json:"foreignId" bson:"foreignId,omitempty"`

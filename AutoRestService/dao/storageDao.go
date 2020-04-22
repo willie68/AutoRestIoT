@@ -9,6 +9,7 @@ import (
 	"github.com/willie68/AutoRestIoT/model"
 )
 
+//FulltextIndexName name of the index containing fulltext data
 const FulltextIndexName = "$fulltext"
 
 /*

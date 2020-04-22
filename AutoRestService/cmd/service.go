@@ -72,7 +72,7 @@ func routes() *chi.Mux {
 	router.Use(
 		render.SetContentType(render.ContentTypeJSON),
 		middleware.Logger,
-		middleware.DefaultCompress,
+		middleware.Compress(5),
 		middleware.Recoverer,
 		myHandler.Handler,
 	)
@@ -92,7 +92,7 @@ func healthRoutes() *chi.Mux {
 	router.Use(
 		render.SetContentType(render.ContentTypeJSON),
 		middleware.Logger,
-		middleware.DefaultCompress,
+		middleware.Compress(5),
 		middleware.Recoverer,
 	)
 
@@ -329,11 +329,11 @@ func initAutoRest() {
 			break
 		}
 		for i, dataSource := range bemodel.DataSources {
-			configJson, err := json.Marshal(dataSource.Config)
+			configJSON, err := json.Marshal(dataSource.Config)
 			switch dataSource.Type {
 			case "mqtt":
 				var config model.DataSourceConfigMQTT
-				if err = json.Unmarshal(configJson, &config); err != nil {
+				if err = json.Unmarshal(configJSON, &config); err != nil {
 					log.Alertf("%v", err)
 				}
 				bemodel.DataSources[i].Config = config
@@ -347,9 +347,6 @@ func initAutoRest() {
 			log.Alertf("validating backend %s in %s, getting error: %v", bemodel.Backendname, value, err)
 			break
 		}
-		//		jsonData, err := json.Marshal(bemodel)
-		//		fmt.Println(string(jsonData))
-		//		fmt.Println("--------------------------------------------------------------------------------")
 		err = worker.RegisterBackend(bemodel)
 		if err != nil {
 			log.Alertf("error registering backend %s successfully. %v", bemodel.Backendname, err)

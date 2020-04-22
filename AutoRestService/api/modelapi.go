@@ -14,6 +14,7 @@ import (
 	"github.com/willie68/AutoRestIoT/worker"
 )
 
+//DeleteRefHeader header key for the delete reference options
 const DeleteRefHeader = "X-mcs-deleteref"
 
 /*
@@ -223,7 +224,7 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if validModel == nil {
-		render.Render(response, request, ErrInvalidRequest(errors.New("data model not valid.")))
+		render.Render(response, request, ErrInvalidRequest(errors.New("data model not valid")))
 		return
 	}
 
@@ -249,9 +250,7 @@ func PutModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	render.JSON(response, request, validModel)
 }
 
-/*
-DeleteConfigEndpoint deleting store for a tenant, this will automatically delete all data in the store
-*/
+//DeleteModelEndpoint deleting a model
 func DeleteModelEndpoint(response http.ResponseWriter, request *http.Request) {
 	backend := chi.URLParam(request, "bename")
 	mymodel := chi.URLParam(request, "model")

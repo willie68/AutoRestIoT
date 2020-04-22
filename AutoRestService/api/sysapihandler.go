@@ -10,23 +10,19 @@ import (
 	"github.com/go-chi/render"
 )
 
-// APIKeyHeader in this header thr right api key should be inserted
+//APIKeyHeader in this header thr right api key should be inserted
 const APIKeyHeader = "X-mcs-apikey"
 
-// SystemHeader in this header thr right system should be inserted
+//SystemHeader in this header thr right system should be inserted
 const SystemHeader = "X-mcs-system"
 
-/*
-SysAPIKey defining a handler for checking system id and api key
-*/
+//SysAPIKey defining a handler for checking system id and api key
 type SysAPIKey struct {
 	SystemID string
 	Apikey   string
 }
 
-/*
-NewSysAPIHandler creates a new SysApikeyHandler
-*/
+//NewSysAPIHandler creates a new SysApikeyHandler
 func NewSysAPIHandler(systemID string, apikey string) *SysAPIKey {
 	c := &SysAPIKey{
 		SystemID: systemID,
@@ -35,19 +31,17 @@ func NewSysAPIHandler(systemID string, apikey string) *SysAPIKey {
 	return c
 }
 
-/*
-Handler the handler checks systemid and apikey headers
-*/
+//Handler the handler checks systemid and apikey headers
 func (s *SysAPIKey) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		path := strings.TrimSuffix(request.URL.Path, "/")
 		if !strings.HasPrefix(path, "/health") {
 			if s.SystemID != request.Header.Get(SystemHeader) {
-				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct.")))
+				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct")))
 				return
 			}
 			if s.Apikey != strings.ToLower(request.Header.Get(APIKeyHeader)) {
-				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct.")))
+				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct")))
 				return
 			}
 		}
@@ -56,9 +50,7 @@ func (s *SysAPIKey) Handler(next http.Handler) http.Handler {
 
 }
 
-/*
-AddHeader adding gefault header for system and apikey
-*/
+//AddHeader adding gefault header for system and apikey
 func AddHeader(response http.ResponseWriter, apikey string, system string) {
 	response.Header().Add(APIKeyHeader, apikey)
 	response.Header().Add(SystemHeader, system)
@@ -69,7 +61,7 @@ var (
 	contextKeyLimit  = contextKey("limit")
 )
 
-// Paginate is a middleware logic for populating the context with offset and limit values
+//Paginate is a middleware logic for populating the context with offset and limit values
 func Paginate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		ctx := request.Context()

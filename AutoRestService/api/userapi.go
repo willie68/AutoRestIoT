@@ -85,7 +85,7 @@ func PutUserEndpoint(response http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if username != user.Name {
-		render.Render(response, request, ErrInvalidRequest(errors.New("username should be identically.")))
+		render.Render(response, request, ErrInvalidRequest(errors.New("username should be identically")))
 		return
 	}
 	adminusername, _, _ := request.BasicAuth()

@@ -7,7 +7,7 @@ import (
 	"github.com/willie68/AutoRestIoT/dao"
 )
 
-// BasicAuth implements a simple middleware handler for adding basic http auth to a route.
+//RoleCheck implements a simple middleware handler for adding a role check to a route.
 func RoleCheck(allowedRoles []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {

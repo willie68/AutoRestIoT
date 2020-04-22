@@ -14,7 +14,7 @@ type Config struct {
 	SystemID    string `yaml:"systemID"`
 	BackendPath string `yaml:"backendpath"`
 
-	SecretFile string `yaml:"secretfil`
+	SecretFile string `yaml:"secretfile"`
 
 	AllowAnonymousBackend bool `yaml:"allowAnonymousBackend"`
 
