@@ -5,7 +5,27 @@ models:
     fields:
       - name: temperatur
         type: float
-        mandatory: true
+        mandatory: false
+        collection: false
+      - name: vstring
+        type: string
+        mandatory: false
+        collection: false
+      - name: vint
+        type: int
+        mandatory: false
+        collection: false
+      - name: vfloat
+        type: float
+        mandatory: false
+        collection: false
+      - name: vtime
+        type: time
+        mandatory: false
+        collection: false
+      - name: vbool
+        type: bool
+        mandatory: false
         collection: false
       - name: source
         type: string
@@ -32,3 +52,59 @@ datasources:
       username: temp
       password: temp
       addTopicAsAttribute: topic
+  - name: temp_simple_text
+    type: mqtt
+    destination: temperatur
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/simple/string
+      payload: application/x.simple
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+      simpleValueAttribute: vstring
+  - name: temp_simple_int
+    type: mqtt
+    destination: temperatur
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/simple/int
+      payload: application/x.simple
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+      simpleValueAttribute: vint
+  - name: temp_simple_float
+    type: mqtt
+    destination: temperatur
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/simple/float
+      payload: application/x.simple
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+      simpleValueAttribute: vfloat
+  - name: temp_simple_time
+    type: mqtt
+    destination: temperatur
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/simple/time
+      payload: application/x.simple
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+      simpleValueAttribute: vtime
+  - name: temp_simple_bool
+    type: mqtt
+    destination: temperatur
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/simple/bool
+      payload: application/x.simple
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+      simpleValueAttribute: vbool
+      

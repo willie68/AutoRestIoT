@@ -4,6 +4,8 @@ import (
 	"fmt"
 	orglog "log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"encoding/json"
@@ -14,13 +16,14 @@ import (
 )
 
 type MqttDatasource struct {
-	Client         mqtt.Client
-	Broker         string
-	Backend        string
-	Model          string
-	Topic          string
-	Payload        string
-	TopicAttribute string
+	Client               mqtt.Client
+	Broker               string
+	Backend              string
+	Model                string
+	Topic                string
+	Payload              string
+	TopicAttribute       string
+	SimpleValueAttribute string
 }
 
 var mqttClients = make([]MqttDatasource, 0)
@@ -83,18 +86,81 @@ func mqttStoreMessage(datasource MqttDatasource, client mqtt.Client, msg mqtt.Me
 		Backend: datasource.Backend,
 		Model:   datasource.Model,
 	}
-	if datasource.Payload == "application/json" {
-		var data model.JSONMap
+	var data model.JSONMap
+	data = nil
+	switch strings.ToLower(datasource.Payload) {
+	case "application/json":
 		err := json.Unmarshal(msg.Payload(), &data)
-		if datasource.TopicAttribute != "" {
-			data[datasource.TopicAttribute] = datasource.Topic
-		}
 		if err != nil {
 			log.Alertf("%v", err)
-		} else {
-			Store(route, data)
+			return
+		}
+	case "application/x.simple":
+		added := false
+		data = model.JSONMap{}
+		modelDef, ok := model.BackendList.GetModel(route)
+		payload := string(msg.Payload())
+		if ok {
+			field, ok := modelDef.GetField(datasource.SimpleValueAttribute)
+			if ok {
+				switch field.Type {
+				case model.FieldTypeString:
+					data[datasource.SimpleValueAttribute] = payload
+					added = true
+				case model.FieldTypeInt:
+					value, err := strconv.Atoi(payload)
+					if err == nil {
+						data[datasource.SimpleValueAttribute] = value
+						added = true
+					} else {
+						log.Alertf("route %s: converting error on topic %s: %v", route.String(), datasource.Topic, err)
+					}
+				case model.FieldTypeFloat:
+					value, err := strconv.ParseFloat(payload, 64)
+					if err == nil {
+						data[datasource.SimpleValueAttribute] = value
+						added = true
+					} else {
+						log.Alertf("route %s: converting error on topic %s: %v", route.String(), datasource.Topic, err)
+					}
+				case model.FieldTypeTime:
+					value, err := time.Parse(time.RFC3339, payload)
+					if err != nil {
+						saveerr := err
+						var vint int
+						vint, err = strconv.Atoi(payload)
+						if err == nil {
+							value = time.Unix(0, int64(vint)*int64(time.Millisecond))
+						} else {
+							err = saveerr
+						}
+					}
+					if err == nil {
+						data[datasource.SimpleValueAttribute] = value
+						added = true
+					} else {
+						log.Alertf("route %s: converting error on topic %s: %v", route.String(), datasource.Topic, err)
+					}
+				case model.FieldTypeBool:
+					value, err := strconv.ParseBool(payload)
+					if err == nil {
+						data[datasource.SimpleValueAttribute] = value
+						added = true
+					} else {
+						log.Alertf("route %s: converting error on topic %s: %v", route.String(), datasource.Topic, err)
+					}
+				}
+			}
+		}
+		if !added {
+			data[datasource.SimpleValueAttribute] = string(msg.Payload())
 		}
 	}
+	if datasource.TopicAttribute != "" {
+		data[datasource.TopicAttribute] = datasource.Topic
+	}
+
+	Store(route, data)
 }
 
 func mqttConnectionLost(datasource MqttDatasource, c mqtt.Client, e error) {
@@ -151,12 +217,13 @@ func mqttRegisterTopic(clientID string, backendname string, destinationmodel str
 	opts.SetPingTimeout(1 * time.Second)
 	opts.AutoReconnect = true
 	datasource := MqttDatasource{
-		Broker:         config.Broker,
-		Backend:        backendname,
-		Model:          destinationmodel,
-		Topic:          config.Topic,
-		Payload:        config.Payload,
-		TopicAttribute: config.AddTopicAsAttribute,
+		Broker:               config.Broker,
+		Backend:              backendname,
+		Model:                destinationmodel,
+		Topic:                config.Topic,
+		Payload:              config.Payload,
+		TopicAttribute:       config.AddTopicAsAttribute,
+		SimpleValueAttribute: config.SimpleValueAttribute,
 	}
 
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {

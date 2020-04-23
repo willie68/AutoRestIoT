@@ -68,12 +68,13 @@ type DataSource struct {
 
 //DataSourceConfigMQTT definition of the special configuration of a mqtt datasource
 type DataSourceConfigMQTT struct {
-	Broker              string `yaml:"broker" json:"broker"`
-	Topic               string `yaml:"topic" json:"topic"`
-	Payload             string `yaml:"payload" json:"payload"`
-	Username            string `yaml:"username" json:"username"`
-	Password            string `yaml:"password" json:"password"`
-	AddTopicAsAttribute string `yaml:"addTopicAsAttribute" json:"addTopicAsAttribute"`
+	Broker               string `yaml:"broker" json:"broker"`
+	Topic                string `yaml:"topic" json:"topic"`
+	Payload              string `yaml:"payload" json:"payload"`
+	Username             string `yaml:"username" json:"username"`
+	Password             string `yaml:"password" json:"password"`
+	AddTopicAsAttribute  string `yaml:"addTopicAsAttribute" json:"addTopicAsAttribute"`
+	SimpleValueAttribute string `yaml:"simpleValueAttribute" json:"simpleValueAttribute"`
 }
 
 //ErrModelDefinitionNotFound model definition not found

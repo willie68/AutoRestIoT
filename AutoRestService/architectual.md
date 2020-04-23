@@ -198,6 +198,17 @@ datasources:
       username: temp
       password: temp
       addTopicAsAttribute: topic
+  - name: temp_simple_time
+    type: mqtt
+    destination: temperatur
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/simple/time
+      payload: application/x.simple
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+      simpleValueAttribute: vtime
 ...
 ```
 
@@ -205,10 +216,13 @@ datasources:
 
 **topic**:  Topic aus welchem die Daten importiert werden sollen
 
-**payload**: Mimetyp der payload auf dem Topic. Derzeit unterstützt: 
+**payload**: beschreibt den Mimetypen der Payload auf dem Topic. Derzeit unterstützt: 
 
-- JSON: die Payload enthält ein Json Objekt. Dieses wird dann automatisch auf die Model Struktur  gemapped. 
+- **application/json**: die Payload enthält ein Json Objekt. Dieses wird dann automatisch auf die Model Struktur  gemapped. 
+- **application/x.simple**: die Payload besteht aus nur einem einzigen Wert. Dieser Wert wird dann in das Attribut **simpleValueAttribute** abgelegt. ist dieses Attribut in der Attributliste des Models definiert findet eine automatische Typkonvertierung statt. Für Zeitattribute können 2 verschiedene Format verwendet werden. Einerseits eine normale Ganzzahl, die die Millisekunden seit 1.1.1970 angibt (UNIX Zeitstempel), andererseits kann der Zeitstempel auch im [RFC3339 Format](https://en.wikipedia.org/wiki/ISO_8601)  als String gesendet werden, z.B.: 2020-04-23T06:20:16.730+00:00
 
 **username, password**: Authentifizierung gegen den Broker
 
 **addTopicAsAttribute**: das Topic wird zusätzlich in ein Attribute mit dem definierten Namen gespeichert.
+
+**simpleValueAttribute**: kommt der zu speichernde Wert als einfacher Wert, wird das hier benannte Attribut zur Ablage benutzt.
