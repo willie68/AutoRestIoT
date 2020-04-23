@@ -11,6 +11,7 @@ import (
 
 	"github.com/willie68/AutoRestIoT/config"
 	"github.com/willie68/AutoRestIoT/internal"
+	"github.com/willie68/AutoRestIoT/internal/crypt"
 	"github.com/willie68/AutoRestIoT/internal/slicesutils"
 	"github.com/willie68/AutoRestIoT/logging"
 	"github.com/willie68/AutoRestIoT/model"
@@ -36,6 +37,7 @@ type MongoDAO struct {
 	bucket      gridfs.Bucket
 	database    mongo.Database
 	users       map[string]string
+	salts       map[string][]byte
 	ticker      time.Ticker
 	done        chan bool
 }
@@ -96,6 +98,7 @@ func (m *MongoDAO) reloadUsers() {
 	}
 	defer cursor.Close(ctx)
 	localUsers := make(map[string]string)
+	localSalts := make(map[string][]byte)
 	for cursor.Next(ctx) {
 		var user bson.M
 		if err = cursor.Decode(&user); err != nil {
@@ -103,29 +106,40 @@ func (m *MongoDAO) reloadUsers() {
 		} else {
 			username := strings.ToLower(user["name"].(string))
 			password := user["password"].(string)
-			localUsers[username] = BuildPasswordHash(password)
+			salt := user["salt"].([]byte)
+			localSalts[username] = salt
+			localUsers[username] = BuildPasswordHash(password, salt)
 		}
 	}
 	m.users = localUsers
+	m.salts = localSalts
 	if len(m.users) == 0 {
+		salt, _ := crypt.GenerateRandomBytes(20)
 		admin := model.User{
 			Name:     "admin",
 			Password: "admin",
+			Salt:     salt,
 			Admin:    true,
 			Roles:    []string{"admin"},
 		}
 		m.AddUser(admin)
+
+		salt, _ = crypt.GenerateRandomBytes(20)
 		editor := model.User{
 			Name:     "editor",
 			Password: "editor",
+			Salt:     salt,
 			Admin:    false,
 			Guest:    false,
 			Roles:    []string{"edit"},
 		}
 		m.AddUser(editor)
+
+		salt, _ = crypt.GenerateRandomBytes(20)
 		guest := model.User{
 			Name:     "guest",
 			Password: "guest",
+			Salt:     salt,
 			Admin:    false,
 			Guest:    true,
 			Roles:    []string{"read"},
@@ -216,6 +230,17 @@ func (m *MongoDAO) DeleteFile(backend string, fileid string) error {
 	return nil
 }
 
+//GetSalt getting the salt for a user.
+func (m *MongoDAO) GetSalt(username string) ([]byte, bool) {
+	username = strings.ToLower(username)
+	salt, ok := m.salts[username]
+	if ok {
+		return salt, true
+	}
+
+	return []byte{}, false
+}
+
 //CheckUser checking username and password... returns true if the user is active and the password for this user is correct
 func (m *MongoDAO) CheckUser(username string, password string) bool {
 	username = strings.ToLower(username)
@@ -298,7 +323,7 @@ func (m *MongoDAO) GetUser(username string) (model.User, bool) {
 		return model.User{}, false
 	}
 	password := user.Password
-	hash := BuildPasswordHash(password)
+	hash := BuildPasswordHash(password, user.Salt)
 	m.users[username] = hash
 	return user, true
 }
@@ -314,7 +339,8 @@ func (m *MongoDAO) AddUser(user model.User) error {
 		return errors.New("username already exists")
 	}
 
-	user.Password = BuildPasswordHash(user.Password)
+	user.Salt, _ = crypt.GenerateRandomBytes(20)
+	user.Password = BuildPasswordHash(user.Password, user.Salt)
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -325,6 +351,7 @@ func (m *MongoDAO) AddUser(user model.User) error {
 		return err
 	}
 	m.users[user.Name] = user.Password
+	m.salts[user.Name] = user.Salt
 	return nil
 }
 
@@ -363,8 +390,13 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 		return errors.New("username not registered")
 	}
 
-	newpassword = BuildPasswordHash(newpassword)
-	oldpassword = BuildPasswordHash(oldpassword)
+	usermodel, ok := m.GetUser(username)
+	if !ok {
+		return errors.New("username not registered")
+	}
+
+	oldpassword = BuildPasswordHash(oldpassword, usermodel.Salt)
+	newpassword = BuildPasswordHash(newpassword, usermodel.Salt)
 	if pwd != oldpassword {
 		return errors.New("actual password incorrect")
 	}

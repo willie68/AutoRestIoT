@@ -1,12 +1,13 @@
 package dao
 
 import (
-	"crypto/md5"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"strings"
 
 	"github.com/willie68/AutoRestIoT/model"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 //FulltextIndexName name of the index containing fulltext data
@@ -38,6 +39,7 @@ type StorageDao interface {
 	UserInRoles(username string, roles []string) bool
 
 	GetUsers() ([]model.User, error)
+	GetSalt(username string) ([]byte, bool)
 	AddUser(user model.User) error
 	DeleteUser(username string) error
 	ChangePWD(username string, newpassword string, oldpassword string) error
@@ -62,10 +64,11 @@ func SetStorage(storage StorageDao) {
 }
 
 //BuildPasswordHash building a hash value of the password
-func BuildPasswordHash(password string) string {
-	if !strings.HasPrefix(password, "md5:") {
-		hash := md5.Sum([]byte(password))
-		password = fmt.Sprintf("md5:%x", hash)
+func BuildPasswordHash(password string, salt []byte) string {
+	if !strings.HasPrefix(password, "hash:") {
+		hash := pbkdf2.Key([]byte(password), salt, 4096, 32, sha1.New)
+		// hash := md5.Sum([]byte(password))
+		password = fmt.Sprintf("hash:%x", hash)
 	}
 	return password
 }

@@ -104,6 +104,11 @@ func healthRoutes() *chi.Mux {
 
 func main() {
 	log.Info("starting server")
+	_, err := crypt.GenerateRandomBytes(20)
+	if err != nil {
+		log.Alertf("can't generate secure salts: %s", err.Error())
+		panic(1)
+	}
 	flag.Parse()
 
 	config.File = configFile
