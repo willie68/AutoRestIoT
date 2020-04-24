@@ -1,13 +1,9 @@
 package dao
 
 import (
-	"crypto/sha1"
-	"fmt"
 	"io"
-	"strings"
 
 	"github.com/willie68/AutoRestIoT/model"
-	"golang.org/x/crypto/pbkdf2"
 )
 
 //FulltextIndexName name of the index containing fulltext data
@@ -61,14 +57,4 @@ func GetStorage() StorageDao {
 //SetStorage setting the actual storage dad
 func SetStorage(storage StorageDao) {
 	storageDao = storage
-}
-
-//BuildPasswordHash building a hash value of the password
-func BuildPasswordHash(password string, salt []byte) string {
-	if !strings.HasPrefix(password, "hash:") {
-		hash := pbkdf2.Key([]byte(password), salt, 4096, 32, sha1.New)
-		// hash := md5.Sum([]byte(password))
-		password = fmt.Sprintf("hash:%x", hash)
-	}
-	return password
 }

@@ -106,7 +106,11 @@ func (m *MongoDAO) reloadUsers() {
 		} else {
 			username := strings.ToLower(user["name"].(string))
 			password := user["password"].(string)
-			salt := user["salt"].([]byte)
+			saltInts := user["salt"].(primitive.Binary)
+			salt := make([]byte, 10)
+			if len(saltInts.Data) != 0 {
+				salt = saltInts.Data
+			}
 			localSalts[username] = salt
 			localUsers[username] = BuildPasswordHash(password, salt)
 		}
