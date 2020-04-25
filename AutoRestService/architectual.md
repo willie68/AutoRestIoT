@@ -226,3 +226,497 @@ datasources:
 **addTopicAsAttribute**: das Topic wird zusätzlich in ein Attribute mit dem definierten Namen gespeichert.
 
 **simpleValueAttribute**: kommt der zu speichernde Wert als einfacher Wert, wird das hier benannte Attribut zur Ablage benutzt.
+
+## Transformation Rules
+
+Nicht immer sollen die aus einer Datasource gelesenen Daten ohne Modifikationen in den Storage geschrieben werden. Für den Fall einer JSON Payload können Rules definiert werden, mit denen man das JSON Objekt transformieren kann, bevor es in den Storage gespeichert wird. Für die Transformation wird die Go Bibliothek [Kazaam](https://github.com/qntfy/kazaam) verwendet. Die Bibliothek verwendet als Definitionssprache JSON. Da die AutoRestIoT Konfiguration in Dateien aber immer in YAML vorliegt,  hier die Definition der verschiedenen Transformationen in YAML. 
+
+```yaml
+datasources:
+  - name: temp_wohnzimmer
+    type: mqtt
+    destination: temperatur
+	rule: tasmota_ds18b20
+    config: 
+      broker: 127.0.0.1:1883
+      topic: stat/temperatur/wohnzimmer
+      payload: application/json
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+...
+rules:
+  - name: tasmota_ds18b20
+    description: transforming the tasmota json structure of the DS18B20 into my simple structure
+	transform: 
+	  - operation: shift
+	    spec: 
+		  Temperatur: DS18B20.Temperatur
+	  - operation: delete
+	    spec: 
+		  path: DS18B20
+
+```
+
+In der Definition der Data wird durch **rule** der Name einer anzuwendenden Regel angegeben.  Die Regel selber werden im Bereich `rules` definiert.
+
+**name**: definiert den Namen der Regel. Innerhalb einer Anwendung müssen diese Namen eindeutig sein. Vordefinierte Regeln sind noch nicht imülementiert
+
+**description**: gibt eine kurze Beschreibung der Regel
+
+**transform**: defniert nun die verschiedenen Transformationsregeln.
+
+## Transformationsregeln
+Derzeit werden folgende Transformation unterstützt:
+- shift
+- concat
+- coalesce
+- extract
+- timestamp
+- uuid
+- default
+- pass
+- delete
+
+### Shift
+Die Shift-Transformation wird zum Neuzuordnen von Feldern verwendet.
+Die Spezifikation unterstützt jsonpath-ähnliche JSON-Zugriffe. Konkret
+
+```yaml
+- operation: shift
+  spec:
+    object.id: doc.uid
+    gid2: doc.guid[1]
+    allGuids: doc.guidObjects[*].id
+```
+
+```javascript
+{
+  "operation": "shift",
+  "spec": {
+    "object.id": "doc.uid",
+    "gid2": "doc.guid[1]",
+    "allGuids": "doc.guidObjects[*].id"
+  }
+}
+```
+
+JSON-Nachricht
+
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  },
+  "top-level-key": null
+}
+```
+
+wird zu 
+```javascript
+{
+  "object": {
+    "id": 12345
+  },
+  "gid2": "guid2",
+  "allGuids": ["guid0", "guid2", "guid4"]
+}
+```
+
+Die Implementierung von jsonpath unterstützt einige Sonderfälle:
+
+- * **Array-Zugriffe** : Ruft das n-te Element aus dem Array ab
+- * **Array-Platzhalter** : Durch Indizieren eines Arrays mit `[*]` wird jedes übereinstimmende Element in einem Array zurückgegeben
+- * **Objekterfassung der obersten Ebene**: Durch Zuordnen von "$" in ein Feld wird das gesamte Originalobjekt unter dem angeforderten Schlüssel verschachtelt
+- * **Array anhängen / voranstellen und setzen** : Ein Array mit `[+]` und `[-]` anhängen und voranstellen. Der Versuch, ein nicht vorhandenes Array-Element zu schreiben, führt nach Bedarf zu einem Null-Padding, um dieses Element am angegebenen Index hinzuzufügen (nützlich bei "inplace").
+
+Die Shift-Transformation unterstützt auch ein `require` -Feld. Wenn auf `true` gesetzt,
+wird ein Fehler erzeugt, wenn *einer* der Pfade im Quell-JSON nicht vorhanden ist.
+
+### Concat
+Die Concat-Transformation ermöglicht die Kombination von Feldern und Literalzeichenfolgen zu einem einzigen Zeichenfolgenwert.
+
+```yaml
+- operation: concat
+  spec:
+    sources:
+    - value: TEST
+    - path: a.timestamp
+    targetPath: a.timestamp
+    delim: ","
+```
+
+```javascript
+{
+    "operation": "concat",
+    "spec": {
+        "sources": [{
+            "value": "TEST"
+        }, {
+            "path": "a.timestamp"
+        }],
+        "targetPath": "a.timestamp",
+        "delim": ","
+    }
+}
+```
+
+JSON-Nachricht
+```javascript
+{
+    "a": {
+        "timestamp": 1481305274
+    }
+}
+```
+
+wird zu
+```javascript
+{
+    "a": {
+        "timestamp": "TEST,1481305274"
+    }
+}
+```
+
+Anmerkungen:
+
+- **Quellen**: Liste der zu kombinierenden Elemente (in der angegebenen Reihenfolge)
+   - Literalwerte werden über `value` angegeben
+   - Feldwerte werden über `path` angegeben (unterstützt die gleiche Adressierung wie `shift`)
+- **targetPath**: Wo soll die resultierende Zeichenfolge platziert werden?
+  
+   - Wenn dies ein vorhandener Pfad ist, ersetzt das Ergebnis den aktuellen Wert.
+- **delim**: Optionales Trennzeichen
+
+Die Concat-Transformation unterstützt auch ein `require`-Feld. Wenn auf `true` gesetzt,
+wird ein Fehler erzeugt, wenn *einer* der Pfade im Quell-JSON nicht vorhanden ist.
+
+### Coalesce
+Eine Coalesce-Transformation bietet die Möglichkeit, mehrere mögliche Schlüssel zu überprüfen, um einen gewünschten Wert zu finden. Der erste gefundene passende Schlüssel wird zurückgegeben.
+
+```yaml
+- operation: coalesce
+  spec:
+    firstObjectId:
+    - doc.guidObjects[0].uid
+    - doc.guidObjects[0].id
+```
+
+
+
+```javascript
+{
+  "operation": "coalesce",
+  "spec": {
+    "firstObjectId": ["doc.guidObjects[0].uid", "doc.guidObjects[0].id"]
+  }
+}
+```
+
+JSON-Nachricht
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+wird zu
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  },
+  "firstObjectId": "guid0"
+}
+```
+
+Coalesce unterstützt auch ein `ignore`-Array in der Spezifikation. Wenn ein ansonsten übereinstimmender Schlüssel den Wert "Ignorieren" hat, wird er nicht als Übereinstimmung betrachtet.
+Dies ist z.B. für leere Zeichenketten interessant
+
+```javascript
+{
+  "operation": "coalesce",
+  "spec": {
+    "ignore": [""],
+    "firstObjectId": ["doc.guidObjects[0].uid", "doc.guidObjects[0].id"]
+  }
+}
+```
+
+### Extract
+Die `extract`-Transform bietet die Möglichkeit, ein Unterobjekt auszuwählen und dieses Unterobjekt als Objekt der obersten Ebene zurückgeben zu lassen.
+
+Beispiel
+
+```yaml
+- operation: extract
+  spec:
+    path: doc.guidObjects[0].path.to.subobject
+```
+
+```javascript
+{
+  "operation": "extract",
+  "spec": {
+    "path": "doc.guidObjects[0].path.to.subobject"
+  }
+}
+```
+
+JSON-Nachricht
+```json
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"path": {"to": {"subobject": {"name": "the.subobject", "field", "field.in.subobject"}}}}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+wird zu
+```javascript
+{
+  "name": "the.subobject",
+  "field": "field.in.subobject"
+}
+```
+
+### Timestamp
+Ein `timestamp`-Transformation transformiert und formatiert Zeitzeichenfolgen in der Golang
+Syntax. Diese Transformation unterstützt den Operator `$now` für `inputFormat`, der den aktuellen Zeitstempel gemäß dem `outputFormat` formatiert und am angegebenen Pfad einträgt.
+`$unix` wird sowohl für Eingabe- als auch für Ausgabeformate als Unix-Zeit unterstützt
+Anzahl der Sekunden seit dem 1. Januar 1970 UTC als Ganzzahl.
+
+```yaml
+- operation: timestamp
+  timestamp[0]:
+    inputFormat: Mon Jan _2 15:04:05 -0700 2006
+    outputFormat: '2006-01-02T15:04:05-0700'
+  nowTimestamp:
+    inputFormat: "$now"
+    outputFormat: '2006-01-02T15:04:05-0700'
+  epochTimestamp:
+    inputFormat: '2006-01-02T15:04:05-0700'
+    outputFormat: "$unix"
+```
+
+```javascript
+{
+  "operation": "extract",
+  "spec": {
+    "path": "doc.guidObjects[0].path.to.subobject"
+  }
+}
+```
+
+JSON-Nachricht
+
+```javascript
+{
+  "timestamp": [
+    "Sat Jul 22 08:15:27 +0000 2017",
+    "Sun Jul 23 08:15:27 +0000 2017",
+    "Mon Jul 24 08:15:27 +0000 2017"
+  ]
+}
+```
+
+wird zu
+```javascript
+{
+  "timestamp": [
+    "2017-07-22T08:15:27+0000",
+    "Sun Jul 23 08:15:27 +0000 2017",
+    "Mon Jul 24 08:15:27 +0000 2017"
+  ]
+  "nowTimestamp": "2017-09-08T19:15:27+0000"
+}
+```
+
+### UUID
+Eine UUID-Transformation generiert eine UUID basierend auf den Spezifikationen UUIDv3, UUIDv4, UUIDv5.
+
+Für UUIDv4 ist die Spezifikation einfach
+
+```yaml
+- operation: uuid
+  spec:
+    doc.uuid:
+      version: 4
+```
+
+```javascript
+{
+    "operation": "uuid",
+    "spec": {
+        "doc.uuid": {
+            "version": 4, //required
+        }
+    }
+}
+```
+
+JSON-Nachricht
+```javascript
+{
+  "doc": {
+    "author_id": 11122112,
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    }
+  }
+}
+```
+
+wird zu
+```javascript
+{
+  "doc": {
+    "author_id": 11122112,
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    }
+    "uuid": "f03bacc1-f4e0-4371-a5c5-e8160d3d6c0c"
+  }
+}
+```
+
+Für UUIDv3 & UUIDV5 sind die Konfigurationen etwas komplexer. Diese erfordern einen Namensraum, der bereits eine gültige UUID ist, und eine Reihe von Pfaden, die UUIDs basierend auf dem Wert dieses Pfads generieren. Wenn dieser Pfad im eingehenden Dokument nicht vorhanden ist, wird stattdessen ein Standardfeld verwendet. 
+**Hinweis** Diese beiden Felder müssen Zeichenfolgen sein.
+**Zusätzlich** können Sie die 4 vordefinierten Namespaces wie "DNS", "URL", "OID" und "X500" im Feld "Namensraum" verwenden, andernfalls übergeben Sie Ihre eigene UUID.
+
+```yaml
+- operation: uuid
+  spec:
+    doc.uuid:
+      version: 5
+      namespace: DNS
+      names:
+      - path: doc.author_name
+        default: some string
+      - path: doc.type
+        default: another string
+```
+
+```javascript
+{
+   "operation":"uuid",
+   "spec":{
+      "doc.uuid":{
+         "version":5,
+         "namespace":"DNS",
+         "names":[
+            {"path":"doc.author_name", "default":"some string"},
+            {"path":"doc.type", "default":"another string"}
+         ]
+      }
+   }
+}
+```
+
+JSON-Nachricht
+```javascript
+{
+  "doc": {
+    "author_name": "jason",
+    "type": "secret-document"
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    }
+  }
+}
+```
+
+wird zu
+```javascript
+{
+  "doc": {
+    "author_name": "jason",
+    "type": "secret-document",
+    "document_id": 223323,
+    "meta": {
+      "id": 23
+    },
+    "uuid": "f03bacc1-f4e0-4371-a7c5-e8160d3d6c0c"
+  }
+}
+```
+
+
+### Default
+Eine Default-Transformation bietet die Möglichkeit, den Wert eines Schlüssels explizit festzulegen. Zum Beispiel
+
+```yaml
+- operation: default
+  spec:
+    type: message
+```
+
+
+
+```javascript
+{
+  "operation": "default",
+  "spec": {
+    "type": "message"
+  }
+}
+```
+würde sicherstellen, dass das Ausgabe-JSON `{"type":"message"}` enthält.
+
+
+### Delete
+Eine Delete-Transformation bietet die Möglichkeit, vorhandene Schlüssel zu löschen.
+
+```yaml
+- operation: delete
+  spec:
+    paths:
+    - doc.uid
+    - doc.guidObjects[1]
+```
+
+
+
+```javascript
+{
+  "operation": "delete",
+  "spec": {
+    "paths": ["doc.uid", "doc.guidObjects[1]"]
+  }
+}
+```
+
+JSON-Nachricht
+```javascript
+{
+  "doc": {
+    "uid": 12345,
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid2"}, {"id": "guid4"}]
+  }
+}
+```
+
+wird zu
+```javascript
+{
+  "doc": {
+    "guid": ["guid0", "guid2", "guid4"],
+    "guidObjects": [{"id": "guid0"}, {"id": "guid4"}]
+  }
+}
+```

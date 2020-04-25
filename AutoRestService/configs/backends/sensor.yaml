@@ -107,4 +107,13 @@ datasources:
       password: temp
       addTopicAsAttribute: topic
       simpleValueAttribute: vbool
-      
+rules:
+  - name: tasmota_ds18b20
+    description: transforming the tasmota json structure of the DS18B20 into my simple structure
+	transform: 
+	  - operation: shift
+	    spec: 
+		  Temperatur: DS18B20.Temperatur
+	  - operation: delete
+	    spec: 
+		  path: DS18B20
