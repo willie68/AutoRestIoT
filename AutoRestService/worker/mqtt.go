@@ -2,6 +2,7 @@ package worker
 
 import (
 	"encoding/json"
+	"fmt"
 	orglog "log"
 	"os"
 	"strconv"
@@ -21,6 +22,7 @@ type MqttDatasource struct {
 	Payload              string
 	TopicAttribute       string
 	SimpleValueAttribute string
+	Rule                 string
 }
 
 var mqttClients = make([]MqttDatasource, 0)
@@ -110,6 +112,29 @@ func mqttStoreMessage(datasource MqttDatasource, client mqtt.Client, msg mqtt.Me
 		data[datasource.TopicAttribute] = datasource.Topic
 	}
 
+	if datasource.Rule != "" {
+		ruleName := GetRuleName(datasource.Backend, datasource.Rule)
+
+		jsonBytes, err := json.Marshal(data)
+		if err != nil {
+			log.Alertf("%v", err)
+			return
+		}
+		newJson, err := transformJSON(ruleName, jsonBytes)
+		if err != nil {
+			log.Alertf("%v", err)
+			return
+		}
+
+		data = nil
+		err = json.Unmarshal(newJson, &data)
+		if err != nil {
+			log.Alertf("%v", err)
+			return
+		}
+		fmt.Printf("src: %s\ndst: %s\n", string(jsonBytes), string(newJson))
+	}
+
 	Store(route, data)
 }
 
@@ -160,13 +185,16 @@ func mqttSubscribe(datasource MqttDatasource) error {
 	return err
 }
 
-func mqttRegisterTopic(clientID string, backendname string, destinationmodel string, config model.DataSourceConfigMQTT) error {
+func mqttRegisterTopic(clientID string, backendname string, datasource model.DataSource) error {
+	destinationmodel := datasource.Destination
+	config := datasource.Config.(model.DataSourceConfigMQTT)
+
 	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(clientID)
 	opts.SetKeepAlive(2 * time.Second)
 	//opts.SetDefaultPublishHandler(f)
 	opts.SetPingTimeout(1 * time.Second)
 	opts.AutoReconnect = true
-	datasource := MqttDatasource{
+	datasourceMqtt := MqttDatasource{
 		Broker:               config.Broker,
 		Backend:              backendname,
 		Model:                destinationmodel,
@@ -174,10 +202,11 @@ func mqttRegisterTopic(clientID string, backendname string, destinationmodel str
 		Payload:              config.Payload,
 		TopicAttribute:       config.AddTopicAsAttribute,
 		SimpleValueAttribute: config.SimpleValueAttribute,
+		Rule:                 datasource.Rule,
 	}
 
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		mqttConnectionLost(datasource, c, err)
+		mqttConnectionLost(datasourceMqtt, c, err)
 	})
 	if config.Username != "" {
 		opts.CredentialsProvider = func() (string, string) {
@@ -186,16 +215,16 @@ func mqttRegisterTopic(clientID string, backendname string, destinationmodel str
 	}
 
 	c := mqtt.NewClient(opts)
-	datasource.Client = c
+	datasourceMqtt.Client = c
 
 	err := mqttReconnect(c)
 	if err != nil {
 		return err
 	}
 
-	mqttClients = append(mqttClients, datasource)
+	mqttClients = append(mqttClients, datasourceMqtt)
 
-	err = mqttSubscribe(datasource)
+	err = mqttSubscribe(datasourceMqtt)
 	if err != nil {
 		return err
 	}

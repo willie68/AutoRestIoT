@@ -24,15 +24,15 @@ func registerTransformRule(name string, config string) error {
 	return nil
 }
 
-func transformJSON(name, json string) (string, error) {
+func transformJSON(name string, json []byte) ([]byte, error) {
 	k, ok := rules[name]
 	if !ok {
-		return "", ErrRuleNotDefined
+		return []byte{}, ErrRuleNotDefined
 	}
-	out, transformError := k.TransformJSONStringToString(json)
+	out, transformError := k.TransformInPlace(json)
 	if transformError != nil {
 		log.Alertf("Unable to transform message %v", transformError)
-		return "", transformError
+		return []byte{}, transformError
 	}
 
 	return out, nil

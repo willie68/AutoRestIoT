@@ -59,11 +59,16 @@ func RegisterBackend(backend model.Backend) error {
 	return nil
 }
 
+//GetRuleName building the rule namespace name
+func GetRuleName(backendName string, rulename string) string {
+	return fmt.Sprintf("%s.%s", backendName, rulename)
+}
+
 func createDatasource(datasource model.DataSource, backendname string) error {
 	switch datasource.Type {
 	case "mqtt":
 		clientID := fmt.Sprintf("autorestIoT.%s", datasource.Name)
-		err := mqttRegisterTopic(clientID, backendname, datasource.Destination, datasource.Config.(model.DataSourceConfigMQTT))
+		err := mqttRegisterTopic(clientID, backendname, datasource)
 		if err != nil {
 			return err
 		}
@@ -74,7 +79,7 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 }
 
 func createRule(rule model.Rule, backendname string) error {
-	namespacedName := fmt.Sprintf("%s.%s", backendname, rule.Name)
+	namespacedName := GetRuleName(backendname, rule.Name)
 	json, err := json.Marshal(rule.Transform)
 	if err != nil {
 		return err

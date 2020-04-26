@@ -64,6 +64,7 @@ type DataSource struct {
 	Name        string      `yaml:"name" json:"name"`
 	Type        string      `yaml:"type" json:"type"`
 	Destination string      `yaml:"destination" json:"destination"`
+	Rule        string      `yaml:"rule" json:"rule"`
 	Config      interface{} `yaml:"config" json:"config"`
 }
 
