@@ -12,6 +12,7 @@ type Backend struct {
 	Description string       `yaml:"description" json:"description"`
 	Models      []Model      `yaml:"models" json:"models"`
 	DataSources []DataSource `yaml:"datasources" json:"datasources"`
+	Rules       []Rule       `yaml:"rules" json:"rules"`
 }
 
 //Model definition of a single model
@@ -64,6 +65,12 @@ type DataSource struct {
 	Type        string      `yaml:"type" json:"type"`
 	Destination string      `yaml:"destination" json:"destination"`
 	Config      interface{} `yaml:"config" json:"config"`
+}
+
+type Rule struct {
+	Name        string      `yaml:"name" json:"name"`
+	Description string      `yaml:"description" json:"description"`
+	Transform   interface{} `yaml:"transform" json:"transform"`
 }
 
 //ErrModelDefinitionNotFound model definition not found

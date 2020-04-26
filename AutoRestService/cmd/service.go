@@ -328,6 +328,7 @@ func initAutoRest() {
 		data, err := ioutil.ReadFile(value)
 		bemodel := model.Backend{}
 		bemodel.DataSources = make([]model.DataSource, 0)
+		bemodel.Rules = make([]model.Rule, 0)
 		err = yaml.Unmarshal(data, &bemodel)
 		if err != nil {
 			log.Alertf("%v", err)

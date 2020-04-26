@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -41,6 +42,20 @@ func RegisterBackend(backend model.Backend) error {
 			ok = true
 		}
 	}
+
+	for _, rule := range backend.Rules {
+		ok := false
+		for !ok {
+			err := createRule(rule, backend.Backendname)
+			if err != nil {
+				log.Fatalf("%v", err)
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			ok = true
+		}
+	}
+
 	return nil
 }
 
@@ -55,6 +70,20 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 	default:
 		log.Alertf("type \"%s\" is not availble as data source type", datasource.Type)
 	}
+	return nil
+}
+
+func createRule(rule model.Rule, backendname string) error {
+	namespacedName := fmt.Sprintf("%s.%s", backendname, rule.Name)
+	json, err := json.Marshal(rule.Transform)
+	if err != nil {
+		return err
+	}
+	err = registerTransformRule(namespacedName, string(json))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

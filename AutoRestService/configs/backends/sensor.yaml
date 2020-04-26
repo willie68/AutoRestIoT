@@ -35,6 +35,7 @@ datasources:
   - name: temp_wohnzimmer
     type: mqtt
     destination: temperatur
+    rule: tasmota_ds18b20
     config: 
       broker: 127.0.0.1:1883
       topic: stat/temperatur/wohnzimmer
@@ -45,6 +46,7 @@ datasources:
   - name: temp_kueche
     type: mqtt
     destination: temperatur
+    rule: tasmota_ds18b20
     config: 
       broker: 127.0.0.1:1883
       topic: stat/temperatur/kueche
@@ -110,10 +112,10 @@ datasources:
 rules:
   - name: tasmota_ds18b20
     description: transforming the tasmota json structure of the DS18B20 into my simple structure
-	transform: 
-	  - operation: shift
-	    spec: 
-		  Temperatur: DS18B20.Temperatur
-	  - operation: delete
-	    spec: 
-		  path: DS18B20
+    transform: 
+      - operation: shift
+        spec: 
+          Temperatur: DS18B20.Temperatur
+      - operation: delete
+        spec: 
+          path: DS18B20
