@@ -26,3 +26,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
+
+replace github.com/qntfy/kazaam => H:\privat\ext-git\kazaam

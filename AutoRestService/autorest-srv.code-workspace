@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "..\\TestMQTT"
+		},
+		{
+			"path": "..\\..\\..\\ext-git\\kazaam"
 		}
 	]
 }
