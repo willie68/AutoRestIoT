@@ -107,7 +107,7 @@ func (m *MongoDAO) reloadUsers() {
 			username := strings.ToLower(user["name"].(string))
 			password := user["password"].(string)
 			saltInts := user["salt"].(primitive.Binary)
-			salt := make([]byte, 10)
+			salt := make([]byte, 0)
 			if len(saltInts.Data) != 0 {
 				salt = saltInts.Data
 			}
@@ -118,32 +118,26 @@ func (m *MongoDAO) reloadUsers() {
 	m.users = localUsers
 	m.salts = localSalts
 	if len(m.users) == 0 {
-		salt, _ := crypt.GenerateRandomBytes(20)
 		admin := model.User{
 			Name:     "admin",
 			Password: "admin",
-			Salt:     salt,
 			Admin:    true,
 			Roles:    []string{"admin"},
 		}
 		m.AddUser(admin)
 
-		salt, _ = crypt.GenerateRandomBytes(20)
 		editor := model.User{
 			Name:     "editor",
 			Password: "editor",
-			Salt:     salt,
 			Admin:    false,
 			Guest:    false,
 			Roles:    []string{"edit"},
 		}
 		m.AddUser(editor)
 
-		salt, _ = crypt.GenerateRandomBytes(20)
 		guest := model.User{
 			Name:     "guest",
 			Password: "guest",
-			Salt:     salt,
 			Admin:    false,
 			Guest:    true,
 			Roles:    []string{"read"},
@@ -308,6 +302,7 @@ func (m *MongoDAO) GetUsers() ([]model.User, error) {
 			return nil, err
 		}
 		user.Password = ""
+		user.Salt = nil
 		users = append(users, user)
 	}
 	return users, nil
@@ -400,22 +395,24 @@ func (m *MongoDAO) ChangePWD(username string, newpassword string, oldpassword st
 	}
 
 	oldpassword = BuildPasswordHash(oldpassword, usermodel.Salt)
-	newpassword = BuildPasswordHash(newpassword, usermodel.Salt)
 	if pwd != oldpassword {
 		return errors.New("actual password incorrect")
 	}
+	newsalt, _ := crypt.GenerateRandomBytes(20)
+	newpassword = BuildPasswordHash(newpassword, newsalt)
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	collection := m.database.Collection(usersCollectionName)
 	filter := bson.M{"name": username}
-	update := bson.D{{Key: "$set", Value: bson.D{{Key: "password", Value: newpassword}}}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "password", Value: newpassword}, {Key: "salt", Value: newsalt}}}}
 	result := collection.FindOneAndUpdate(ctx, filter, update)
 	if result.Err() != nil {
 		fmt.Printf("error: %s\n", result.Err().Error())
 		return result.Err()
 	}
 	m.users[username] = newpassword
+	m.salts[username] = newsalt
 	return nil
 }
 

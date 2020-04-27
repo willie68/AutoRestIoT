@@ -7,7 +7,7 @@ require (
 	github.com/aphistic/sweet v0.3.0 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-chi/chi v4.1.1+incompatible
-	github.com/go-chi/docgen v1.0.5 // indirect
+	github.com/go-chi/docgen v1.0.5
 	github.com/go-chi/render v1.0.1
 	github.com/go-delve/delve v1.4.0 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
