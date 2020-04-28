@@ -15,10 +15,13 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/hashicorp/consul v1.7.2 // indirect
 	github.com/hashicorp/consul/api v1.4.0
+	github.com/joyent/triton-go v0.0.0-20180628001255-830d2b111e62
 	github.com/prometheus/client_golang v1.5.1 // indirect
 	github.com/qntfy/jsonparser v1.0.2 // indirect
 	github.com/qntfy/kazaam v3.4.8+incompatible
+	github.com/rs/zerolog v1.18.0 // indirect
 	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.6.3 // indirect
 	github.com/stretchr/testify v1.5.1
 	go.mongodb.org/mongo-driver v1.3.2
 	golang.org/x/crypto v0.0.0-20191106202628-ed6320f186d4

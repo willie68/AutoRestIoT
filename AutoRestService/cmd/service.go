@@ -82,7 +82,7 @@ func routes() *chi.Mux {
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/models", api.ModelRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/files", api.FilesRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/users", api.UsersRoutes())
-		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/admin", api.AdminRoutes())
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/"+api.AdminPrefix, api.AdminRoutes())
 		r.Mount("/health", health.Routes())
 	})
 	return router

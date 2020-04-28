@@ -93,6 +93,15 @@ func NewBackends() Backends {
 	return b
 }
 
+//Names getting all backendnames
+func (m *Backends) Names() []string {
+	names := make([]string, 0)
+	for name := range m.bs {
+		names = append(names, name)
+	}
+	return names
+}
+
 //Contains checking if the manufacturer name is present in the list of manufacturers
 func (m *Backends) Contains(name string) bool {
 	for k := range m.bs {
