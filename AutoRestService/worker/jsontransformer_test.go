@@ -14,9 +14,9 @@ type TestRuleStruct struct {
 }
 
 var TestingRules = []TestRuleStruct{
-	/*	TestRuleStruct{
-			RuleName: "tasmotaTemp",
-			RuleSrc: `[
+	TestRuleStruct{
+		RuleName: "tasmotaTemp",
+		RuleSrc: `[
 				{"operation": "shift",
 					"spec": {
 						"Temperature": "DS18B20.Temperature",
@@ -25,12 +25,12 @@ var TestingRules = []TestRuleStruct{
 					}
 				}
 			]`,
-			JsonSrc: `{"Time":"2020-04-27T08:47:07","DS18B20":{"Id":"0114556E95AA","Temperature":26.9},"TempUnit":"C"}`,
-			JsonExp: `{"Time":"2020-04-27T08:47:07", "Temperature":26.9,"TempUnit":"C"}`,
-		},
-		TestRuleStruct{
-			RuleName: "hmBWMMotion",
-			RuleSrc: `[
+		JsonSrc: `{"Time":"2020-04-27T08:47:07","DS18B20":{"Id":"0114556E95AA","Temperature":26.9},"TempUnit":"C"}`,
+		JsonExp: `{"Time":"2020-04-27T08:47:07", "Temperature":26.9,"TempUnit":"C"}`,
+	},
+	TestRuleStruct{
+		RuleName: "hmBWMMotion",
+		RuleSrc: `[
 				{"operation": "shift",
 					"spec": {
 						"Device": "hm.channelName",
@@ -39,12 +39,12 @@ var TestingRules = []TestRuleStruct{
 					}
 				}
 			]`,
-			JsonSrc: `{"val":false,"ts":1587971766000,"lc":1587971766000,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"LTK0028082","deviceName":"BWM Gartenhütte","deviceType":"HM-Sen-MDIR-O-2","channel":"LTK0028082:1","channelName":"BWM Gartenhütte","channelType":"MOTION_DETECTOR","channelIndex":1,"datapoint":"MOTION","datapointName":"BidCos-RF.LTK0028082:1.MOTION","datapointType":"BOOL","datapointMin":false,"datapointMax":true,"datapointDefault":false,"valueStable":false,"rooms":["Garten"],"room":"Garten","functions":["Homekit"],"function":"Homekit","ts":1587971766000,"lc":1587971766000,"change":false,"cache":true,"working":false,"uncertain":false,"stable":true}}`,
-			JsonExp: `{"Device":"BWM Gartenhütte", "Motion":false,"Time":1587971766000}`,
-		},
-		TestRuleStruct{
-			RuleName: "hmBWMBright",
-			RuleSrc: `[
+		JsonSrc: `{"val":false,"ts":1587971766000,"lc":1587971766000,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"LTK0028082","deviceName":"BWM Gartenhütte","deviceType":"HM-Sen-MDIR-O-2","channel":"LTK0028082:1","channelName":"BWM Gartenhütte","channelType":"MOTION_DETECTOR","channelIndex":1,"datapoint":"MOTION","datapointName":"BidCos-RF.LTK0028082:1.MOTION","datapointType":"BOOL","datapointMin":false,"datapointMax":true,"datapointDefault":false,"valueStable":false,"rooms":["Garten"],"room":"Garten","functions":["Homekit"],"function":"Homekit","ts":1587971766000,"lc":1587971766000,"change":false,"cache":true,"working":false,"uncertain":false,"stable":true}}`,
+		JsonExp: `{"Device":"BWM Gartenhütte", "Motion":false,"Time":1587971766000}`,
+	},
+	TestRuleStruct{
+		RuleName: "hmBWMBright",
+		RuleSrc: `[
 				{"operation": "shift",
 					"spec": {
 						"Device": "hm.channelName",
@@ -53,12 +53,12 @@ var TestingRules = []TestRuleStruct{
 					}
 				}
 			]`,
-			JsonSrc: `{"val":181,"ts":1587973274220,"lc":1587973274220,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"LTK0028082","deviceName":"BWM Gartenhütte","deviceType":"HM-Sen-MDIR-O-2","channel":"LTK0028082:1","channelName":"BWM Gartenhütte","channelType":"MOTION_DETECTOR","channelIndex":1,"datapoint":"BRIGHTNESS","datapointName":"BidCos-RF.LTK0028082:1.BRIGHTNESS","datapointType":"INTEGER","datapointMin":0,"datapointMax":255,"datapointDefault":0,"valuePrevious":180,"valueStable":181,"rooms":["Garten"],"room":"Garten","functions":["Homekit"],"function":"Homekit","ts":1587973274220,"tsPrevious":1587972873227,"lc":1587973274220,"change":true,"cache":false,"uncertain":false,"stable":true}}`,
-			JsonExp: `{"Device":"BWM Gartenhütte", "Brightness":181,"Time":1587973274220}`,
-		},
-		TestRuleStruct{
-			RuleName: "hmTermTemp",
-			RuleSrc: `[
+		JsonSrc: `{"val":181,"ts":1587973274220,"lc":1587973274220,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"LTK0028082","deviceName":"BWM Gartenhütte","deviceType":"HM-Sen-MDIR-O-2","channel":"LTK0028082:1","channelName":"BWM Gartenhütte","channelType":"MOTION_DETECTOR","channelIndex":1,"datapoint":"BRIGHTNESS","datapointName":"BidCos-RF.LTK0028082:1.BRIGHTNESS","datapointType":"INTEGER","datapointMin":0,"datapointMax":255,"datapointDefault":0,"valuePrevious":180,"valueStable":181,"rooms":["Garten"],"room":"Garten","functions":["Homekit"],"function":"Homekit","ts":1587973274220,"tsPrevious":1587972873227,"lc":1587973274220,"change":true,"cache":false,"uncertain":false,"stable":true}}`,
+		JsonExp: `{"Device":"BWM Gartenhütte", "Brightness":181,"Time":1587973274220}`,
+	},
+	TestRuleStruct{
+		RuleName: "hmTermTemp",
+		RuleSrc: `[
 				{"operation": "shift",
 					"spec": {
 						"Device": "hm.deviceName",
@@ -67,10 +67,10 @@ var TestingRules = []TestRuleStruct{
 					}
 				}
 			]`,
-			JsonSrc: `{"val":22.6,"ts":1587973561640,"lc":1587973561640,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"OEQ1670535","deviceName":"Thermostat Bad","deviceType":"HM-TC-IT-WM-W-EU","channel":"OEQ1670535:1","channelName":"HM-TC-IT-WM-W-EU OEQ1670535:1","channelType":"WEATHER_TRANSMIT","channelIndex":1,"datapoint":"TEMPERATURE","datapointName":"BidCos-RF.OEQ1670535:1.TEMPERATURE","datapointType":"FLOAT","datapointMin":-10,"datapointMax":50,"datapointDefault":0,"datapointControl":"NONE","valuePrevious":22.7,"valueStable":22.6,"rooms":["Bad"],"room":"Bad","functions":["Heizung"],"function":"Heizung","ts":1587973561640,"tsPrevious":1587973426887,"lc":1587973561640,"change":true,"cache":false,"uncertain":false,"stable":true}}`,
-			JsonExp: `{"Device":"Thermostat Bad", "Temperature":22.6,"Time":1587973561640}`,
-		},
-	*/TestRuleStruct{
+		JsonSrc: `{"val":22.6,"ts":1587973561640,"lc":1587973561640,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"OEQ1670535","deviceName":"Thermostat Bad","deviceType":"HM-TC-IT-WM-W-EU","channel":"OEQ1670535:1","channelName":"HM-TC-IT-WM-W-EU OEQ1670535:1","channelType":"WEATHER_TRANSMIT","channelIndex":1,"datapoint":"TEMPERATURE","datapointName":"BidCos-RF.OEQ1670535:1.TEMPERATURE","datapointType":"FLOAT","datapointMin":-10,"datapointMax":50,"datapointDefault":0,"datapointControl":"NONE","valuePrevious":22.7,"valueStable":22.6,"rooms":["Bad"],"room":"Bad","functions":["Heizung"],"function":"Heizung","ts":1587973561640,"tsPrevious":1587973426887,"lc":1587973561640,"change":true,"cache":false,"uncertain":false,"stable":true}}`,
+		JsonExp: `{"Device":"Thermostat Bad", "Temperature":22.6,"Time":1587973561640}`,
+	},
+	TestRuleStruct{
 		RuleName: "hmTermHumi",
 		RuleSrc: `[
 			{"operation": "shift",
@@ -90,7 +90,7 @@ var TestingRules = []TestRuleStruct{
 			}
 		]`,
 		JsonSrc: `{"val":40, "ts":1587973561647,"lc":1587973561647,"hm":{"ccu":"localhost","iface":"BidCos-RF","device":"OEQ1670535","deviceName":"Thermostat Bad","deviceType":"HM-TC-IT-WM-W-EU","channel":"OEQ1670535:1","channelName":"HM-TC-IT-WM-W-EU OEQ1670535:1","channelType":"WEATHER_TRANSMIT","channelIndex":1,"datapoint":"HUMIDITY","datapointName":"BidCos-RF.OEQ1670535:1.HUMIDITY","datapointType":"INTEGER","datapointMin":0,"datapointMax":99,"datapointDefault":0,"datapointControl":"NONE","valuePrevious":39,"valueStable":40,"rooms":["Bad"],"room":"Bad","functions":["Heizung"],"function":"Heizung","ts":1587973561647,"tsPrevious":1587973426898,"lc":1587973561647,"change":true,"cache":false,"uncertain":false,"stable":true}}`,
-		JsonExp: `{"Device":"Thermostat Bad", "Humidity":40,"Time":1587973561647}`,
+		JsonExp: `{"Device":"Thermostat Bad", "Humidity":40,"Time":"2020-04-27T09:46:01"}`,
 	},
 }
 
