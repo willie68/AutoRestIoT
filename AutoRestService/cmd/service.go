@@ -30,7 +30,6 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/docgen"
 	"github.com/go-chi/render"
 
 	flag "github.com/spf13/pflag"
@@ -145,6 +144,12 @@ func main() {
 	storage := &dao.MongoDAO{}
 	storage.InitDAO(config.Get().MongoDB)
 	dao.SetStorage(storage)
+
+	// initialise the identity managment system
+	idm := dao.NewIDM()
+	idm.InitIDM()
+	dao.SetIDM(idm)
+
 	health.InitHealthSystem(healthCheckConfig)
 	apikey = getApikey()
 	log.Infof("systemid: %s", serviceConfig.SystemID)
@@ -159,8 +164,6 @@ func main() {
 		log.Infof("%s %s", method, route)
 		return nil
 	}
-
-	fmt.Println(docgen.MarkdownRoutesDoc(router, docgen.MarkdownOpts{}))
 
 	if err := chi.Walk(router, walkFunc); err != nil {
 		log.Alertf("Logging err: %s", err.Error())

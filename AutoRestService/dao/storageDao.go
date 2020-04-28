@@ -30,15 +30,11 @@ type StorageDao interface {
 	DeleteIndex(route model.Route, name string) error
 	UpdateIndex(route model.Route, index model.Index) error
 
-	CheckUser(username string, password string) bool
-	GetUser(username string) (model.User, bool)
-	UserInRoles(username string, roles []string) bool
-
 	GetUsers() ([]model.User, error)
-	GetSalt(username string) ([]byte, bool)
-	AddUser(user model.User) error
+	GetUser(username string) (model.User, bool)
+	AddUser(user model.User) (model.User, error)
 	DeleteUser(username string) error
-	ChangePWD(username string, newpassword string, oldpassword string) error
+	ChangePWD(username string, newpassword string) (model.User, error)
 
 	DeleteBackend(beackend string) error
 	DropAll()

@@ -495,26 +495,38 @@ wird zu
 Ein `timestamp`-Transformation transformiert und formatiert Zeitzeichenfolgen in der Golang
 Syntax. Diese Transformation unterstützt den Operator `$now` für `inputFormat`, der den aktuellen Zeitstempel gemäß dem `outputFormat` formatiert und am angegebenen Pfad einträgt.
 `$unix` wird sowohl für Eingabe- als auch für Ausgabeformate als Unix-Zeit unterstützt
-Anzahl der Sekunden seit dem 1. Januar 1970 UTC als Ganzzahl.
+Anzahl der Sekunden seit dem 1. Januar 1970 UTC als Ganzzahl. `$unixext` ist eine Abwandlung für Unixdaten in Millisekunden seit Epoche. Diese wird gerne in IoT Umgebungen verwendet.
 
 ```yaml
 - operation: timestamp
-  timestamp[0]:
-    inputFormat: Mon Jan _2 15:04:05 -0700 2006
-    outputFormat: '2006-01-02T15:04:05-0700'
-  nowTimestamp:
-    inputFormat: "$now"
-    outputFormat: '2006-01-02T15:04:05-0700'
-  epochTimestamp:
-    inputFormat: '2006-01-02T15:04:05-0700'
-    outputFormat: "$unix"
+  spec: 
+    timestamp[0]:
+      inputFormat: Mon Jan _2 15:04:05 -0700 2006
+      outputFormat: '2006-01-02T15:04:05-0700'
+    nowTimestamp:
+      inputFormat: "$now"
+      outputFormat: '2006-01-02T15:04:05-0700'
+    epochTimestamp:
+      inputFormat: '2006-01-02T15:04:05-0700'
+      outputFormat: "$unix"
 ```
 
 ```javascript
 {
-  "operation": "extract",
+  "operation": "timestamp",
   "spec": {
-    "path": "doc.guidObjects[0].path.to.subobject"
+    "timestamp[0]": {
+      "inputFormat": "Mon Jan _2 15:04:05 -0700 2006",
+      "outputFormat": "2006-01-02T15:04:05-0700"
+    },
+    "nowTimestamp": {
+      "inputFormat": "$now",
+      "outputFormat": "2006-01-02T15:04:05-0700"
+    },
+    "epochTimestamp": {
+      "inputFormat": "2006-01-02T15:04:05-0700",
+      "outputFormat": "$unix"
+    }
   }
 }
 ```

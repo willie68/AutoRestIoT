@@ -16,13 +16,14 @@ func BasicAuth(realm string) func(next http.Handler) http.Handler {
 				basicAuthFailed(w, realm)
 				return
 			}
-			salt, ok := dao.GetStorage().GetSalt(user)
+			idm := dao.GetIDM()
+			salt, ok := idm.GetSalt(user)
 			if !ok {
 				basicAuthFailed(w, realm)
 				return
 			}
 			pass = dao.BuildPasswordHash(pass, salt)
-			if !dao.GetStorage().CheckUser(user, pass) {
+			if !idm.CheckUser(user, pass) {
 				basicAuthFailed(w, realm)
 				return
 			}

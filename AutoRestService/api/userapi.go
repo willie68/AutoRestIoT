@@ -28,7 +28,14 @@ func GetUsersEndpoint(response http.ResponseWriter, request *http.Request) {
 		render.Render(response, request, ErrInternalServer(err))
 		return
 	}
-	render.JSON(response, request, users)
+	myUsers := make([]model.User, 0)
+	for _, user := range users {
+		user.Password = ""
+		user.NewPassword = ""
+		user.Salt = []byte{}
+		myUsers = append(myUsers, user)
+	}
+	render.JSON(response, request, myUsers)
 }
 
 //GetUserEndpoint getting a user info
@@ -37,6 +44,7 @@ func GetUserEndpoint(response http.ResponseWriter, request *http.Request) {
 	user, ok := dao.GetStorage().GetUser(username)
 	user.Password = ""
 	user.NewPassword = ""
+	user.Salt = []byte{}
 	if !ok {
 		render.Render(response, request, ErrInternalServer(errors.New("")))
 		return
@@ -63,12 +71,14 @@ func PostUserEndpoint(response http.ResponseWriter, request *http.Request) {
 		render.Render(response, request, ErrForbidden)
 		return
 	}
+	idm := dao.GetIDM()
 
-	err = dao.GetStorage().AddUser(user)
+	user, err = idm.AddUser(user)
 	if err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
+	user.Salt = []byte{}
 	user.Password = "#####"
 	user.NewPassword = ""
 	render.Status(request, http.StatusCreated)
@@ -98,12 +108,14 @@ func PutUserEndpoint(response http.ResponseWriter, request *http.Request) {
 		render.Render(response, request, ErrForbidden)
 		return
 	}
+	idm := dao.GetIDM()
 
-	err = dao.GetStorage().ChangePWD(username, user.NewPassword, user.Password)
+	err = idm.ChangePWD(username, user.NewPassword, user.Password)
 	if err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
+	user.Salt = []byte{}
 	user.Password = "#####"
 	user.NewPassword = ""
 	render.JSON(response, request, user)
@@ -122,8 +134,9 @@ func DeleteUserEndpoint(response http.ResponseWriter, request *http.Request) {
 		render.Render(response, request, ErrForbidden)
 		return
 	}
+	idm := dao.GetIDM()
 
-	err := dao.GetStorage().DeleteUser(username)
+	err := idm.DeleteUser(username)
 	if err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
 		return
