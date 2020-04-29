@@ -59,7 +59,7 @@ func RegisterBackend(backend model.Backend) error {
 	for _, destination := range backend.Destinations {
 		ok := false
 		for !ok {
-			err := Destinations.Add(backend.Backendname, destination)
+			err := Destinations.Register(backend.Backendname, destination)
 			if err != nil {
 				log.Fatalf("%v", err)
 				time.Sleep(10 * time.Second)

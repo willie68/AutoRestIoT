@@ -13,6 +13,28 @@ import (
 	"github.com/willie68/AutoRestIoT/model"
 )
 
+func CreateMQTTDestinationProcessor(destination model.Destination) (DestinationProcessor, error) {
+	processor := MQTTDestinationProcessor{
+		Destination: destination,
+	}
+	return &processor, nil
+}
+
+//MQTTDestinationProcessor does nothing
+type MQTTDestinationProcessor struct {
+	Destination model.Destination
+}
+
+//Initialise do nothing on initialise
+func (n *MQTTDestinationProcessor) Initialise(destination model.Destination) error {
+	return nil
+}
+
+//Store do nothing on store
+func (n *MQTTDestinationProcessor) Store(data model.JSONMap) (string, error) {
+	return "MQTTnoId", nil
+}
+
 type MqttDatasource struct {
 	Client                   mqtt.Client
 	Broker                   string
