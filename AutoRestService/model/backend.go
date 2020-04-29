@@ -202,6 +202,16 @@ func (b *Backend) GetModel(modelname string) (Model, bool) {
 	return Model{}, false
 }
 
+//GetRule getting a rule definition from the backend definition
+func (b *Backend) GetRule(rulename string) (Rule, bool) {
+	for _, rule := range b.Rules {
+		if rule.Name == rulename {
+			return rule, true
+		}
+	}
+	return Rule{}, false
+}
+
 //GetField getting a field definition from the model definition
 func (m *Model) GetField(fieldname string) (Field, bool) {
 	for _, field := range m.Fields {

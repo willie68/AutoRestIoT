@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "119ccec9-a715-4e98-91f8-3d4a32af16e8",
+		"_postman_id": "8521d47b-0fcf-44da-93a5-ce7d9ffc2081",
 		"name": "AutoRestIoT",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -91,15 +91,15 @@
 					]
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8080/health/health",
-					"protocol": "http",
+					"raw": "https://127.0.0.1:9443/health/health",
+					"protocol": "https",
 					"host": [
 						"127",
 						"0",
 						"0",
 						"1"
 					],
-					"port": "8080",
+					"port": "9443",
 					"path": [
 						"health",
 						"health"
@@ -109,12 +109,12 @@
 			"response": []
 		},
 		{
-			"name": "healthcheck",
+			"name": "DEV: ssl healthcheck",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "https://127.0.0.1:8443/health/health",
+					"raw": "https://127.0.0.1:9443/health/health",
 					"protocol": "https",
 					"host": [
 						"127",
@@ -122,7 +122,7 @@
 						"0",
 						"1"
 					],
-					"port": "8443",
+					"port": "9443",
 					"path": [
 						"health",
 						"health"
@@ -132,12 +132,12 @@
 			"response": []
 		},
 		{
-			"name": "readiness",
+			"name": "DEV: ssl readiness",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "https://127.0.0.1:8443/health/readiness",
+					"raw": "https://127.0.0.1:9443/health/readiness",
 					"protocol": "https",
 					"host": [
 						"127",
@@ -145,7 +145,7 @@
 						"0",
 						"1"
 					],
-					"port": "8443",
+					"port": "9443",
 					"path": [
 						"health",
 						"readiness"
@@ -155,28 +155,60 @@
 			"response": []
 		},
 		{
-			"name": "GetConfig",
+			"name": "DEV: ssl Get Users",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "string"
+						}
+					]
+				},
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-es-tenant",
-						"value": "EASY",
-						"type": "text"
-					},
-					{
-						"key": "X-es-apikey",
-						"value": "9db6b3e13c150d6c000776a89409661e",
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
 						"equals": true
 					},
 					{
-						"key": "X-es-system",
-						"value": "easy1",
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
 						"type": "text"
 					}
 				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ApplicationName\": \"schematic\",\n    \"Description\": \"\",\n    \"Models\": [\n        {\n            \"Name\": \"schematic\",\n            \"Description\": \"\",\n            \"Fields\": [\n                {\n                    \"Name\": \"manufacturer\",\n                    \"Type\": \"string\",\n                    \"Mandantory\": true,\n                    \"Collection\": false\n                },\n                {\n                    \"Name\": \"model\",\n                    \"Type\": \"string\",\n                    \"Mandantory\": true,\n                    \"Collection\": false\n                },\n                {\n                    \"Name\": \"tags\",\n                    \"Type\": \"string\",\n                    \"Mandantory\": false,\n                    \"Collection\": true\n                }\n            ],\n            \"Indexes\": [\n                {\n                    \"Name\": \"fulltext\",\n                    \"Fields\": [\n                        \"manufactuer\",\n                        \"model\",\n                        \"tags\"\n                    ]\n                },\n                {\n                    \"Name\": \"manufacturer\",\n                    \"Fields\": [\n                        \"manufacturer\"\n                    ]\n                },\n                {\n                    \"Name\": \"tags\",\n                    \"Fields\": [\n                        \"tags\"\n                    ]\n                }\n            ]\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "https://127.0.0.1:8443/api/v1/config/",
+					"raw": "https://127.0.0.1:9443/api/v1/users/",
 					"protocol": "https",
 					"host": [
 						"127",
@@ -184,11 +216,1038 @@
 						"0",
 						"1"
 					],
-					"port": "8443",
+					"port": "9443",
 					"path": [
 						"api",
 						"v1",
-						"config",
+						"users",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl changePWD",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"name\": \"guest\",\r\n\t\"password\": \"guest\",\r\n\t\"newpassword\": \"guest1\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/users/guest",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"users",
+						"guest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Post File",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/readme.md"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/files/mybe/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"files",
+						"mybe",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Create Model",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"title\",\n    \"foreignid\": \"12345678\",\n    \"date\": \"2020-04-09T09:46:06.252+02:00\",\n    \"array\": [\n        \"gut\",\n        \"besser\"\n    ],\n    \"file\": \"5e8ec42bd40bf595c1def721\",\n    \"number\": 1.234,\n    \"integer\": 2345,\n    \"bool_1\": 1,\n    \"bool_2\": true,\n    \"string\": \"string\",\n    \"map\": {\n        \"key_string\": \"value_string\",\n        \"key_int\": 2345,\n        \"key_num\": 2.345\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/mybe/mymodel/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"mybe",
+						"mymodel",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Get Model",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "guest1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "guest",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"ApplicationName\":\"schematic\",\"Description\":\"\",\"Models\":[{\"Name\":\"schematic\",\"Description\":\"\",\"Fields\":[{\"Name\":\"manufacturer\",\"Type\":\"string\",\"Mandantory\":true,\"Collection\":false},{\"Name\":\"model\",\"Type\":\"string\",\"Mandantory\":true,\"Collection\":false},{\"Name\":\"tags\",\"Type\":\"string\",\"Mandantory\":false,\"Collection\":true}],\"Indexes\":[{\"Name\":\"fulltext\",\"Fields\":[\"manufactuer\",\"model\",\"tags\"]},{\"Name\":\"manufacturer\",\"Fields\":[\"manufacturer\"]},{\"Name\":\"tags\",\"Fields\":[\"tags\"]}]}]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/mybe/mymodel/5e8ec432d40bf595c1def723",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"mybe",
+						"mymodel",
+						"5e8ec432d40bf595c1def723"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Update Model",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"ApplicationName\": \"schematic\",\r\n    \"Description\": \"\",\r\n    \"Models\": [\r\n        {\r\n            \"Description\": \"\",\r\n            \"Fields\": [\r\n                {\r\n                    \"Collection\": false,\r\n                    \"Mandantory\": true,\r\n                    \"Name\": \"manufacturer\",\r\n                    \"Type\": \"string\"\r\n                },\r\n                {\r\n                    \"Collection\": false,\r\n                    \"Mandantory\": true,\r\n                    \"Name\": \"model\",\r\n                    \"Type\": \"string\"\r\n                },\r\n                {\r\n                    \"Collection\": true,\r\n                    \"Mandantory\": false,\r\n                    \"Name\": \"tags\",\r\n                    \"Type\": \"string\"\r\n                }\r\n            ],\r\n            \"Indexes\": [\r\n                {\r\n                    \"Fields\": [\r\n                        \"manufactuer\",\r\n                        \"model\",\r\n                        \"tags\"\r\n                    ],\r\n                    \"Name\": \"fulltext\"\r\n                },\r\n                {\r\n                    \"Fields\": [\r\n                        \"manufacturer\"\r\n                    ],\r\n                    \"Name\": \"manufacturer\"\r\n                },\r\n                {\r\n                    \"Fields\": [\r\n                        \"tags\"\r\n                    ],\r\n                    \"Name\": \"tags\"\r\n                }\r\n            ],\r\n            \"Name\": \"schematic\"\r\n        }\r\n    ],\r\n    \"_created\": \"2020-04-07T09:13:24.606+02:00\",\r\n    \"_id\": \"5e8c2814867dfcf74776e418\",\r\n    \"_modified\": \"2020-04-07T09:13:24.606+02:00\",\r\n    \"_owner\": \"editor\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/mybe/mymodel/5e8c2814867dfcf74776e418",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"mybe",
+						"mymodel",
+						"5e8c2814867dfcf74776e418"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Delete Model",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/schematics/schematic/5e8c8077451fc560b0d01f4c",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"schematics",
+						"schematic",
+						"5e8c8077451fc560b0d01f4c"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Delete Schematic Model",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/schematics/schematic/5e8ec28b7043d7b6a7d0d1b5",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"schematics",
+						"schematic",
+						"5e8ec28b7043d7b6a7d0d1b5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl GET File",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/readme.md"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/files/mybe/5e8b3d750666bc965feca1bb",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"files",
+						"mybe",
+						"5e8b3d750666bc965feca1bb"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Post backend",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/readme.md"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/admin/backends/mybe/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"admin",
+						"backends",
+						"mybe",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Get backend names",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/readme.md"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/admin/backends/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"admin",
+						"backends",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Delete backend",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/readme.md"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/admin/backends/sensors/dropdata",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"admin",
+						"backends",
+						"sensors",
+						"dropdata"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://127.0.0.1:9443/api/v1/models/mybe/mymodel/",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "guest",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "guest",
+							"type": "string"
+						},
+						{
+							"key": "saveHelperData",
+							"type": "any"
+						},
+						{
+							"key": "showPassword",
+							"value": false,
+							"type": "boolean"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c",
+						"equals": true
+					},
+					{
+						"key": "X-mcs-system",
+						"value": "autorest-srv",
+						"type": "text"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"value": "MCS",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/mybe/mymodel/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"mybe",
+						"mymodel",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Query Model",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "editor",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "editor",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"equals": true,
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c"
+					},
+					{
+						"key": "X-mcs-system",
+						"type": "text",
+						"value": "autorest-srv"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"type": "text",
+						"value": "MCS"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"type": "text",
+						"value": "true"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"ApplicationName\":\"schematic\",\"Description\":\"\",\"Models\":[{\"Name\":\"schematic\",\"Description\":\"\",\"Fields\":[{\"Name\":\"manufacturer\",\"Type\":\"string\",\"Mandantory\":true,\"Collection\":false},{\"Name\":\"model\",\"Type\":\"string\",\"Mandantory\":true,\"Collection\":false},{\"Name\":\"tags\",\"Type\":\"string\",\"Mandantory\":false,\"Collection\":true}],\"Indexes\":[{\"Name\":\"fulltext\",\"Fields\":[\"manufactuer\",\"model\",\"tags\"]},{\"Name\":\"manufacturer\",\"Fields\":[\"manufacturer\"]},{\"Name\":\"tags\",\"Fields\":[\"tags\"]}]}]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/models/mybe/mymodel/?query=",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"models",
+						"mybe",
+						"mymodel",
+						""
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DEV: ssl Ruletest",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "admin",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"equals": true,
+						"key": "X-mcs-apikey",
+						"value": "5854d123dd25f310395954f7c450171c"
+					},
+					{
+						"key": "X-mcs-system",
+						"type": "text",
+						"value": "autorest-srv"
+					},
+					{
+						"key": "X-mcs-tenant",
+						"type": "text",
+						"value": "MCS"
+					},
+					{
+						"key": "X-mcs-deleteref",
+						"type": "text",
+						"value": "true"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/E:/DATEN/easygit/GoBlobStore/test/readme.md"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://127.0.0.1:9443/api/v1/admin/backends/sensors/",
+					"protocol": "https",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "9443",
+					"path": [
+						"api",
+						"v1",
+						"admin",
+						"backends",
+						"sensors",
 						""
 					]
 				}

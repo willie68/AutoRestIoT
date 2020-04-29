@@ -26,7 +26,7 @@ func registerTransformRule(name string, config string) error {
 	return nil
 }
 
-func transformJSON(name string, json []byte) ([]byte, error) {
+func TransformJSON(name string, json []byte) ([]byte, error) {
 	k, ok := rules[name]
 	if !ok {
 		return []byte{}, ErrRuleNotDefined

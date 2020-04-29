@@ -120,7 +120,7 @@ func mqttStoreMessage(datasource MqttDatasource, client mqtt.Client, msg mqtt.Me
 			log.Alertf("%v", err)
 			return
 		}
-		newJson, err := transformJSON(ruleName, jsonBytes)
+		newJson, err := TransformJSON(ruleName, jsonBytes)
 		if err != nil {
 			log.Alertf("%v", err)
 			return

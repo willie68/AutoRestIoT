@@ -37,7 +37,7 @@ datasources:
     destination: temperatur
     rule: tasmota_ds18b20
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: stat/temperatur/wohnzimmer
       payload: application/json
       username: temp
@@ -48,7 +48,7 @@ datasources:
     destination: temperatur
     rule: tasmota_ds18b20
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: tele/tasmota_63E6F8/SENSOR
       payload: application/json
       username: temp
@@ -58,7 +58,7 @@ datasources:
     type: mqtt
     destination: temperatur
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/string
       payload: application/x.simple
       username: temp
@@ -69,7 +69,7 @@ datasources:
     type: mqtt
     destination: temperatur
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/int
       payload: application/x.simple
       username: temp
@@ -80,7 +80,7 @@ datasources:
     type: mqtt
     destination: temperatur
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/float
       payload: application/x.simple
       username: temp
@@ -91,7 +91,7 @@ datasources:
     type: mqtt
     destination: temperatur
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/time
       payload: application/x.simple
       username: temp
@@ -102,7 +102,7 @@ datasources:
     type: mqtt
     destination: temperatur
     config: 
-      broker: 127.0.0.1:1883
+      broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/bool
       payload: application/x.simple
       username: temp
@@ -117,3 +117,29 @@ rules:
         spec: 
           Temperature: DS18B20.Temperature
           TempUnit: TempUnit
+          Datetime: Time
+          Timestamp: Time
+          Msg: $
+      - operation: timestamp
+        spec:
+          Timestamp: {
+            inputFormat: 2006-01-02T15:04:05,
+            outputFormat: $unixext
+          }
+  - name: hm_temp_simple
+    description: handle homematic temperatur rightly
+    transform:
+      - operation: shift
+        spec: 
+          Temperature: val
+          Timestamp: ts
+          Datetime: ts
+      - operation: default
+        spec: 
+          TempUnit: C
+      - operation: timestamp
+        spec:
+          Datetime: {
+            inputFormat: $unixext,
+            outputFormat: 2006-01-02T15:04:05-0700
+          }

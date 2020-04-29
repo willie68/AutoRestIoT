@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -10,6 +11,7 @@ import (
 	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/logging"
 	"github.com/willie68/AutoRestIoT/model"
+	"github.com/willie68/AutoRestIoT/worker"
 )
 
 var log logging.ServiceLogger
@@ -21,12 +23,14 @@ const BackendsPrefix = "backends"
 func AdminRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/", BackendsPrefix), GetAdminBackendsHandler)
+	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/", BackendsPrefix), PostAdminBackendHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/", BackendsPrefix), GetAdminBackendHandler)
-	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/{bename}/", BackendsPrefix), PostAdminBackendHandler)
 	router.With(RoleCheck([]string{"admin"})).Delete(fmt.Sprintf("/%s/{bename}/dropdata", BackendsPrefix), DeleteAdminBackendEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/models", BackendsPrefix), GetAdminModelsHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/datasources", BackendsPrefix), GetAdminDatasourcesHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/rules", BackendsPrefix), GetAdminRulesHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/rules/{rulename}", BackendsPrefix), GetAdminRulesRuleHandler)
+	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/{bename}/rules/{rulename}/test", BackendsPrefix), PostAdminRulesRuleTestHandler)
 	return router
 }
 
@@ -67,8 +71,7 @@ func GetAdminBackendHandler(response http.ResponseWriter, request *http.Request)
 
 // PostAdminBackendHandler create a new backend
 func PostAdminBackendHandler(response http.ResponseWriter, request *http.Request) {
-	backend := chi.URLParam(request, "bename")
-	log.Infof("POST: path: %s, be: %s", request.URL.Path, backend)
+	log.Infof("POST: path: %s", request.URL.Path)
 	render.Render(response, request, ErrNotImplemted)
 }
 
@@ -128,4 +131,52 @@ func GetAdminRulesHandler(response http.ResponseWriter, request *http.Request) {
 	}
 	rules := backend.Rules
 	render.JSON(response, request, rules)
+}
+
+//GetAdminRulesRuleHandler getting all rules of a backend
+func GetAdminRulesRuleHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	ruleName := chi.URLParam(request, "rulename")
+	log.Infof("GET: path: %s, be: %s", request.URL.Path, backendName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	rule, ok := backend.GetRule(ruleName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	render.JSON(response, request, rule)
+}
+
+//PostAdminRulesRuleTestHandler getting all rules of a backend
+func PostAdminRulesRuleTestHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	ruleName := chi.URLParam(request, "rulename")
+	log.Infof("POST: path: %s, be: %s", request.URL.Path, backendName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	_, ok = backend.GetRule(ruleName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	namespacedRulename := worker.GetRuleName(backendName, ruleName)
+	body, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	transformedJson, err := worker.TransformJSON(namespacedRulename, body)
+	if err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	response.Header().Add("Content-Type", "application/json")
+	response.Write(transformedJson)
 }

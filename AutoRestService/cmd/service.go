@@ -35,9 +35,7 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-/*
-apiVersion implementing api version for this service
-*/
+//apiVersion implementing api version for this service
 const apiVersion = "1"
 const servicename = "autorest-srv"
 

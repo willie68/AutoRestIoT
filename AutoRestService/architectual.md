@@ -1,6 +1,6 @@
 # Auto Rest IoT Service #
 
-## REST Interface
+## Einleitung
 
 Dieser kleine Service ermöglicht es, schnell eine permanente Datenspeicherung über ein einfaches REST/gRPC Interface zu ermöglichen. 
 
@@ -732,3 +732,449 @@ wird zu
   }
 }
 ```
+
+## REST Interface
+
+Hier nun folgt die Beschreibung des REST Interfaces. Beispielhafte REST Calls sind als Postman Collection im Ordner test/postman vorhanden. 
+
+Beispielhaft werden hier alle Calls als Calls auf den lokalen Server (127.0.0.1) mit dem Port 9443 bereitgestellt. Bei einer anderen Serverinstanz bitte entsprechend ändern.
+
+### Admin API
+
+Security: Ja, Authentifizierung derzeit als BasicAuth.
+Role: admin
+
+zus. Header:
+
+**X-mcs-system**: autorest-srv  (Konfigurationseinstellung: systemID)
+
+**X-mcs-apikey**: {uuid} 
+Wird beim Starten des Servers auf der Konsole ausgegeben. 
+
+```
+...
+2020/04/29 08:43:04 systemid: autorest-srv
+2020/04/29 08:43:04 apikey: 5854d123dd25f310395954f7c450171c
+2020/04/29 08:43:04 ssl: true
+...
+```
+
+
+
+#### Liste alle Backends
+
+**Request**: **GET**: https://127.0.0.1:9443/api/v1/admin/backends
+
+**Beschreibung**: Liefert eine Liste mit allen Backenddefinitioninformationen. D.h. pro Backend werden nur der Name, die Beschreibung und die URL auf die Definition ausgeliefert.
+
+**Request**: **GET**: https://127.0.0.1:9443/api/v1/admin/backends
+
+**Response**:
+
+```JSON
+[
+    {
+        "Name": "sensors",
+        "Description": "sensor model für storing and retrieving sensor data",
+        "URL": "https://127.0.0.1:9443/api/v1/admin/backends/sensors/"
+    },
+    {
+        "Name": "mybe",
+        "Description": "",
+        "URL": "https://127.0.0.1:9443/api/v1/admin/backends/mybe/"
+    }
+]
+```
+
+#### Definition eines Backends
+
+**GET**: https://127.0.0.1:9443/api/v1/admin/backends/{backendname}/
+
+**Beschreibung**: Liefert die Definition eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/
+
+**Response**:
+
+```JSON
+{
+    "backendname": "sensors",
+    "description": "sensor model für storing and retrieving sensor data",
+    "models": [
+        {
+            "name": "temperatur",
+            "description": "",
+            "fields": [
+                {
+                    "name": "temperatur",
+                    "type": "float",
+                    "mandatory": false,
+                    "collection": false
+                },
+                {
+                    "name": "source",
+                    "type": "string",
+                    "mandatory": false,
+                    "collection": false
+                }
+            ],
+            "indexes": null
+        }
+    ],
+    "datasources": [
+        {
+            "name": "temp_wohnzimmer",
+            "type": "mqtt",
+            "destination": "temperatur",
+            "rule": "tasmota_ds18b20",
+            "config": {
+                "broker": "127.0.0.1:1883",
+                "topic": "stat/temperatur/wohnzimmer",
+                "payload": "application/json",
+                "username": "temp",
+                "password": "temp",
+                "addTopicAsAttribute": "topic",
+                "simpleValueAttribute": ""
+            }
+        },
+        {
+            "name": "temp_kueche",
+            "type": "mqtt",
+            "destination": "temperatur",
+            "rule": "tasmota_ds18b20",
+            "config": {
+                "broker": "127.0.0.1:1883",
+                "topic": "tele/tasmota_63E6F8/SENSOR",
+                "payload": "application/json",
+                "username": "temp",
+                "password": "temp",
+                "addTopicAsAttribute": "topic",
+                "simpleValueAttribute": ""
+            }
+        }
+    ],
+    "rules": [
+        {
+            "name": "tasmota_ds18b20",
+            "description": "transforming the tasmota json structure of the DS18B20 into my simple structure",
+            "transform": [
+                {
+                    "operation": "shift",
+                    "spec": {
+                        "TempUnit": "TempUnit",
+                        "Temperature": "DS18B20.Temperature"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "hm_temp_simple",
+            "description": "handle homematic temperatur rightly",
+            "transform": [
+                {
+                    "operation": "shift",
+                    "spec": {
+                        "Datetime": "ts",
+                        "Temperature": "val",
+                        "Timestamp": "ts"
+                    }
+                },
+                {
+                    "operation": "default",
+                    "spec": {
+                        "TempUnit": "°C"
+                    }
+                },
+                {
+                    "operation": "timestamp",
+                    "spec": {
+                        "Datetime": {
+                            "inputFormat": "$unixext",
+                            "outputFormat": "2006-01-02T15:04:05-0700"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Neues Backends anlegen
+
+**POST**: https://127.0.0.1:9443/api/v1/admin/backends/
+
+**Beschreibung**: Liefert die Definition eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/
+
+**Response**: **Not implemented Yet**
+
+#### Daten eines Backends löschen
+
+**DELETE**: https://127.0.0.1:9443/api/v1/admin/backends/
+
+**Beschreibung**: Löscht alle Daten eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/dropdata
+
+**Response**: 
+
+```json
+{
+    "backend": "sensors",
+    "msg": "backend sensors deleted. All data destroyed."
+}
+```
+
+#### Liste aller Modelle eines Backends 
+
+**GET**: https://127.0.0.1:9443/api/v1/admin/backends/{backendname}/models
+
+**Beschreibung**: Liefert eine Liste aller Modelle eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/models
+
+**Response**: 
+
+```json
+[
+    {
+        "name": "temperatur",
+        "description": "",
+        "fields": [
+            {
+                "name": "temperatur",
+                "type": "float",
+                "mandatory": false,
+                "collection": false
+            },
+            {
+                "name": "source",
+                "type": "string",
+                "mandatory": false,
+                "collection": false
+            }
+        ],
+        "indexes": null
+    }
+]
+```
+
+#### Liste aller Datenquellen eines Backends 
+
+**GET**: https://127.0.0.1:9443/api/v1/admin/backends/{backendname}/datasources
+
+**Beschreibung**: Liefert eine Liste aller Datenquellen eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/datasources
+
+**Response**: 
+
+```json
+[
+    {
+        "name": "temp_wohnzimmer",
+        "type": "mqtt",
+        "destination": "temperatur",
+        "rule": "tasmota_ds18b20",
+        "config": {
+            "broker": "127.0.0.1:1883",
+            "topic": "stat/temperatur/wohnzimmer",
+            "payload": "application/json",
+            "username": "temp",
+            "password": "temp",
+            "addTopicAsAttribute": "topic",
+            "simpleValueAttribute": ""
+        }
+    },
+    {
+        "name": "temp_kueche",
+        "type": "mqtt",
+        "destination": "temperatur",
+        "rule": "tasmota_ds18b20",
+        "config": {
+            "broker": "127.0.0.1:1883",
+            "topic": "tele/tasmota_63E6F8/SENSOR",
+            "payload": "application/json",
+            "username": "temp",
+            "password": "temp",
+            "addTopicAsAttribute": "topic",
+            "simpleValueAttribute": ""
+        }
+    }
+]
+```
+
+#### Liste aller Transformationsregeln eines Backends 
+
+**GET**: https://127.0.0.1:9443/api/v1/admin/backends/{backendname}/rules
+
+**Beschreibung**: Liefert eine Liste aller Transformationsregelen eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/rules
+
+**Response**: 
+
+```json
+[
+    {
+        "name": "tasmota_ds18b20",
+        "description": "transforming the tasmota json structure of the DS18B20 into my simple structure",
+        "transform": [
+            {
+                "operation": "shift",
+                "spec": {
+                    "TempUnit": "TempUnit",
+                    "Temperature": "DS18B20.Temperature"
+                }
+            }
+        ]
+    },
+    {
+        "name": "hm_temp_simple",
+        "description": "handle homematic temperatur rightly",
+        "transform": [
+            {
+                "operation": "shift",
+                "spec": {
+                    "Datetime": "ts",
+                    "Temperature": "val",
+                    "Timestamp": "ts"
+                }
+            },
+            {
+                "operation": "default",
+                "spec": {
+                    "TempUnit": "°C"
+                }
+            },
+            {
+                "operation": "timestamp",
+                "spec": {
+                    "Datetime": {
+                        "inputFormat": "$unixext",
+                        "outputFormat": "2006-01-02T15:04:05-0700"
+                    }
+                }
+            }
+        ]
+    }
+]
+```
+
+#### Definition einer Transformationsregel eines Backends 
+
+**GET**: https://127.0.0.1:9443/api/v1/admin/backends/{backendname}/rules/{rulename}
+
+**Beschreibung**: Definition einer Transformationsregel eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/rules/hm_temp_simple
+
+**Response**: 
+
+```json
+{
+    "name": "hm_temp_simple",
+    "description": "handle homematic temperatur rightly",
+    "transform": [
+        {
+            "operation": "shift",
+            "spec": {
+                "Datetime": "ts",
+                "Temperature": "val",
+                "Timestamp": "ts"
+            }
+        },
+        {
+            "operation": "default",
+            "spec": {
+                "TempUnit": "°C"
+            }
+        },
+        {
+            "operation": "timestamp",
+            "spec": {
+                "Datetime": {
+                    "inputFormat": "$unixext",
+                    "outputFormat": "2006-01-02T15:04:05-0700"
+                }
+            }
+        }
+    ]
+}
+```
+
+#### Testen einer Transformationsregel eines Backends 
+
+**POST**: https://127.0.0.1:9443/api/v1/admin/backends/{backendname}/rules/{rulename}/test
+
+**Beschreibung**: Testen einer Transformationsregel eines Backends.
+
+**Request**: https://127.0.0.1:9443/api/v1/admin/backends/sensors/rules/hm_temp_simple/test
+
+Payload:
+
+```json
+{
+    "val": 22.8,
+    "ts": 1588142598973,
+    "lc": 1588142598973
+}
+```
+
+**Response**: 
+
+```json
+{
+    "Timestamp": 1588142598973,
+    "Datetime": "2020-04-29T08:43:18+0200",
+    "Temperature": 22.8,
+    "TempUnit": "°C"
+}
+```
+
+### Files API
+
+Security: Ja
+
+
+#### Upload einer Datei
+
+**Request**: **POST**: https://127.0.0.1:9443/api/v1/files/{backendname}/
+
+**Beschreibung**: Upload einer Datei auf den Server. Dateien dürfen nicht größer sein als 10MB.
+
+**Security role**: edit
+
+**Request**: **POST**: https://127.0.0.1:9443/api/v1/files/sensors/
+
+​	**Payload**: Http Formbased File Upload. Name des Formfeldes: file
+
+**Response**:
+
+```JSON
+{
+    "fileid": "5ea92df4d015d95201f6b4b8",
+    "filename": "readme.md"
+}
+```
+
+​	**Headers**: `Location: /api/v1/files/sensors/5ea92df4d015d95201f6b4b8`
+
+#### Download einer Datei
+
+**Request**: **GET**: https://127.0.0.1:9443/api/v1/files/{backendname}/{fileid}
+
+**Beschreibung**: Download einer Datei vom Server.
+
+**Security role**: read
+
+**Request**: **GET**: https://127.0.0.1:9443/api/v1/files/sensors/5ea92df4d015d95201f6b4b8
+
+**Response**:
+
+Die Datei als Download.
+
+
+
