@@ -32,20 +32,11 @@ models:
         mandatory: false
         collection: false
 datasources:
-  - name: temp_wohnzimmer
-    type: mqtt
-    destination: temperatur
-    rule: tasmota_ds18b20
-    config: 
-      broker: 192.168.178.12:1883
-      topic: stat/temperatur/wohnzimmer
-      payload: application/json
-      username: temp
-      password: temp
-      addTopicAsAttribute: topic
   - name: temp_kueche
     type: mqtt
-    destination: temperatur
+    destinations: 
+      - $model.temperatur 
+      - mqtt_sensors_temperatur
     rule: tasmota_ds18b20
     config: 
       broker: 192.168.178.12:1883
@@ -56,7 +47,8 @@ datasources:
       addTopicAsAttribute: topic
   - name: temp_simple_text
     type: mqtt
-    destination: temperatur
+    destinations: 
+      - $model.temperatur 
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/string
@@ -65,9 +57,11 @@ datasources:
       password: temp
       addTopicAsAttribute: topic
       simpleValueAttribute: vstring
+      simpleValueAttributeType: string
   - name: temp_simple_int
     type: mqtt
-    destination: temperatur
+    destinations: 
+      - $model.temperatur 
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/int
@@ -76,9 +70,11 @@ datasources:
       password: temp
       addTopicAsAttribute: topic
       simpleValueAttribute: vint
+      simpleValueAttributeType: int
   - name: temp_simple_float
     type: mqtt
-    destination: temperatur
+    destinations: 
+      - $model.temperatur 
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/float
@@ -87,9 +83,11 @@ datasources:
       password: temp
       addTopicAsAttribute: topic
       simpleValueAttribute: vfloat
+      simpleValueAttributeType: float
   - name: temp_simple_time
     type: mqtt
-    destination: temperatur
+    destinations: 
+      - $model.temperatur 
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/time
@@ -98,9 +96,11 @@ datasources:
       password: temp
       addTopicAsAttribute: topic
       simpleValueAttribute: vtime
+      simpleValueAttributeType: time
   - name: temp_simple_bool
     type: mqtt
-    destination: temperatur
+    destinations: 
+      - $model.temperatur 
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur/simple/bool
@@ -109,6 +109,7 @@ datasources:
       password: temp
       addTopicAsAttribute: topic
       simpleValueAttribute: vbool
+      simpleValueAttributeType: bool
 rules:
   - name: tasmota_ds18b20
     description: transforming the tasmota json structure of the DS18B20 into my simple structure
@@ -143,3 +144,12 @@ rules:
             inputFormat: $unixext,
             outputFormat: 2006-01-02T15:04:05-0700
           }
+destinations:
+  - name: mqtt_sensors_temperatur
+    type: mqtt
+    config: 
+      broker: 192.168.178.12:1883
+      topic: stat/temperatur
+      payload: application/json
+      username: temp
+      password: temp

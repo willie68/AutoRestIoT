@@ -8,11 +8,12 @@ import (
 
 //Backend struct for definition of a backend
 type Backend struct {
-	Backendname string       `yaml:"backendname" json:"backendname"`
-	Description string       `yaml:"description" json:"description"`
-	Models      []Model      `yaml:"models" json:"models"`
-	DataSources []DataSource `yaml:"datasources" json:"datasources"`
-	Rules       []Rule       `yaml:"rules" json:"rules"`
+	Backendname  string        `yaml:"backendname" json:"backendname"`
+	Description  string        `yaml:"description" json:"description"`
+	Models       []Model       `yaml:"models" json:"models"`
+	DataSources  []DataSource  `yaml:"datasources" json:"datasources"`
+	Rules        []Rule        `yaml:"rules" json:"rules"`
+	Destinations []Destination `yaml:"destinations" json:"destinations"`
 }
 
 //Model definition of a single model
@@ -61,11 +62,17 @@ type Index struct {
 
 //DataSource Definition of a datasource
 type DataSource struct {
-	Name        string      `yaml:"name" json:"name"`
-	Type        string      `yaml:"type" json:"type"`
-	Destination string      `yaml:"destination" json:"destination"`
-	Rule        string      `yaml:"rule" json:"rule"`
-	Config      interface{} `yaml:"config" json:"config"`
+	Name         string      `yaml:"name" json:"name"`
+	Type         string      `yaml:"type" json:"type"`
+	Destinations []string    `yaml:"destinations" json:"destinations"`
+	Rule         string      `yaml:"rule" json:"rule"`
+	Config       interface{} `yaml:"config" json:"config"`
+}
+
+type Destination struct {
+	Name   string      `yaml:"name" json:"name"`
+	Type   string      `yaml:"type" json:"type"`
+	Config interface{} `yaml:"config" json:"config"`
 }
 
 type Rule struct {

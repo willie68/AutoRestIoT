@@ -56,12 +56,20 @@ func RegisterBackend(backend model.Backend) error {
 		}
 	}
 
-	return nil
-}
+	for _, destination := range backend.Destinations {
+		ok := false
+		for !ok {
+			err := Destinations.Add(backend.Backendname, destination)
+			if err != nil {
+				log.Fatalf("%v", err)
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			ok = true
+		}
+	}
 
-//GetRuleName building the rule namespace name
-func GetRuleName(backendName string, rulename string) string {
-	return fmt.Sprintf("%s.%s", backendName, rulename)
+	return nil
 }
 
 func createDatasource(datasource model.DataSource, backendname string) error {
@@ -79,16 +87,14 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 }
 
 func createRule(rule model.Rule, backendname string) error {
-	namespacedName := GetRuleName(backendname, rule.Name)
 	json, err := json.Marshal(rule.Transform)
 	if err != nil {
 		return err
 	}
-	err = registerTransformRule(namespacedName, string(json))
+	err = Rules.Register(backendname, rule.Name, string(json))
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

@@ -97,13 +97,13 @@ var TestingRules = []TestRuleStruct{
 func TestTasmotaRule(t *testing.T) {
 	for _, testRule := range TestingRules {
 
-		err := registerTransformRule(testRule.RuleName, testRule.RuleSrc)
+		err := Rules.Register("mcs", testRule.RuleName, testRule.RuleSrc)
 		if err != nil {
 			t.Errorf("can't transforn: %v", err)
 			return
 		}
 
-		jsonDest, err := transformJSON(testRule.RuleName, []byte(testRule.JsonSrc))
+		jsonDest, err := Rules.TransformJSON("mcs", testRule.RuleName, []byte(testRule.JsonSrc))
 		if err != nil {
 			t.Errorf("can't transforn: %v", err)
 			return
@@ -131,7 +131,7 @@ func TestSimpleRule(t *testing.T) {
   }
 }]`
 
-	registerTransformRule("test.me", jsonConfig)
+	Rules.Register("mcs", "test.me", jsonConfig)
 
 	jsonObject := `{
   "doc": {
@@ -142,7 +142,7 @@ func TestSimpleRule(t *testing.T) {
   "top-level-key": null
 }`
 
-	jsonDest, err := transformJSON("test.me", []byte(jsonObject))
+	jsonDest, err := Rules.TransformJSON("mcs", "test.me", []byte(jsonObject))
 	if err != nil {
 		t.Errorf("can't transforn: %v", err)
 		return
@@ -160,7 +160,7 @@ func TestUnknownRule(t *testing.T) {
   "top-level-key": null
 }`
 
-	_, err := transformJSON("test.me2", []byte(jsonObject))
+	_, err := Rules.TransformJSON("mcs", "test.me2", []byte(jsonObject))
 	if err != ErrRuleNotDefined {
 		t.Errorf("something goes wrong: %v", err)
 		return

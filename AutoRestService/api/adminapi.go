@@ -166,13 +166,12 @@ func PostAdminRulesRuleTestHandler(response http.ResponseWriter, request *http.R
 		render.Render(response, request, ErrNotFound)
 		return
 	}
-	namespacedRulename := worker.GetRuleName(backendName, ruleName)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
 		return
 	}
-	transformedJson, err := worker.TransformJSON(namespacedRulename, body)
+	transformedJson, err := worker.Rules.TransformJSON(backendName, ruleName, body)
 	if err != nil {
 		render.Render(response, request, ErrInvalidRequest(err))
 		return
