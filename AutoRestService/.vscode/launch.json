@@ -14,8 +14,8 @@
             "env": {},
             "args": [
                 "-c",
-                "configs/serviceLocal.yaml",
-             ]
+                "configs/service_home.yaml",
+            ]
         }
     ]
 }

@@ -1,0 +1,30 @@
+# port of the http server
+port: 9080 
+# port of the https server
+sslport: 9443
+# this is the servicURL from outside
+serviceURL: https://127.0.0.1:9443
+# this is the registry URL from inside
+registryURL: 
+# this is the system id of this service. services in a cluster mode should have the same system id.
+systemID: autorest-srv
+#sercret file for storing usernames and passwords
+secretfile: configs/secret.yaml
+#where the configuration of the backends are
+backendpath: configs/backends
+#allow data saving without a registered backend
+allowAnonymousBackend: true
+
+logging:
+    gelf-url: 
+    gelf-port: 
+
+healthcheck:
+    period: 30
+mongodb:
+    host: 192.168.178.12
+    port: 37017
+    username:
+    password:
+    authdb: backend1
+    database: backend1
