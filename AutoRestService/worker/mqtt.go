@@ -17,8 +17,9 @@ import (
 const processorPrefix = "processor"
 const datasourcePrefix = "datasource"
 
-func CreateMQTTDestinationProcessor(destination model.Destination) (DestinationProcessor, error) {
+func CreateMQTTDestinationProcessor(backend string, destination model.Destination) (DestinationProcessor, error) {
 	processor := MQTTDestinationProcessor{
+		Backend:     backend,
 		Destination: destination,
 	}
 	return &processor, nil
@@ -62,16 +63,18 @@ func (m *MQTTDestinationProcessor) Store(data model.JSONMap) (string, error) {
 		if err != nil {
 			return "", err
 		}
-	}
-	datasink, ok = mqttClients[datasinkNsName]
-	if !ok {
-		return "", errors.New("destination client is not ready")
+		datasinkNsName = GetMQTTClientNsName(processorPrefix, m.Backend, m.Destination.Name)
+		datasink, ok = mqttClients[datasinkNsName]
+		if !ok {
+			return "", errors.New("destination client is not ready")
+		}
 	}
 	payload, err := json.Marshal(data)
 	if err != nil {
 		return "", err
 	}
-	token := datasink.Client.Publish(datasink.Topic, 0, false, payload)
+	config := m.Destination.Config.(model.DataSourceConfigMQTT)
+	token := datasink.Client.Publish(datasink.Topic, byte(config.QoS), false, payload)
 	token.Wait()
 	if token.Error() != nil {
 		return "", token.Error()
@@ -85,6 +88,7 @@ type MqttDatasource struct {
 	Backend                  string
 	Destinations             []string
 	Topic                    string
+	QoS                      int
 	Payload                  string
 	TopicAttribute           string
 	SimpleValueAttribute     string
@@ -267,7 +271,7 @@ func mqttReconnect(c mqtt.Client) error {
 }
 
 func mqttSubscribe(datasource MqttDatasource) error {
-	token := datasource.Client.Subscribe(datasource.Topic, 0, func(c mqtt.Client, m mqtt.Message) {
+	token := datasource.Client.Subscribe(datasource.Topic, byte(datasource.QoS), func(c mqtt.Client, m mqtt.Message) {
 		mqttStoreMessage(datasource, m)
 	})
 	token.Wait()
@@ -280,6 +284,7 @@ func getDatasinkMQTTClient(datasinkNsName string, backendname string, config mod
 		Broker:                   config.Broker,
 		Backend:                  backendname,
 		Topic:                    config.Topic,
+		QoS:                      config.QoS,
 		Payload:                  config.Payload,
 		TopicAttribute:           config.AddTopicAsAttribute,
 		SimpleValueAttribute:     config.SimpleValueAttribute,
@@ -322,6 +327,7 @@ func getDatasourceMQTTClient(clientID string, backendname string, datasource mod
 		Backend:                  backendname,
 		Destinations:             destinationmodel,
 		Topic:                    config.Topic,
+		QoS:                      config.QoS,
 		Payload:                  config.Payload,
 		TopicAttribute:           config.AddTopicAsAttribute,
 		SimpleValueAttribute:     config.SimpleValueAttribute,

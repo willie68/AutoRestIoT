@@ -4,6 +4,7 @@ package model
 type DataSourceConfigMQTT struct {
 	Broker                   string `yaml:"broker" json:"broker"`
 	Topic                    string `yaml:"topic" json:"topic"`
+	QoS                      int    `yaml:"qos" json:"qos"`
 	Payload                  string `yaml:"payload" json:"payload"`
 	Username                 string `yaml:"username" json:"username"`
 	Password                 string `yaml:"password" json:"password"`

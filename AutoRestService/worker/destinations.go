@@ -38,10 +38,10 @@ type DestinationList struct {
 	processors   map[string]DestinationProcessor
 }
 
-func GetNewDestinationProcessor(destination model.Destination) (DestinationProcessor, error) {
+func GetNewDestinationProcessor(backend string, destination model.Destination) (DestinationProcessor, error) {
 	switch destination.Type {
 	case "mqtt":
-		return CreateMQTTDestinationProcessor(destination)
+		return CreateMQTTDestinationProcessor(backend, destination)
 	case "null":
 		return &NullDestinationProcessor{}, nil
 	default:
@@ -72,7 +72,7 @@ func (d *DestinationList) Store(backendName string, destinationName string, data
 	processor, ok = d.processors[destinationName]
 	if !ok {
 		var err error
-		processor, err = GetNewDestinationProcessor(destination)
+		processor, err = GetNewDestinationProcessor(backendName, destination)
 		if err != nil {
 			return err
 		}

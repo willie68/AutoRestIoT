@@ -50,6 +50,16 @@ mongodb:
 
 ```
 
+Die Secrets zu diesem Service, im speziellen username und Passwort zur MongoDB werden in einer speziellen Datei secrets.yaml abgelegt. Diese wird über den Configeintrag `secretfile` bestimmt.
+
+Inhalt:
+
+```yaml
+mongodb:
+    username: backend1
+    password: backend1
+```
+
 
 
 ## Storage
@@ -85,7 +95,7 @@ Auch eine Attributvalidierung (wie z.B. auch das Mandatory) erfordert die Defini
 Typische JSON Attribute/Objektverschachtelungen sind grundsätzlich erlaubt. Neben den Attributen kann man pro Modell auch noch eine Reihe von Suchindizies definieren, um einen schnelleren Zugriff zu ermöglichen. Eine Besonderheit stellt der Volltextindex dar. Man kann pro Modell **einen** Volltextindex definieren. Dabei wird dann jedes angegebene Feld in diesem Index gespeichert und über eine eingängige Suchsyntax wieder findbar abgelegt. Dazu mehr im Kapitel Suche.
 
 ```yaml
-applicationname: schematicworld  #name without whitespaces and special charaters
+backendname: schematicworld  #name without whitespaces and special charaters
 description: Willies World Schematics Database #description of the backend
 models:  #definition of the different models
     - name: schematics #name of the models, no whitespaces or special chars
@@ -104,7 +114,7 @@ models:  #definition of the different models
           mandatory: false
           collection: true
       indexes:
-        - name: fulltext #revered name for the fulltext index
+        - name: $fulltext #reserved name for the fulltext index
           fields: # defining which fields should be in that index
             - manufacturer
             - model
@@ -115,12 +125,15 @@ models:  #definition of the different models
         - name: tags #single field index on a collection field 
           fields:
             - tags
-
+        - name: Foreignid #single unique field index on a collection field 
+          unique: true
+          fields:
+            - Foreignid
 ```
 
 ## Dateien
 
-Dateien können pro Backend in das reserviert Model files abgelegt werden. Sollen diese einem Modell zugeordnet werden, sollte man ein Attribut vom Typ ID anlegen. Der Service stellt dann automatisch die Referenzierung sicher. D.h. wird eine Modelinstanz aus den Modellen gelöscht, wird automatisch die referenzierte Instanz mit gelöscht. (Eine Referenzzählung wird nicht vorgenommen, d.h. wird ein und dieselbe Dateiinstanz in verschiedenen Modellen verwendet, und eines der Modelle gelöscht, wird die Dateiinstanz mit gelöscht.) Dieses Verhalten kann mit dem Header `X-mcs-deleteref: false` verhindert werden.
+Dateien können pro Backend in das reserviert Model files abgelegt werden. Sollen diese einem Modell zugeordnet werden, sollte man ein Attribut vom Typ `file` anlegen. Der Service stellt dann automatisch die Referenzierung sicher. D.h. wird eine Modelinstanz aus den Modellen gelöscht, wird automatisch die referenzierte Instanz mit gelöscht. (Eine Referenzzählung wird nicht vorgenommen, d.h. wird ein und dieselbe Dateiinstanz in verschiedenen Modellen verwendet, und eines der Modelle gelöscht, wird die Dateiinstanz mit gelöscht.) Dieses Verhalten kann mit dem Header `X-mcs-deleteref: false` verhindert werden.
 
 ## User
 
@@ -161,7 +174,8 @@ gemeinsame Properties:
 datasources:
   - name: temp_wohnzimmer
     type: mqtt
-    destination: temperatur
+    destination: 
+      - $model.temperatur
     config: 
 ```
 
@@ -169,9 +183,29 @@ datasources:
 
 **type**: Typ des Importplugin to use. Derzeit unterstützt: MQTT
 
-**destination**: Welches Model soll als Speicher dienen
+**destination**: Welches Destination Plugin soll zum speichern verwendet werden. Zur Speicherung in der internen Datenbank wird dem Modelnamen ein `$model`. vorangestellt.
 
-**config**: pluginspezifische Konfigurationseinstellungen
+Beispiel: das aufbereitete JSON soll in sowohl das interne Modell `temperature` abgelegt werden als auch  per MQTT auf dem einem Topic bereitgestellt werden.
+
+```yaml
+  - name: temp_kueche
+    type: mqtt
+    destinations: 
+      - $model.temperatur 
+      - mqtt_sensors_temperatur
+    rule: tasmota_ds18b20
+    config: 
+      broker: 192.168.178.12:1883
+      topic: tele/tasmota_63E6F8/SENSOR
+      payload: application/json
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
+```
+
+**rule**: definiert welche Regel vor der Weiterverarbeitung der Daten ausgeführt werden sollen
+
+**config**: enthält dabei die pluginspezifische Konfigurationseinstellungen
 
 ### MQTT
 
@@ -216,6 +250,8 @@ datasources:
 
 **topic**:  Topic aus welchem die Daten importiert werden sollen
 
+**qos**: Qualtity of Service, 0 ,1 oder 2. Als Standard wird immer 0 angenommen.
+
 **payload**: beschreibt den Mimetypen der Payload auf dem Topic. Derzeit unterstützt: 
 
 - **application/json**: die Payload enthält ein Json Objekt. Dieses wird dann automatisch auf die Model Struktur  gemapped. 
@@ -229,7 +265,7 @@ datasources:
 
 ## Transformation Rules
 
-Nicht immer sollen die aus einer Datasource gelesenen Daten ohne Modifikationen in den Storage geschrieben werden. Für den Fall einer JSON Payload können Rules definiert werden, mit denen man das JSON Objekt transformieren kann, bevor es in den Storage gespeichert wird. Für die Transformation wird die Go Bibliothek [Kazaam](https://github.com/qntfy/kazaam) verwendet. Die Bibliothek verwendet als Definitionssprache JSON. Da die AutoRestIoT Konfiguration in Dateien aber immer in YAML vorliegt,  hier die Definition der verschiedenen Transformationen in YAML. 
+Nicht immer sollen die aus einer Datasource gelesenen Daten ohne Modifikationen in den Storage geschrieben werden. Für den Fall einer JSON Payload können Rules definiert werden, mit denen man das JSON Objekt transformieren kann, bevor es in den Storage gespeichert wird. Für die Transformation wird die Go Bibliothek [Kazaam](https://github.com/qntfy/kazaam) verwendet. Die Bibliothek verwendet als Definitionssprache JSON. Da die AutoRestIoT Konfiguration in Dateien aber immer in YAML vorliegt,  hier die Definition der verschiedenen Transformationen in YAML übersetzt nach `yaml`. 
 
 ```yaml
 datasources:
@@ -732,6 +768,28 @@ wird zu
   }
 }
 ```
+
+## Destinations
+
+Neben der internen Datensenke Datenbank, können noch weitere Empfänger definiert werden. 
+
+### MQTT
+
+Um die Message auf einem MQTT Server zu veröffentlichen, sind folgende Einstellungen nötig. 
+
+```yaml
+destinations:
+  - name: mqtt_sensors_temperatur
+    type: mqtt
+    config: 
+      broker: 192.168.178.12:1883
+      topic: stat/temperatur
+      payload: application/json
+      username: temp
+      password: temp
+```
+
+
 
 ## REST Interface
 

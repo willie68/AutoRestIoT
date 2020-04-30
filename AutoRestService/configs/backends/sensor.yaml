@@ -41,6 +41,7 @@ datasources:
     config: 
       broker: 192.168.178.12:1883
       topic: tele/tasmota_63E6F8/SENSOR
+      qos: 0
       payload: application/json
       username: temp
       password: temp
@@ -150,6 +151,7 @@ destinations:
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur
+      qos: 1
       payload: application/json
       username: temp
       password: temp
