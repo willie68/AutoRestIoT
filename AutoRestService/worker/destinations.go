@@ -10,7 +10,7 @@ import (
 //DestinationProcessor fpr every destination there must be a processor to do the work
 type DestinationProcessor interface {
 	//Initialise this procssor
-	Initialise(destination model.Destination) error
+	Initialise(backend string, destination model.Destination) error
 	//Store do the right storage
 	Store(data model.JSONMap) (string, error)
 }
@@ -20,7 +20,7 @@ type NullDestinationProcessor struct {
 }
 
 //Initialise do nothing on initialise
-func (n *NullDestinationProcessor) Initialise(destination model.Destination) error {
+func (n *NullDestinationProcessor) Initialise(backend string, destination model.Destination) error {
 	return nil
 }
 

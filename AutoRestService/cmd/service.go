@@ -350,6 +350,20 @@ func initAutoRest() {
 				break
 			}
 		}
+		for i, destination := range bemodel.Destinations {
+			configJSON, err := json.Marshal(destination.Config)
+			switch destination.Type {
+			case "mqtt":
+				var config model.DataSourceConfigMQTT
+				if err = json.Unmarshal(configJSON, &config); err != nil {
+					log.Alertf("%v", err)
+				}
+				bemodel.Destinations[i].Config = config
+			default:
+				log.Alertf("unknown message type: %q", destination.Type)
+				break
+			}
+		}
 		err = worker.ValidateBackend(bemodel)
 		if err != nil {
 			log.Alertf("validating backend %s in %s, getting error: %v", bemodel.Backendname, value, err)

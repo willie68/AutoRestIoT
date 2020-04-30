@@ -2,6 +2,7 @@ package worker
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	orglog "log"
 	"os"
@@ -13,6 +14,9 @@ import (
 	"github.com/willie68/AutoRestIoT/model"
 )
 
+const processorPrefix = "processor"
+const datasourcePrefix = "datasource"
+
 func CreateMQTTDestinationProcessor(destination model.Destination) (DestinationProcessor, error) {
 	processor := MQTTDestinationProcessor{
 		Destination: destination,
@@ -22,17 +26,57 @@ func CreateMQTTDestinationProcessor(destination model.Destination) (DestinationP
 
 //MQTTDestinationProcessor does nothing
 type MQTTDestinationProcessor struct {
+	Backend     string
 	Destination model.Destination
 }
 
 //Initialise do nothing on initialise
-func (n *MQTTDestinationProcessor) Initialise(destination model.Destination) error {
+func (m *MQTTDestinationProcessor) Initialise(backend string, destination model.Destination) error {
+	// delete an already connected mqtt processor
+	//	if m.Destination != nil {
+	datasinkNsName := GetMQTTClientNsName(processorPrefix, backend, m.Destination.Name)
+	datasink, ok := mqttClients[datasinkNsName]
+	if ok {
+		if datasink.Client != nil {
+			datasink.Client.Disconnect(1000)
+		}
+	}
+	delete(mqttClients, datasinkNsName)
+	//	}
+	m.Destination = destination
+	// now initilaise the new connection
+	datasink, err := getDatasinkMQTTClient(datasinkNsName, backend, destination.Config.(model.DataSourceConfigMQTT))
+	if err != nil {
+		log.Alertf("%v", err)
+		return err
+	}
 	return nil
 }
 
 //Store do nothing on store
-func (n *MQTTDestinationProcessor) Store(data model.JSONMap) (string, error) {
-	return "MQTTnoId", nil
+func (m *MQTTDestinationProcessor) Store(data model.JSONMap) (string, error) {
+	datasinkNsName := GetMQTTClientNsName(processorPrefix, m.Backend, m.Destination.Name)
+	datasink, ok := mqttClients[datasinkNsName]
+	if !ok {
+		err := m.Initialise(m.Backend, m.Destination)
+		if err != nil {
+			return "", err
+		}
+	}
+	datasink, ok = mqttClients[datasinkNsName]
+	if !ok {
+		return "", errors.New("destination client is not ready")
+	}
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	token := datasink.Client.Publish(datasink.Topic, 0, false, payload)
+	token.Wait()
+	if token.Error() != nil {
+		return "", token.Error()
+	}
+	return fmt.Sprintf("brk: %s, tpc: %s", datasink.Broker, datasink.Topic), nil
 }
 
 type MqttDatasource struct {
@@ -48,7 +92,7 @@ type MqttDatasource struct {
 	Rule                     string
 }
 
-var mqttClients = make([]MqttDatasource, 0)
+var mqttClients = make(map[string]MqttDatasource)
 
 func init() {
 	//	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
@@ -231,30 +275,22 @@ func mqttSubscribe(datasource MqttDatasource) error {
 	return err
 }
 
-func getMQTTClient(config model.DataSourceConfigMQTT) {
-
-}
-
-func mqttRegisterTopic(clientID string, backendname string, datasource model.DataSource) error {
-	destinationmodel := datasource.Destinations
-	config := datasource.Config.(model.DataSourceConfigMQTT)
-
-	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(clientID)
-	opts.SetKeepAlive(2 * time.Second)
-	//opts.SetDefaultPublishHandler(f)
-	opts.SetPingTimeout(1 * time.Second)
-	opts.AutoReconnect = true
+func getDatasinkMQTTClient(datasinkNsName string, backendname string, config model.DataSourceConfigMQTT) (MqttDatasource, error) {
 	datasourceMqtt := MqttDatasource{
 		Broker:                   config.Broker,
 		Backend:                  backendname,
-		Destinations:             destinationmodel,
 		Topic:                    config.Topic,
 		Payload:                  config.Payload,
 		TopicAttribute:           config.AddTopicAsAttribute,
 		SimpleValueAttribute:     config.SimpleValueAttribute,
 		SimpleValueAttributeType: config.SimpleValueAttributeType,
-		Rule:                     datasource.Rule,
 	}
+
+	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(datasinkNsName)
+	opts.SetKeepAlive(2 * time.Second)
+	//opts.SetDefaultPublishHandler(f)
+	opts.SetPingTimeout(1 * time.Second)
+	opts.AutoReconnect = true
 
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
 		mqttConnectionLost(datasourceMqtt, c, err)
@@ -270,16 +306,72 @@ func mqttRegisterTopic(clientID string, backendname string, datasource model.Dat
 
 	err := mqttReconnect(c)
 	if err != nil {
-		return err
+		return MqttDatasource{}, err
 	}
 
-	mqttClients = append(mqttClients, datasourceMqtt)
+	mqttClients[datasinkNsName] = datasourceMqtt
+	return datasourceMqtt, nil
+}
+
+func getDatasourceMQTTClient(clientID string, backendname string, datasource model.DataSource) (MqttDatasource, error) {
+	destinationmodel := datasource.Destinations
+	config := datasource.Config.(model.DataSourceConfigMQTT)
+
+	datasourceMqtt := MqttDatasource{
+		Broker:                   config.Broker,
+		Backend:                  backendname,
+		Destinations:             destinationmodel,
+		Topic:                    config.Topic,
+		Payload:                  config.Payload,
+		TopicAttribute:           config.AddTopicAsAttribute,
+		SimpleValueAttribute:     config.SimpleValueAttribute,
+		SimpleValueAttributeType: config.SimpleValueAttributeType,
+		Rule:                     datasource.Rule,
+	}
+
+	opts := mqtt.NewClientOptions().AddBroker(config.Broker).SetClientID(clientID)
+	opts.SetKeepAlive(2 * time.Second)
+	//opts.SetDefaultPublishHandler(f)
+	opts.SetPingTimeout(1 * time.Second)
+	opts.AutoReconnect = true
+
+	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
+		mqttConnectionLost(datasourceMqtt, c, err)
+	})
+	if config.Username != "" {
+		opts.CredentialsProvider = func() (string, string) {
+			return config.Username, config.Password
+		}
+	}
+
+	c := mqtt.NewClient(opts)
+	datasourceMqtt.Client = c
+
+	err := mqttReconnect(c)
+	if err != nil {
+		return MqttDatasource{}, err
+	}
+
+	datasourceNSName := GetMQTTClientNsName(datasourcePrefix, datasourceMqtt.Backend, datasource.Name)
+	mqttClients[datasourceNSName] = datasourceMqtt
+	return datasourceMqtt, nil
+}
+
+func mqttRegisterTopic(clientID string, backendname string, datasource model.DataSource) error {
+	datasourceMqtt, err := getDatasourceMQTTClient(clientID, backendname, datasource)
+	if err != nil {
+		return err
+	}
 
 	err = mqttSubscribe(datasourceMqtt)
 	if err != nil {
 		return err
 	}
 
-	log.Infof("registering topic %s on %s for model %s", config.Topic, config.Broker, destinationmodel)
+	log.Infof("registering topic %s on %s for model %s", datasourceMqtt.Topic, datasourceMqtt.Broker, datasource.Destinations)
 	return nil
+}
+
+func GetMQTTClientNsName(prefix, backend, dataname string) string {
+	return fmt.Sprintf("%s.%s.%s", prefix, backend, dataname)
 }
