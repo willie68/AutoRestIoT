@@ -16,4 +16,5 @@ Liste der Features
 - Admin Interface zum Anlegen von Usern, Rollen, Backend
 - Admin Interface zur Änderung von Indexen
 - Attributvalidierung
+- neben der eigenen Datenspeicherung verschiedene andere Datensenken, wie MQTT, EMail, 
 
