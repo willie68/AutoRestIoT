@@ -197,6 +197,7 @@ Beispiel: das aufbereitete JSON soll in sowohl das interne Modell `temperature` 
     config: 
       broker: 192.168.178.12:1883
       topic: tele/tasmota_63E6F8/SENSOR
+      qos: 0
       payload: application/json
       username: temp
       password: temp
@@ -218,6 +219,7 @@ datasources:
     config: 
       broker: 127.0.0.1:1883
       topic: stat/temperatur/wohnzimmer
+      qos: 0
       payload: application/json
       username: temp
       password: temp
@@ -228,6 +230,7 @@ datasources:
     config: 
       broker: 127.0.0.1:1883
       topic: stat/temperatur/kueche
+      qos: 0
       payload: application/json
       username: temp
       password: temp
@@ -238,6 +241,7 @@ datasources:
     config: 
       broker: 127.0.0.1:1883
       topic: stat/temperatur/simple/time
+      qos: 0
       payload: application/x.simple
       username: temp
       password: temp
@@ -784,10 +788,13 @@ destinations:
     config: 
       broker: 192.168.178.12:1883
       topic: stat/temperatur
+      qos: 0
       payload: application/json
       username: temp
       password: temp
 ```
+
+Die Beschreibung der Parameter entnehmen Sie bitte aus dem Kapitel Datasource/MQTT
 
 
 
