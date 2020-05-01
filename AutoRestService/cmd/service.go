@@ -401,33 +401,11 @@ func initAutoRest() {
 }
 
 func registerBackend(bemodel model.Backend) error {
-	for i, dataSource := range bemodel.DataSources {
-		configJSON, err := json.Marshal(dataSource.Config)
-		switch dataSource.Type {
-		case "mqtt":
-			var config model.DataSourceConfigMQTT
-			if err = json.Unmarshal(configJSON, &config); err != nil {
-				return errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", bemodel.Backendname, dataSource.Type))
-			}
-			bemodel.DataSources[i].Config = config
-		default:
-			return errors.New(fmt.Sprintf("backend: %s, unknown datasource type: %q", bemodel.Backendname, dataSource.Type))
-		}
+	bemodel, err := worker.PrepareBackend(bemodel)
+	if err != nil {
+		return errors.New(fmt.Sprintf("validating backend %s, getting error: %v", bemodel.Backendname, err))
 	}
-	for i, destination := range bemodel.Destinations {
-		configJSON, err := json.Marshal(destination.Config)
-		switch destination.Type {
-		case "mqtt":
-			var config model.DataSourceConfigMQTT
-			if err = json.Unmarshal(configJSON, &config); err != nil {
-				return errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", bemodel.Backendname, destination.Type))
-			}
-			bemodel.Destinations[i].Config = config
-		default:
-			return errors.New(fmt.Sprintf("backend: %s, unknown destination type: %q", bemodel.Backendname, destination.Type))
-		}
-	}
-	err := worker.ValidateBackend(bemodel)
+	err = worker.ValidateBackend(bemodel)
 	if err != nil {
 		return errors.New(fmt.Sprintf("validating backend %s, getting error: %v", bemodel.Backendname, err))
 	}

@@ -72,8 +72,38 @@ func GetAdminBackendHandler(response http.ResponseWriter, request *http.Request)
 // PostAdminBackendHandler create a new backend
 func PostAdminBackendHandler(response http.ResponseWriter, request *http.Request) {
 	log.Infof("POST: path: %s", request.URL.Path)
-	
-	render.Render(response, request, ErrNotImplemted)
+
+	data := &model.Backend{}
+	if err := render.Decode(request, data); err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+
+	bemodel := *data
+	if !model.BackendList.Contains(bemodel.Backendname) {
+		render.Status(request, http.StatusCreated)
+	} else {
+		worker.DeregisterBackend(bemodel.Backendname)
+	}
+	bemodel, err := worker.PrepareBackend(bemodel)
+	if err != nil {
+		log.Alertf("%v\n", err)
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+	_, err = worker.StoreBackend(bemodel)
+	if err != nil {
+		log.Alertf("%v\n", err)
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+	err = worker.RegisterBackend(bemodel)
+	if err != nil {
+		log.Alertf("%v\n", err)
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+	render.JSON(response, request, bemodel)
 }
 
 //DeleteAdminBackendEndpoint delete a backend with data

@@ -2,6 +2,7 @@ package worker
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,6 +23,36 @@ func ValidateBackend(be model.Backend) error {
 	// checking models
 	// checking indexes
 	return nil
+}
+
+func PrepareBackend(backend model.Backend) (model.Backend, error) {
+	for i, dataSource := range backend.DataSources {
+		configJSON, err := json.Marshal(dataSource.Config)
+		switch dataSource.Type {
+		case "mqtt":
+			var config model.DataSourceConfigMQTT
+			if err = json.Unmarshal(configJSON, &config); err != nil {
+				return backend, errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", backend.Backendname, dataSource.Type))
+			}
+			backend.DataSources[i].Config = config
+		default:
+			return backend, errors.New(fmt.Sprintf("backend: %s, unknown datasource type: %q", backend.Backendname, dataSource.Type))
+		}
+	}
+	for i, destination := range backend.Destinations {
+		configJSON, err := json.Marshal(destination.Config)
+		switch destination.Type {
+		case "mqtt":
+			var config model.DataSourceConfigMQTT
+			if err = json.Unmarshal(configJSON, &config); err != nil {
+				return backend, errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", backend.Backendname, destination.Type))
+			}
+			backend.Destinations[i].Config = config
+		default:
+			return backend, errors.New(fmt.Sprintf("backend: %s, unknown destination type: %q", backend.Backendname, destination.Type))
+		}
+	}
+	return backend, nil
 }
 
 func RegisterBackend(backend model.Backend) error {
@@ -79,7 +110,7 @@ func RegisterBackend(backend model.Backend) error {
 func createDatasource(datasource model.DataSource, backendname string) error {
 	switch datasource.Type {
 	case "mqtt":
-		clientID := fmt.Sprintf("autorestIoT.%s", datasource.Name)
+		clientID := fmt.Sprintf("autorestIoT.%s.%s", backendname, datasource.Name)
 		err := mqttRegisterTopic(clientID, backendname, datasource)
 		if err != nil {
 			return err
@@ -152,6 +183,10 @@ func createIndex(bemodel model.Model, backendname string) error {
 		}
 	}
 	return nil
+}
+
+func DeregisterBacken(backendname string) {
+	//TODO here we have to deregister all datasources and destinations
 }
 
 func StoreBackend(backend model.Backend) (string, error) {

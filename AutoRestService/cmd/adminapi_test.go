@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetBackend(t *testing.T) {
-	url := baseSslURL + restEndpoints + "admin/mybe/"
+	url := baseSslURL + restEndpoints + "admin/backends/mybe/"
 	resp, err := getGetRequest(url, AdminUser)
 	if err != nil {
 		t.Errorf("Error getting response. %v", err)
