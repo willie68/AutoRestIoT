@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -326,6 +327,16 @@ func initAutoRest() {
 		fmt.Println(err)
 	}
 
+	storage := dao.GetStorage()
+
+	route := model.Route{
+		Backend:  "_system",
+		Model:    "backends",
+		Apikey:   getApikey(),
+		SystemID: serviceConfig.SystemID,
+	}
+
+	// importing the files, if needed, to the database
 	for _, value := range files {
 		data, err := ioutil.ReadFile(value)
 		bemodel := model.Backend{}
@@ -336,46 +347,100 @@ func initAutoRest() {
 			log.Alertf("%v", err)
 			break
 		}
-		for i, dataSource := range bemodel.DataSources {
-			configJSON, err := json.Marshal(dataSource.Config)
-			switch dataSource.Type {
-			case "mqtt":
-				var config model.DataSourceConfigMQTT
-				if err = json.Unmarshal(configJSON, &config); err != nil {
-					log.Alertf("%v", err)
-				}
-				bemodel.DataSources[i].Config = config
-			default:
-				log.Alertf("unknown message type: %q", dataSource.Type)
-				break
-			}
-		}
-		for i, destination := range bemodel.Destinations {
-			configJSON, err := json.Marshal(destination.Config)
-			switch destination.Type {
-			case "mqtt":
-				var config model.DataSourceConfigMQTT
-				if err = json.Unmarshal(configJSON, &config); err != nil {
-					log.Alertf("%v", err)
-				}
-				bemodel.Destinations[i].Config = config
-			default:
-				log.Alertf("unknown message type: %q", destination.Type)
-				break
-			}
-		}
-		err = worker.ValidateBackend(bemodel)
+
+		query := fmt.Sprintf("{\"backendname\": \"%s\"}", bemodel.Backendname)
+		count, _, err := storage.QueryModel(route, query, 0, 10)
 		if err != nil {
-			log.Alertf("validating backend %s in %s, getting error: %v", bemodel.Backendname, value, err)
+			log.Alertf("%v", err)
 			break
 		}
-		err = worker.RegisterBackend(bemodel)
-		if err != nil {
-			log.Alertf("error registering backend %s successfully. %v", bemodel.Backendname, err)
-			fmt.Println(err)
-		} else {
-			backendName := model.BackendList.Add(bemodel)
-			log.Infof("registering backend %s successfully.", backendName)
+		if count == 0 {
+			jsonModel := model.JSONMap{}
+			err = yaml.Unmarshal(data, &jsonModel)
+			if err != nil {
+				log.Alertf("%v", err)
+				break
+			}
+
+			id, err := storage.CreateModel(route, jsonModel)
+			if err != nil {
+				log.Alertf("%v", err)
+				break
+			}
+			log.Infof("model created : %s", id)
+		}
+
+	}
+
+	//now, getting all backends from the database and register them
+	query := ""
+	count, backends, err := storage.QueryModel(route, query, 0, 10)
+	if err != nil {
+		log.Alertf("%v", err)
+		return
+	}
+	if count > 0 {
+		for _, dbmodel := range backends {
+			jsonString, err := json.Marshal(dbmodel)
+			if err != nil {
+				log.Alertf("%v", err)
+				break
+			}
+			bemodel := model.Backend{}
+			bemodel.DataSources = make([]model.DataSource, 0)
+			bemodel.Rules = make([]model.Rule, 0)
+
+			err = json.Unmarshal(jsonString, &bemodel)
+			if err != nil {
+				log.Alertf("%v", err)
+				break
+			}
+
+			err = registerBackend(bemodel)
+			if err != nil {
+				log.Alertf("%v", err)
+				break
+			}
 		}
 	}
+}
+
+func registerBackend(bemodel model.Backend) error {
+	for i, dataSource := range bemodel.DataSources {
+		configJSON, err := json.Marshal(dataSource.Config)
+		switch dataSource.Type {
+		case "mqtt":
+			var config model.DataSourceConfigMQTT
+			if err = json.Unmarshal(configJSON, &config); err != nil {
+				return errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", bemodel.Backendname, dataSource.Type))
+			}
+			bemodel.DataSources[i].Config = config
+		default:
+			return errors.New(fmt.Sprintf("backend: %s, unknown datasource type: %q", bemodel.Backendname, dataSource.Type))
+		}
+	}
+	for i, destination := range bemodel.Destinations {
+		configJSON, err := json.Marshal(destination.Config)
+		switch destination.Type {
+		case "mqtt":
+			var config model.DataSourceConfigMQTT
+			if err = json.Unmarshal(configJSON, &config); err != nil {
+				return errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", bemodel.Backendname, destination.Type))
+			}
+			bemodel.Destinations[i].Config = config
+		default:
+			return errors.New(fmt.Sprintf("backend: %s, unknown destination type: %q", bemodel.Backendname, destination.Type))
+		}
+	}
+	err := worker.ValidateBackend(bemodel)
+	if err != nil {
+		return errors.New(fmt.Sprintf("validating backend %s, getting error: %v", bemodel.Backendname, err))
+	}
+	err = worker.RegisterBackend(bemodel)
+	if err != nil {
+		return errors.New(fmt.Sprintf("error registering backend %s. %v", bemodel.Backendname, err))
+	}
+	backendName := model.BackendList.Add(bemodel)
+	log.Infof("registering backend %s successfully.", backendName)
+	return nil
 }

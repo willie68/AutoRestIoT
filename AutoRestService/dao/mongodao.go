@@ -400,8 +400,8 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 			//queryDoc[k] = v
 		}
 	}
-	data, _ := json.Marshal(queryDoc)
-	log.Infof("mongoquery: %s", string(data))
+	//data, _ := json.Marshal(queryDoc)
+	//log.Infof("mongoquery: %s", string(data))
 	n, err := collection.CountDocuments(ctx, queryDoc, &options.CountOptions{Collation: &options.Collation{Locale: "en", Strength: 2}})
 	if err != nil {
 		log.Alertf("%v", err)
