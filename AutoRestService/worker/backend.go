@@ -7,7 +7,11 @@ import (
 
 	"github.com/willie68/AutoRestIoT/dao"
 	"github.com/willie68/AutoRestIoT/model"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/yaml.v2"
 )
+
+var BackendStorageRoute model.Route
 
 func init() {
 }
@@ -148,4 +152,54 @@ func createIndex(bemodel model.Model, backendname string) error {
 		}
 	}
 	return nil
+}
+
+func StoreBackend(backend model.Backend) (string, error) {
+	update := false
+	id := ""
+	query := fmt.Sprintf("{\"backendname\": \"%s\"}", backend.Backendname)
+	count, bemodels, err := dao.GetStorage().QueryModel(BackendStorageRoute, query, 0, 10)
+	if err != nil {
+		log.Alertf("%v", err)
+		return "", err
+	}
+	if count > 0 {
+		update = true
+		bemodel := model.JSONMap(bemodels[0])
+		id = bemodel["_id"].(primitive.ObjectID).Hex()
+		log.Infof("found model with id: %s", id)
+	}
+	jsonString, err := json.Marshal(backend)
+	if err != nil {
+		return "", err
+	}
+
+	jsonModel := model.JSONMap{}
+	err = yaml.Unmarshal(jsonString, &jsonModel)
+	if err != nil {
+		return "", err
+	}
+	if update {
+		route := model.Route{
+			Backend:  BackendStorageRoute.Backend,
+			Apikey:   BackendStorageRoute.Apikey,
+			Identity: id,
+			Model:    BackendStorageRoute.Model,
+			SystemID: BackendStorageRoute.SystemID,
+			Username: BackendStorageRoute.Username,
+		}
+		_, err = dao.GetStorage().UpdateModel(route, jsonModel)
+		if err != nil {
+			return "", err
+		}
+		log.Infof("model updated: %s", id)
+
+	} else {
+		id, err = dao.GetStorage().CreateModel(BackendStorageRoute, jsonModel)
+		if err != nil {
+			return "", err
+		}
+		log.Infof("model created: %s", id)
+	}
+	return id, nil
 }

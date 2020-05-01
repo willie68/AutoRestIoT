@@ -336,6 +336,8 @@ func initAutoRest() {
 		SystemID: serviceConfig.SystemID,
 	}
 
+	worker.BackendStorageRoute = route
+
 	// importing the files, if needed, to the database
 	for _, value := range files {
 		data, err := ioutil.ReadFile(value)
@@ -355,14 +357,7 @@ func initAutoRest() {
 			break
 		}
 		if count == 0 {
-			jsonModel := model.JSONMap{}
-			err = yaml.Unmarshal(data, &jsonModel)
-			if err != nil {
-				log.Alertf("%v", err)
-				break
-			}
-
-			id, err := storage.CreateModel(route, jsonModel)
+			id, err := worker.StoreBackend(bemodel)
 			if err != nil {
 				log.Alertf("%v", err)
 				break
