@@ -72,6 +72,7 @@ func GetAdminBackendHandler(response http.ResponseWriter, request *http.Request)
 // PostAdminBackendHandler create a new backend
 func PostAdminBackendHandler(response http.ResponseWriter, request *http.Request) {
 	log.Infof("POST: path: %s", request.URL.Path)
+	
 	render.Render(response, request, ErrNotImplemted)
 }
 
