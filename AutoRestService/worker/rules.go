@@ -30,6 +30,7 @@ func GetRuleNsName(backendName string, rulename string) string {
 	return fmt.Sprintf("%s.%s", backendName, rulename)
 }
 
+//GetRulelist getting a copy of the list of rules
 func (r *RuleList) GetRulelist() []string {
 	list := make([]string, 0)
 	r.rulesSync.Lock()
