@@ -11,6 +11,8 @@ import (
 type DestinationProcessor interface {
 	//Initialise this procssor
 	Initialise(backend string, destination model.Destination) error
+	//Destroy this processor
+	Destroy(backend string, destination model.Destination) error
 	//Store do the right storage
 	Store(data model.JSONMap) (string, error)
 }
@@ -21,6 +23,11 @@ type NullDestinationProcessor struct {
 
 //Initialise do nothing on initialise
 func (n *NullDestinationProcessor) Initialise(backend string, destination model.Destination) error {
+	return nil
+}
+
+//Destroy do nothing on initialise
+func (n *NullDestinationProcessor) Destroy(backend string, destination model.Destination) error {
 	return nil
 }
 
@@ -61,6 +68,23 @@ func (d *DestinationList) Register(backendName string, destination model.Destina
 	return nil
 }
 
+//Deregister deregistering a new destination with a name
+func (d *DestinationList) Deregister(backendName string, destination model.Destination) error {
+	destinationNsName := GetDestinationNsName(backendName, destination.Name)
+	// getting the processor for this
+	processor, ok := d.processors[destinationNsName]
+	if ok {
+		err := processor.Destroy(backendName, destination)
+		if err != nil {
+			return err
+		}
+		delete(d.processors, destinationNsName)
+	}
+	// removing the destination from the list
+	delete(d.destinations, destinationNsName)
+	return nil
+}
+
 //Store storing a message into the desired destination
 func (d *DestinationList) Store(backendName string, destinationName string, data model.JSONMap) error {
 	destinationNsName := GetDestinationNsName(backendName, destinationName)
@@ -77,11 +101,11 @@ func (d *DestinationList) Store(backendName string, destinationName string, data
 			return err
 		}
 	}
-	id, err := processor.Store(data)
+	_, err := processor.Store(data)
 	if err != nil {
 		return err
 	}
-	log.Infof("store object in destination %s as %s", destination, id)
+	//log.Infof("store object in destination %s as %s", destination, id)
 	return nil
 }
 

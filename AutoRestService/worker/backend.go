@@ -22,6 +22,9 @@ func ValidateBackend(be model.Backend) error {
 	// checking backendname format
 	// checking models
 	// checking indexes
+	// checking datasources
+	// checking rules
+	// checking destinations
 	return nil
 }
 
@@ -121,12 +124,32 @@ func createDatasource(datasource model.DataSource, backendname string) error {
 	return nil
 }
 
+func destroyDatasource(datasource model.DataSource, backendname string) error {
+	switch datasource.Type {
+	case "mqtt":
+		clientID := fmt.Sprintf("autorestIoT.%s.%s", backendname, datasource.Name)
+		err := mqttDeregisterTopic(clientID, backendname, datasource)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func createRule(rule model.Rule, backendname string) error {
 	json, err := json.Marshal(rule.Transform)
 	if err != nil {
 		return err
 	}
 	err = Rules.Register(backendname, rule.Name, string(json))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func destroyRule(rule model.Rule, backendname string) error {
+	err := Rules.Deregister(backendname, rule.Name)
 	if err != nil {
 		return err
 	}
@@ -185,8 +208,51 @@ func createIndex(bemodel model.Model, backendname string) error {
 	return nil
 }
 
-func DeregisterBacken(backendname string) {
+func DeregisterBackend(backendname string) {
 	//TODO here we have to deregister all datasources and destinations
+	backend, ok := model.BackendList.Get(backendname)
+	if ok {
+		for _, datasource := range backend.DataSources {
+			ok := false
+			for !ok {
+				err := destroyDatasource(datasource, backend.Backendname)
+				if err != nil {
+					log.Fatalf("%v", err)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				ok = true
+			}
+		}
+
+		for _, rule := range backend.Rules {
+			ok := false
+			for !ok {
+				err := destroyRule(rule, backend.Backendname)
+				if err != nil {
+					log.Fatalf("%v", err)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				ok = true
+			}
+		}
+
+		for _, destination := range backend.Destinations {
+			ok := false
+			for !ok {
+				err := Destinations.Deregister(backend.Backendname, destination)
+				if err != nil {
+					log.Fatalf("%v", err)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				ok = true
+			}
+		}
+
+		model.BackendList.Remove(backendname)
+	}
 }
 
 func StoreBackend(backend model.Backend) (string, error) {

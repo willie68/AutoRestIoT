@@ -31,7 +31,7 @@ type MQTTDestinationProcessor struct {
 	Destination model.Destination
 }
 
-//Initialise do nothing on initialise
+//Initialise the mqtt processor
 func (m *MQTTDestinationProcessor) Initialise(backend string, destination model.Destination) error {
 	// delete an already connected mqtt processor
 	//	if m.Destination != nil {
@@ -54,7 +54,20 @@ func (m *MQTTDestinationProcessor) Initialise(backend string, destination model.
 	return nil
 }
 
-//Store do nothing on store
+//Destroy the mqtt processor
+func (m *MQTTDestinationProcessor) Destroy(backend string, destination model.Destination) error {
+	datasinkNsName := GetMQTTClientNsName(processorPrefix, backend, m.Destination.Name)
+	datasink, ok := mqttClients[datasinkNsName]
+	if ok {
+		if datasink.Client != nil {
+			datasink.Client.Disconnect(1000)
+		}
+		delete(mqttClients, datasinkNsName)
+	}
+	return nil
+}
+
+//Store stores the message to a topic
 func (m *MQTTDestinationProcessor) Store(data model.JSONMap) (string, error) {
 	datasinkNsName := GetMQTTClientNsName(processorPrefix, m.Backend, m.Destination.Name)
 	datasink, ok := mqttClients[datasinkNsName]
@@ -97,6 +110,11 @@ type MqttDatasource struct {
 }
 
 var mqttClients = make(map[string]MqttDatasource)
+
+//GetMQTTClients
+func GetMQTTClients() map[string]MqttDatasource {
+	return mqttClients
+}
 
 func init() {
 	//	mqtt.DEBUG = orglog.New(os.Stdout, "DEBUG", 0)
@@ -158,7 +176,7 @@ func executeTransformationrule(datasource MqttDatasource, data model.JSONMap) (m
 			log.Alertf("%v", err)
 			return nil, err
 		}
-		fmt.Printf("src: %s\ndst: %s\n", string(jsonBytes), string(newJson))
+		//fmt.Printf("src: %s\ndst: %s\n", string(jsonBytes), string(newJson))
 	}
 	return data, nil
 }
@@ -279,6 +297,13 @@ func mqttSubscribe(datasource MqttDatasource) error {
 	return err
 }
 
+func mqttUnsubscribe(datasource MqttDatasource) error {
+	token := datasource.Client.Unsubscribe(datasource.Topic)
+	token.Wait()
+	err := token.Error()
+	return err
+}
+
 func getDatasinkMQTTClient(datasinkNsName string, backendname string, config model.DataSourceConfigMQTT) (MqttDatasource, error) {
 	datasourceMqtt := MqttDatasource{
 		Broker:                   config.Broker,
@@ -375,6 +400,21 @@ func mqttRegisterTopic(clientID string, backendname string, datasource model.Dat
 	}
 
 	log.Infof("registering topic %s on %s for model %s", datasourceMqtt.Topic, datasourceMqtt.Broker, datasource.Destinations)
+	return nil
+}
+
+func mqttDeregisterTopic(clientID string, backendname string, datasource model.DataSource) error {
+	datasourceNSName := GetMQTTClientNsName(datasourcePrefix, backendname, datasource.Name)
+	datasourceMqtt, ok := mqttClients[datasourceNSName]
+	if ok {
+		err := mqttUnsubscribe(datasourceMqtt)
+		if err != nil {
+			return err
+		}
+		datasourceMqtt.Client.Disconnect(1000)
+		delete(mqttClients, datasourceNSName)
+		log.Infof("deregistering topic %s on %s for model %s", datasourceMqtt.Topic, datasourceMqtt.Broker, datasource.Destinations)
+	}
 	return nil
 }
 

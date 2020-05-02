@@ -22,6 +22,7 @@ const BackendsPrefix = "backends"
 //AdminRoutes getting all routes for the config endpoint
 func AdminRoutes() *chi.Mux {
 	router := chi.NewRouter()
+	router.With(RoleCheck([]string{"admin"})).Get("/info", GetAdminInfoHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/", BackendsPrefix), GetAdminBackendsHandler)
 	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/", BackendsPrefix), PostAdminBackendHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/", BackendsPrefix), GetAdminBackendHandler)
@@ -38,6 +39,19 @@ type BackendInfo struct {
 	Name        string
 	Description string
 	URL         string
+}
+
+// GetAdminInfoHandler getting server info
+func GetAdminInfoHandler(response http.ResponseWriter, request *http.Request) {
+	log.Infof("GET: path: %s", request.URL.Path)
+	info := model.JSONMap{}
+
+	info["backends"] = model.BackendList.Names()
+	info["modelcounter"] = worker.GetModelCount()
+	info["rules"] = worker.Rules.GetRulelist()
+	info["mqttClients"] = worker.GetMQTTClients()
+
+	render.JSON(response, request, info)
 }
 
 // GetAdminBackendsHandler create a new backend

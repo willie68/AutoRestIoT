@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/willie68/AutoRestIoT/config"
@@ -33,6 +34,25 @@ type ErrValidationError struct {
 
 func (p ErrValidationError) Error() string {
 	return p.message
+}
+
+var modelCount = make(map[string]int)
+var modelCountMutex = &sync.Mutex{}
+
+func GetModelCount() map[string]int {
+	internaleCountMap := make(map[string]int)
+	modelCountMutex.Lock()
+	for k, v := range modelCount {
+		internaleCountMap[k] = v
+	}
+	modelCountMutex.Unlock()
+	return internaleCountMap
+}
+
+func IncModelCounter(name string, count int) {
+	modelCountMutex.Lock()
+	modelCount[name] = modelCount[name] + count
+	modelCountMutex.Unlock()
 }
 
 var log logging.ServiceLogger
@@ -160,6 +180,7 @@ func Store(route model.Route, data model.JSONMap) (model.JSONMap, error) {
 	if err != nil {
 		return nil, err
 	}
+	IncModelCounter(route.GetRouteName(), 1)
 	route.Identity = modelid
 	modelData, err := Get(route)
 	if err != nil {
