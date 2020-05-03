@@ -81,9 +81,42 @@ func routes() *chi.Mux {
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/files", api.FilesRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/users", api.UsersRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/"+api.AdminPrefix, api.AdminRoutes())
+
+		pubrouter := chi.NewRouter()
+		pubrouter.Get("/info", GetPublicInfoHandler)
+		r.Mount(baseURL+"/public", pubrouter)
+
+		prvrouter := chi.NewRouter()
+		prvrouter.Get("/info", GetPrivateInfoHandler)
+		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/private", prvrouter)
+
 		r.Mount("/health", health.Routes())
 	})
 	return router
+}
+
+// GetPublicInfoHandler getting server info
+func GetPublicInfoHandler(response http.ResponseWriter, request *http.Request) {
+	log.Infof("GET: path: %s", request.URL.Path)
+
+	jsonObject := make([]string, 0)
+	jsonObject = append(jsonObject, "pub hund")
+	jsonObject = append(jsonObject, "pub katze")
+	jsonObject = append(jsonObject, "pub maus")
+
+	render.JSON(response, request, jsonObject)
+}
+
+// GetPrivateInfoHandler getting server info
+func GetPrivateInfoHandler(response http.ResponseWriter, request *http.Request) {
+	log.Infof("GET: path: %s", request.URL.Path)
+
+	jsonObject := make([]string, 0)
+	jsonObject = append(jsonObject, "prv hund")
+	jsonObject = append(jsonObject, "prv katze")
+	jsonObject = append(jsonObject, "prv maus")
+
+	render.JSON(response, request, jsonObject)
 }
 
 func healthRoutes() *chi.Mux {
