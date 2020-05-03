@@ -25,7 +25,8 @@ func AdminRoutes() *chi.Mux {
 	router.With(RoleCheck([]string{"admin"})).Get("/info", GetAdminInfoHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/", BackendsPrefix), GetAdminBackendsHandler)
 	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/", BackendsPrefix), PostAdminBackendHandler)
-	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/", BackendsPrefix), GetAdminBackendHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}", BackendsPrefix), GetAdminBackendHandler)
+	router.With(RoleCheck([]string{"admin"})).Delete(fmt.Sprintf("/%s/{bename}", BackendsPrefix), DeleteAdminBackendHandler)
 	router.With(RoleCheck([]string{"admin"})).Delete(fmt.Sprintf("/%s/{bename}/dropdata", BackendsPrefix), DeleteAdminBackendEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/models", BackendsPrefix), GetAdminModelsHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/datasources", BackendsPrefix), GetAdminDatasourcesHandler)
@@ -81,6 +82,31 @@ func GetAdminBackendHandler(response http.ResponseWriter, request *http.Request)
 		return
 	}
 	render.JSON(response, request, backend)
+}
+
+// DeleteAdminBackendHandler create a new backend
+func DeleteAdminBackendHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	log.Infof("DELETE: path: %s, be: %s", request.URL.Path, backendName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	err := worker.DeregisterBackend(backendName)
+	if err != nil {
+		log.Alertf("%v\n", err)
+		render.Render(response, request, ErrInternalServer(err))
+		return
+	}
+
+	worker.DeleteBackend(backendName)
+
+	m := make(map[string]interface{})
+	m["backend"] = backend
+	m["msg"] = fmt.Sprintf("backend %s definition deleted. No data destroyed.", backendName)
+
+	render.JSON(response, request, m)
 }
 
 // PostAdminBackendHandler create a new backend

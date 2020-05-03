@@ -28,6 +28,7 @@ func ValidateBackend(be model.Backend) error {
 	return nil
 }
 
+//PrepareBackend will mmaily prepare the configuration of the datasources and destination to the right config type
 func PrepareBackend(backend model.Backend) (model.Backend, error) {
 	for i, dataSource := range backend.DataSources {
 		configJSON, err := json.Marshal(dataSource.Config)
@@ -58,6 +59,7 @@ func PrepareBackend(backend model.Backend) (model.Backend, error) {
 	return backend, nil
 }
 
+//RegisterBackend will create the needed indexes for the models and create the datasources, rules and destinations
 func RegisterBackend(backend model.Backend) error {
 	// create indexes if missing
 	models := backend.Models
@@ -208,8 +210,8 @@ func createIndex(bemodel model.Model, backendname string) error {
 	return nil
 }
 
-func DeregisterBackend(backendname string) {
-	//TODO here we have to deregister all datasources and destinations
+//DeregisterBackend will destroy all datasources, Rules and destinations and will remove the backend from the internal backendlist.
+func DeregisterBackend(backendname string) error {
 	backend, ok := model.BackendList.Get(backendname)
 	if ok {
 		for _, datasource := range backend.DataSources {
@@ -218,8 +220,7 @@ func DeregisterBackend(backendname string) {
 				err := destroyDatasource(datasource, backend.Backendname)
 				if err != nil {
 					log.Fatalf("%v", err)
-					time.Sleep(10 * time.Second)
-					continue
+					return err
 				}
 				ok = true
 			}
@@ -231,8 +232,7 @@ func DeregisterBackend(backendname string) {
 				err := destroyRule(rule, backend.Backendname)
 				if err != nil {
 					log.Fatalf("%v", err)
-					time.Sleep(10 * time.Second)
-					continue
+					return err
 				}
 				ok = true
 			}
@@ -244,8 +244,7 @@ func DeregisterBackend(backendname string) {
 				err := Destinations.Deregister(backend.Backendname, destination)
 				if err != nil {
 					log.Fatalf("%v", err)
-					time.Sleep(10 * time.Second)
-					continue
+					return err
 				}
 				ok = true
 			}
@@ -253,8 +252,10 @@ func DeregisterBackend(backendname string) {
 
 		model.BackendList.Remove(backendname)
 	}
+	return nil
 }
 
+//StoreBackend will save the backend definition to the storage. If its already there, it will be updated
 func StoreBackend(backend model.Backend) (string, error) {
 	update := false
 	id := ""
@@ -268,7 +269,7 @@ func StoreBackend(backend model.Backend) (string, error) {
 		update = true
 		bemodel := model.JSONMap(bemodels[0])
 		id = bemodel["_id"].(primitive.ObjectID).Hex()
-		log.Infof("found model with id: %s", id)
+		log.Infof("found backend with id: %s", id)
 	}
 	jsonString, err := json.Marshal(backend)
 	if err != nil {
@@ -293,14 +294,43 @@ func StoreBackend(backend model.Backend) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		log.Infof("model updated: %s", id)
+		log.Infof("backend updated: %s", id)
 
 	} else {
 		id, err = dao.GetStorage().CreateModel(BackendStorageRoute, jsonModel)
 		if err != nil {
 			return "", err
 		}
-		log.Infof("model created: %s", id)
+		log.Infof("backend created: %s", id)
 	}
 	return id, nil
+}
+
+//DeleteBackend deleting the backend from the storage, no data will be deleted
+func DeleteBackend(backendname string) error {
+	query := fmt.Sprintf("{\"backendname\": \"%s\"}", backendname)
+	count, bemodels, err := dao.GetStorage().QueryModel(BackendStorageRoute, query, 0, 10)
+	if err != nil {
+		log.Alertf("%v", err)
+		return err
+	}
+	if count > 0 {
+		bemodel := model.JSONMap(bemodels[0])
+		id := bemodel["_id"].(primitive.ObjectID).Hex()
+		log.Infof("found backend with id: %s", id)
+		route := model.Route{
+			Backend:  BackendStorageRoute.Backend,
+			Apikey:   BackendStorageRoute.Apikey,
+			Identity: id,
+			Model:    BackendStorageRoute.Model,
+			SystemID: BackendStorageRoute.SystemID,
+			Username: BackendStorageRoute.Username,
+		}
+		err = dao.GetStorage().DeleteModel(route)
+		if err != nil {
+			return err
+		}
+		log.Infof("backend deleted: %s", id)
+	}
+	return nil
 }
