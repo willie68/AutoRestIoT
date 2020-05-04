@@ -1,52 +1,110 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark>
-      <div class="d-flex align-center">
-        <v-img
-          alt="Vuetify Logo"
-          class="shrink mr-2"
-          contain
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-logo-dark.png"
-          transition="scale-transition"
-          width="40"
-        />
+  <v-toolbar dense max-height="48px">
+     <v-menu open-on-hover v-bind:disabled="!isLoggedIn()" bottom offset-y>
+        <template v-slot:activator="scopeDataFromVMenu">
+          <v-btn icon v-on="scopeDataFromVMenu.on">
+          <v-app-bar-nav-icon>
+          </v-app-bar-nav-icon>
+          </v-btn>
+        </template>
 
-        <v-img
-          alt="Vuetify Name"
-          class="shrink mt-1 hidden-sm-and-down"
-          contain
-          min-width="100"
-          src="https://cdn.vuetifyjs.com/images/logos/vuetify-name-dark.png"
-          width="100"
-        />
-      </div>
+        <v-list>
+            <v-list-item v-on:click="doNothing()">
+            <v-list-item-title >Plansuche</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-on:click="doNothing()">
+            <v-list-item-title >Hersteller</v-list-item-title>
+            </v-list-item>
+            <v-list-item v-on:click="doNothing()">
+            <v-list-item-title >Tags</v-list-item-title>
+            </v-list-item>
+        </v-list>
+      </v-menu>
+
+      <v-toolbar-title>{{ apptitle }}</v-toolbar-title>
 
       <v-spacer></v-spacer>
 
-      <v-btn href="https://github.com/vuetifyjs/vuetify/releases/latest" target="_blank" text>
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
+      <v-btn icon disabled>
+        <v-icon>mdi-magnify</v-icon>
       </v-btn>
-    </v-app-bar>
 
+      <v-menu open-on-hover bottom offset-y>
+        <template v-slot:activator="scopeDataFromVMenu">
+          <v-btn icon v-on="scopeDataFromVMenu.on">
+            <v-icon>mdi-account</v-icon>
+          </v-btn>
+        </template>
+
+        <v-list>
+            <v-list-item v-on:click="logout()">
+            <v-list-item-title >Logout</v-list-item-title>
+            </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-toolbar>
     <v-content>
-      <HelloWorld />
+      <v-container fluid fill-height v-show="!isLoggedIn()">
+        <v-layout align-center justify-center>
+          <v-flex xs12 sm8 md4 >
+            <v-card class="elevation-12">
+              <v-toolbar color="primary" dark flat>
+                <v-toolbar-title>Anmelden</v-toolbar-title>
+                <v-spacer></v-spacer>
+              </v-toolbar>
+              <v-card-text>
+                <v-form>
+                  <v-text-field label="Login" name="login" prepend-icon="mdi-account" type="text" v-model="username"/>
+                  <v-text-field id="password" label="Password" name="password" prepend-icon="mdi-lock" type="password" v-model="password"/>
+                </v-form>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="primary" v-on:click="login()" >Login</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-container>
+      <v-container v-show="isLoggedIn()">
+        <ListSchematics />
+        <HelloWorld />
+      </v-container>
     </v-content>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld";
+import HelloWorld from "./components/HelloWorld"
+import ListSchematics from "./components/listschematics";
 
 export default {
   name: "App",
 
   components: {
-    HelloWorld
+    HelloWorld,
+    ListSchematics
   },
 
   data: () => ({
-    //
-  })
+    apptitle: "Willies Schematic World",
+    loggedIn: false,
+    username: "",
+    password: ""
+  }),
+  methods: { 
+    isLoggedIn() {
+      return this.loggedIn;
+    },
+    logout() {
+      this.loggedIn = false;
+      this.password = "";
+    },
+    login() {
+      console.log(this.username + ":" + this.password);
+      this.loggedIn = true;
+    }
+  }
 };
 </script>

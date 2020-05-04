@@ -82,14 +82,6 @@ func routes() *chi.Mux {
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/users", api.UsersRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/"+api.AdminPrefix, api.AdminRoutes())
 
-		pubrouter := chi.NewRouter()
-		pubrouter.Get("/info", GetPublicInfoHandler)
-		r.Mount(baseURL+"/public", pubrouter)
-
-		prvrouter := chi.NewRouter()
-		prvrouter.Get("/info", GetPrivateInfoHandler)
-		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/private", prvrouter)
-
 		r.Mount("/health", health.Routes())
 	})
 	return router
