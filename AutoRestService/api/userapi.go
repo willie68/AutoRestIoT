@@ -13,12 +13,27 @@ import (
 // UsersRoutes routes to the user interface
 func UsersRoutes() *chi.Mux {
 	router := chi.NewRouter()
+	router.Get("/me", GetMeEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Get("/", GetUsersEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Post("/", PostUserEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Get("/{username}", GetUserEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Put("/{username}", PutUserEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Delete("/{username}", DeleteUserEndpoint)
 	return router
+}
+
+//GetMeEndpoint getting all user infos
+func GetMeEndpoint(response http.ResponseWriter, request *http.Request) {
+	username, _, _ := request.BasicAuth()
+	user, ok := dao.GetStorage().GetUser(username)
+	if !ok {
+		render.Render(response, request, ErrInternalServer(errors.New("")))
+		return
+	}
+	user.Password = ""
+	user.NewPassword = ""
+	user.Salt = []byte{}
+	render.JSON(response, request, user)
 }
 
 //GetUsersEndpoint getting all user infos

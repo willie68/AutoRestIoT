@@ -29,7 +29,7 @@
       <v-btn icon disabled>
         <v-icon>mdi-magnify</v-icon>
       </v-btn>
-
+      <AccountInfo ref="accountinfo" v-bind:username="username" v-bind:password="password"/>
       <v-menu open-on-hover bottom offset-y>
         <template v-slot:activator="scopeDataFromVMenu">
           <v-btn icon v-on="scopeDataFromVMenu.on">
@@ -77,14 +77,20 @@
 
 <script>
 import HelloWorld from "./components/HelloWorld"
-import ListSchematics from "./components/listschematics";
+import ListSchematics from "./components/listschematics"
+import AccountInfo from "./components/AccountInfo"
+import axios from 'axios';
+
+axios.defaults.headers.common['X-mcs-apikey'] = '5854d123dd25f310395954f7c450171c'
+axios.defaults.headers.common['X-mcs-system'] = 'autorest-srv'
 
 export default {
   name: "App",
 
   components: {
     HelloWorld,
-    ListSchematics
+    ListSchematics,
+    AccountInfo
   },
 
   data: () => ({
@@ -100,10 +106,12 @@ export default {
     logout() {
       this.loggedIn = false;
       this.password = "";
+      this.$refs.accountinfo.logout()
     },
     login() {
       console.log(this.username + ":" + this.password);
       this.loggedIn = true;
+      this.$refs.accountinfo.login()
     }
   }
 };

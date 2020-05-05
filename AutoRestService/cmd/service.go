@@ -64,11 +64,28 @@ func init() {
 	flag.StringVarP(&registryURL, "registryURL", "r", "", "registry url where to connect to consul")
 }
 
+func cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		log.Infof("Should set headers")
+
+		if r.Method == "OPTIONS" {
+			log.Infof("Should return for OPTIONS")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func routes() *chi.Mux {
 	myHandler := api.NewSysAPIHandler(serviceConfig.SystemID, apikey)
 	baseURL := fmt.Sprintf("/api/v%s", apiVersion)
 	router := chi.NewRouter()
 	router.Use(
+		cors,
 		render.SetContentType(render.ContentTypeJSON),
 		middleware.Logger,
 		middleware.Compress(5),
@@ -114,6 +131,7 @@ func GetPrivateInfoHandler(response http.ResponseWriter, request *http.Request) 
 func healthRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(
+		cors,
 		render.SetContentType(render.ContentTypeJSON),
 		middleware.Logger,
 		middleware.Compress(5),

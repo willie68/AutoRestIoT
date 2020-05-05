@@ -99,10 +99,12 @@ func (i *IDM) reloadUsers() {
 	i.salts = localSalts
 	if len(i.users) == 0 {
 		admin := model.User{
-			Name:     "admin",
-			Password: "admin",
-			Admin:    true,
-			Roles:    []string{"admin"},
+			Name:      "admin",
+			Firstname: "",
+			Lastname:  "Admin",
+			Password:  "admin",
+			Admin:     true,
+			Roles:     []string{"admin"},
 		}
 		user, err := GetStorage().AddUser(admin)
 		if err != nil {
@@ -112,11 +114,13 @@ func (i *IDM) reloadUsers() {
 		i.addUserToMap(user)
 
 		editor := model.User{
-			Name:     "editor",
-			Password: "editor",
-			Admin:    false,
-			Guest:    false,
-			Roles:    []string{"edit"},
+			Name:      "editor",
+			Firstname: "",
+			Lastname:  "Editor",
+			Password:  "editor",
+			Admin:     false,
+			Guest:     false,
+			Roles:     []string{"edit"},
 		}
 		user, err = GetStorage().AddUser(editor)
 		if err != nil {
@@ -126,11 +130,13 @@ func (i *IDM) reloadUsers() {
 		i.addUserToMap(user)
 
 		guest := model.User{
-			Name:     "guest",
-			Password: "guest",
-			Admin:    false,
-			Guest:    true,
-			Roles:    []string{"read"},
+			Name:      "guest",
+			Firstname: "",
+			Lastname:  "Guest",
+			Password:  "guest",
+			Admin:     false,
+			Guest:     true,
+			Roles:     []string{"read"},
 		}
 		user, err = GetStorage().AddUser(guest)
 		if err != nil {

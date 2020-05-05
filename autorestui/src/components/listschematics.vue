@@ -41,12 +41,12 @@ export default {
   }),
   mounted () {
     axios
-      .get('http://127.0.0.1:9080/api/v1/effects',{
+      .get('https://127.0.0.1:9443/api/v1/users/me',{
          httpsAgent: agent,
         headers: { "Access-Control-Allow-Origin": "*"},
         auth: {
-          username: 'gast',
-          password: 'gast1234'
+          username: 'guest',
+          password: 'guest'
         }
       })
   .then(response => (this.info = response.data));
