@@ -37,9 +37,13 @@ func AdminRoutes() *chi.Mux {
 }
 
 type BackendInfo struct {
-	Name        string
-	Description string
-	URL         string
+	Name         string
+	Description  string
+	URL          string
+	Models       []string
+	Rules        []string
+	Datasources  []string
+	Destinations []string
 }
 
 // GetAdminInfoHandler getting server info
@@ -63,10 +67,30 @@ func GetAdminBackendsHandler(response http.ResponseWriter, request *http.Request
 	myconfig := config.Get()
 	for _, name := range names {
 		backend, _ := model.BackendList.Get(name)
+		modelNames := make([]string, 0)
+		for _, model := range backend.Models {
+			modelNames = append(modelNames, model.Name)
+		}
+		ruleNames := make([]string, 0)
+		for _, rule := range backend.Rules {
+			ruleNames = append(ruleNames, rule.Name)
+		}
+		datasourceNames := make([]string, 0)
+		for _, datasource := range backend.DataSources {
+			datasourceNames = append(datasourceNames, datasource.Name)
+		}
+		destinationNames := make([]string, 0)
+		for _, destination := range backend.Destinations {
+			destinationNames = append(destinationNames, destination.Name)
+		}
 		backendInfos = append(backendInfos, BackendInfo{
-			Name:        name,
-			Description: backend.Description,
-			URL:         fmt.Sprintf("%s%s%s/", myconfig.ServiceURL, request.URL.Path, name),
+			Name:         name,
+			Description:  backend.Description,
+			URL:          fmt.Sprintf("%s%s%s/", myconfig.ServiceURL, request.URL.Path, name),
+			Models:       modelNames,
+			Rules:        ruleNames,
+			Datasources:  datasourceNames,
+			Destinations: destinationNames,
 		})
 	}
 	render.JSON(response, request, backendInfos)

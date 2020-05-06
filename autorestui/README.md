@@ -20,5 +20,8 @@ npm run build
 npm run lint
 ```
 
-### Customize configuration
+### Customize configurationnpminstall
+
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+./node_modules/.bin/vue-cli-service serve

@@ -60,7 +60,6 @@
         </v-row>
       </v-col>
     </v-row>
-    <v-btn color="primary">Normal</v-btn>
   </v-container>
 </template>
 
