@@ -1,5 +1,4 @@
 <template>
-  <div id="app">
   <v-app>
   <v-app-bar fixed app dense max-height="48px">
      <v-menu open-on-hover v-bind:disabled="!isLoggedIn" bottom offset-y>
@@ -26,7 +25,8 @@
       <v-toolbar-title>{{ apptitle }}</v-toolbar-title>
 
       <v-spacer></v-spacer>
-
+      <v-toolbar-title>{{ sectionName }}</v-toolbar-title>
+      <v-spacer></v-spacer>
       <v-btn icon disabled>
         <v-icon>mdi-magnify</v-icon>
       </v-btn>
@@ -50,48 +50,75 @@
         <router-view></router-view>
       </v-container>
     </v-content>
+    <ErrorBox/>
     <v-footer app>
       <div>Wilfried Klaas</div>
       <v-spacer></v-spacer>
       <div>&copy; {{ new Date().getFullYear() }}</div>
     </v-footer>
   </v-app>
-  </div>
 </template>
 
 <script>
-//import Backends from "./components/Backends"
-//import Users from "./components/Users"
-import AccountInfo from "./components/AccountInfo"
+// import Backends from "./components/Backends"
+// import Users from "./components/Users"
+import AccountInfo from './components/AccountInfo'
+import ErrorBox from './components/ErrorBox'
 import axios from 'axios'
-import autorest from "./store/service/autorest"
+import autorest from './store/service/autorest'
 import router from './router'
+import store from './store/store'
 
 axios.defaults.headers.common['X-mcs-apikey'] = autorest.apikey
 axios.defaults.headers.common['X-mcs-system'] = autorest.system
+axios.interceptors.request.use(function (config) {
+  return config
+}, function (error) {
+  // Do something with request error
+  return Promise.reject(error)
+})
+
+// Add a response interceptor
+axios.interceptors.response.use(function (response) {
+  // Do something with response data
+  return response
+}, function (error) {
+  // Do something with response error
+  console.log(error)
+  if (error.response.status === 401) {
+    store.commit('setError', 'Benutzer oder Passwort falsch.')
+  } else {
+    store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText)
+  }
+  return Promise.reject(error)
+})
 
 export default {
-  name: "App",
+  name: 'App',
 
   components: {
-    AccountInfo
+    AccountInfo,
+    ErrorBox
   },
   computed: {
-    isLoggedIn() {
+    isLoggedIn () {
       return this.$store.state.loggedIn
+    },
+    sectionName () {
+      return this.$store.state.section
     }
   },
   data: () => ({
-    apptitle: "AutoRestIoT Service"
+    apptitle: 'AutoRestIoT Service'
   }),
   methods: {
-    logout() {
+    logout () {
       this.$store.commit('resetNames')
-      router.push({ name: "Login" });
+      router.push({ name: 'Login' })
     },
-    route(routeTo) {
-      router.push({ name: routeTo });
+    route (routeTo) {
+      router.push({ name: routeTo })
     }
   }
-};
+}
 </script>

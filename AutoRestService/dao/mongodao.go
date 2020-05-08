@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
@@ -174,6 +175,10 @@ func (m *MongoDAO) GetUsers() ([]model.User, error) {
 		}
 		users = append(users, user)
 	}
+
+	sort.Slice(users, func(i, j int) bool {
+		return users[i].Name < users[j].Name
+	})
 	return users, nil
 }
 

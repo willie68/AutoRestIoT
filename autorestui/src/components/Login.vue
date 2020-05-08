@@ -30,32 +30,30 @@ import router from '../router'
 export default {
   name: 'Login',
   data: () => ({
-    username: "",
-    password: ""
+    username: '',
+    password: ''
   }),
+  mounted () {
+    this.$store.commit('setSection', 'Login')
+  },
   methods: {
-    logout() {
-      this.loggedIn = false;
-      this.password = "";
-      this.$refs.accountinfo.logout()
-    },
-    login() {
-      var credentials = { username : this.username,  password: this.password};
+    login () {
+      var credentials = { username: this.username, password: this.password }
       this.$store.commit('setUser', credentials)
       axios
-        .get('http://127.0.0.1:9080/api/v1/users/me',{
-          headers: { "Access-Control-Allow-Origin": "*"},
+        .get('http://127.0.0.1:9080/api/v1/users/me', {
+          headers: { 'Access-Control-Allow-Origin': '*' },
           auth: this.$store.state.credentials
         })
         .then(response => {
-          this.info = response.data;
-          var userinfo = { firstname : this.info.firstname, lastname: this.info.lastname};
- 
-          this.$store.commit('setNames', userinfo);
-          this.$store.commit('setLoggedIn', true);    
-          router.push({ name: "Backends" });    
-          //console.log(this.info.data);
-        });
+          this.info = response.data
+          var userinfo = { firstname: this.info.firstname, lastname: this.info.lastname }
+          this.$store.commit('resetError')
+          this.$store.commit('setNames', userinfo)
+          this.$store.commit('setLoggedIn', true)
+          router.push({ name: 'Backends' })
+          // console.log(this.info.data);
+        })
     }
   }
 }

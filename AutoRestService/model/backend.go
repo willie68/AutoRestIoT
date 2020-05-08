@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"sort"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -106,6 +107,9 @@ func (m *Backends) Names() []string {
 	for name := range m.bs {
 		names = append(names, name)
 	}
+	sort.Slice(names, func(i, j int) bool {
+		return names[i] < names[j]
+	})
 	return names
 }
 
