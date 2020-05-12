@@ -46,6 +46,19 @@ datasources:
       username: temp
       password: temp
       addTopicAsAttribute: topic
+  - name: temp_arbeit
+    type: mqtt
+    destinations: 
+      - mqtt_hm_output
+    rule: tasmota_ds18b20_hm
+    config: 
+      broker: 192.168.178.12:1883
+      topic: tele/tasmota_63E6F8/SENSOR
+      qos: 0
+      payload: application/json
+      username: temp
+      password: temp
+      addTopicAsAttribute: topic
   - name: temp_simple_text
     type: mqtt
     destinations: 
@@ -145,6 +158,19 @@ rules:
             inputFormat: $unixext,
             outputFormat: 2006-01-02T15:04:05-0700
           }
+  - name: tasmota_ds18b20_hm
+    description: transforming the tasmota json structure of the DS18B20 into hm basic structure
+    transform: 
+      - operation: shift
+        spec: 
+          val: DS18B20.Temperature
+          ts: Time
+      - operation: timestamp
+        spec:
+          Timestamp: {
+            inputFormat: 2006-01-02T15:04:05,
+            outputFormat: $unixext
+          }
 destinations:
   - name: mqtt_sensors_temperatur
     type: mqtt
@@ -152,6 +178,15 @@ destinations:
       broker: 127.0.0.1:1883
       topic: stat/temperatur
       qos: 1
+      payload: application/json
+      username: temp
+      password: temp
+  - name: mqtt_hm_output
+    type: mqtt
+    config: 
+      broker: 192.168.178.12:1883
+      topic: hm/set/TempArbeit
+      qos: 0
       payload: application/json
       username: temp
       password: temp
