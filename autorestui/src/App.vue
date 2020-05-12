@@ -50,6 +50,7 @@
         <router-view></router-view>
       </v-container>
     </v-content>
+    <JsonBox/>
     <ErrorBox/>
     <v-footer app>
       <div>Wilfried Klaas</div>
@@ -63,6 +64,7 @@
 // import Backends from "./components/Backends"
 // import Users from "./components/Users"
 import AccountInfo from './components/AccountInfo'
+import JsonBox from './components/JsonBox'
 import ErrorBox from './components/ErrorBox'
 import axios from 'axios'
 import autorest from './store/service/autorest'
@@ -88,6 +90,8 @@ axios.interceptors.response.use(function (response) {
   if (typeof error.response !== 'undefined') {
     if (error.response.status === 401) {
       store.commit('setError', 'Benutzer oder Passwort falsch.')
+      this.$store.commit('resetNames')
+      router.push({ name: 'Login' })
     } else {
       store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText)
     }
@@ -102,6 +106,7 @@ export default {
 
   components: {
     AccountInfo,
+    JsonBox,
     ErrorBox
   },
   computed: {

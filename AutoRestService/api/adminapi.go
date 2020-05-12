@@ -29,10 +29,14 @@ func AdminRoutes() *chi.Mux {
 	router.With(RoleCheck([]string{"admin"})).Delete(fmt.Sprintf("/%s/{bename}", BackendsPrefix), DeleteAdminBackendHandler)
 	router.With(RoleCheck([]string{"admin"})).Delete(fmt.Sprintf("/%s/{bename}/dropdata", BackendsPrefix), DeleteAdminBackendEndpoint)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/models", BackendsPrefix), GetAdminModelsHandler)
-	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/datasources", BackendsPrefix), GetAdminDatasourcesHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/models/{model}", BackendsPrefix), GetAdminModelHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/rules", BackendsPrefix), GetAdminRulesHandler)
 	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/rules/{rulename}", BackendsPrefix), GetAdminRulesRuleHandler)
 	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/{bename}/rules/{rulename}/test", BackendsPrefix), PostAdminRulesRuleTestHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/datasources", BackendsPrefix), GetAdminDatasourcesHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/datasources/{datasource}", BackendsPrefix), GetAdminDatasourceHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/destinations", BackendsPrefix), GetAdminDestinationsHandler)
+	router.With(RoleCheck([]string{"admin"})).Get(fmt.Sprintf("/%s/{bename}/destinations/{destination}", BackendsPrefix), GetAdminDestinationHandler)
 	return router
 }
 
@@ -202,17 +206,22 @@ func GetAdminModelsHandler(response http.ResponseWriter, request *http.Request) 
 	render.JSON(response, request, models)
 }
 
-// GetAdminDatasourcesHandler getting all datasources of a backend
-func GetAdminDatasourcesHandler(response http.ResponseWriter, request *http.Request) {
+// GetAdminModelHandler getting all models of a backend
+func GetAdminModelHandler(response http.ResponseWriter, request *http.Request) {
 	backendName := chi.URLParam(request, "bename")
-	log.Infof("GET: path: %s, be: %s", request.URL.Path, backendName)
+	modelName := chi.URLParam(request, "model")
+	log.Infof("GET: path: %s, be: %s, md: %s", request.URL.Path, backendName, modelName)
 	backend, ok := model.BackendList.Get(backendName)
 	if !ok {
 		render.Render(response, request, ErrNotFound)
 		return
 	}
-	datasources := backend.DataSources
-	render.JSON(response, request, datasources)
+	myModel, ok := backend.GetModel(modelName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	render.JSON(response, request, myModel)
 }
 
 // GetAdminRulesHandler getting all rules of a backend
@@ -273,4 +282,66 @@ func PostAdminRulesRuleTestHandler(response http.ResponseWriter, request *http.R
 	}
 	response.Header().Add("Content-Type", "application/json")
 	response.Write(transformedJson)
+}
+
+// GetAdminDatasourcesHandler getting all datasources of a backend
+func GetAdminDatasourcesHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	log.Infof("GET: path: %s, be: %s", request.URL.Path, backendName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	datasources := backend.DataSources
+	render.JSON(response, request, datasources)
+}
+
+// GetAdminDatasourceHandler getting all datasources of a backend
+func GetAdminDatasourceHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	datasourceName := chi.URLParam(request, "datasource")
+	log.Infof("GET: path: %s, be: %s, src: %s", request.URL.Path, backendName, datasourceName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	datasource, ok := backend.GetDatasource(datasourceName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	render.JSON(response, request, datasource)
+}
+
+// GetAdminDestinationsHandler getting all datasources of a backend
+func GetAdminDestinationsHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	log.Infof("GET: path: %s, be: %s", request.URL.Path, backendName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	destinations := backend.Destinations
+	render.JSON(response, request, destinations)
+}
+
+// GetAdminDestinationHandler getting all datasources of a backend
+func GetAdminDestinationHandler(response http.ResponseWriter, request *http.Request) {
+	backendName := chi.URLParam(request, "bename")
+	destinationName := chi.URLParam(request, "destination")
+	log.Infof("GET: path: %s, be: %s, src: %s", request.URL.Path, backendName, destinationName)
+	backend, ok := model.BackendList.Get(backendName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	destination, ok := backend.GetDestination(destinationName)
+	if !ok {
+		render.Render(response, request, ErrNotFound)
+		return
+	}
+	render.JSON(response, request, destination)
 }

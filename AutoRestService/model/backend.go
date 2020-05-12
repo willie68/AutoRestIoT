@@ -213,6 +213,26 @@ func (b *Backend) GetModel(modelname string) (Model, bool) {
 	return Model{}, false
 }
 
+//GetDatasource getting a datasource definition from the backend definition
+func (b *Backend) GetDatasource(datasourcename string) (DataSource, bool) {
+	for _, datasource := range b.DataSources {
+		if datasource.Name == datasourcename {
+			return datasource, true
+		}
+	}
+	return DataSource{}, false
+}
+
+//GetDestination getting a datasource definition from the backend definition
+func (b *Backend) GetDestination(destinationname string) (Destination, bool) {
+	for _, destination := range b.Destinations {
+		if destination.Name == destinationname {
+			return destination, true
+		}
+	}
+	return Destination{}, false
+}
+
 //GetRule getting a rule definition from the backend definition
 func (b *Backend) GetRule(rulename string) (Rule, bool) {
 	for _, rule := range b.Rules {
