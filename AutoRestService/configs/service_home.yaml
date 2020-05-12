@@ -22,8 +22,8 @@ logging:
 healthcheck:
     period: 30
 mongodb:
-    host: 192.168.178.12
-    port: 37017
+    host: 192.168.178.14
+    port: 27017
     username:
     password:
     authdb: backend1

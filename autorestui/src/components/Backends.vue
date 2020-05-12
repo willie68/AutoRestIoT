@@ -1,7 +1,6 @@
 <template>
   <v-container>
-    <v-icon>mdi-database</v-icon> Backends
-
+    <v-icon>mdi-database</v-icon>Hier ist eine Liste von Backend, die auf dem System installiert und gestartet wurden.
     <v-card class="mx-auto" max-width="90%" outlined
             v-for="(backend, i) in backends"
              :key="i"
@@ -19,31 +18,75 @@
           <v-col width="50%">
             <v-expansion-panels>
             <v-expansion-panel>
-              <v-expansion-panel-header :disabled="backend.Models.length == 0">Modelle ({{ backend.Models.length }})</v-expansion-panel-header>
+              <v-expansion-panel-header :disabled="backend.Models.length == 0">
+                Modelle ({{ backend.Models.length }})
+                <v-spacer></v-spacer>
+                <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
+                   @click.native.stop="addModel()">+</v-btn>
+              </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Models" :key="i">
-                {{ name }}
-                <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                <v-row>
+                <v-col>{{ name }}</v-col>
+                <v-spacer></v-spacer>
+                <v-col>
+                  <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                  <v-btn icon><v-icon>mdi-trash-can</v-icon></v-btn>
+                </v-col>
+                </v-row>
               </v-expansion-panel-content>
             </v-expansion-panel>
             <v-expansion-panel>
-              <v-expansion-panel-header :disabled="backend.Rules.length == 0">Regeln ({{ backend.Rules.length }})</v-expansion-panel-header>
+              <v-expansion-panel-header :disabled="backend.Rules.length == 0">
+                Regeln ({{ backend.Rules.length }})
+                <v-spacer></v-spacer>
+                <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
+                   @click.native.stop="addRule()">+</v-btn>
+              </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Rules" :key="i">
-                {{ name }}
-                <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                <v-row>
+                <v-col>{{ name }}</v-col>
+                <v-spacer></v-spacer>
+                <v-col>
+                  <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                  <v-btn icon><v-icon>mdi-trash-can</v-icon></v-btn>
+                </v-col>
+                </v-row>
               </v-expansion-panel-content>
             </v-expansion-panel>
             <v-expansion-panel>
-              <v-expansion-panel-header  :disabled="backend.Datasources.length == 0">Datenquellen ({{ backend.Datasources.length }})</v-expansion-panel-header>
+              <v-expansion-panel-header  :disabled="backend.Datasources.length == 0">
+                Datenquellen ({{ backend.Datasources.length }})
+                <v-spacer></v-spacer>
+                <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
+                   @click.native.stop="addSource()">+</v-btn>
+              </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Datasources" :key="i">
-                {{ name }}
-                <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                <v-row>
+                <v-col>{{ name }}</v-col>
+                <v-spacer></v-spacer>
+                <v-col>
+                  <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                  <v-btn icon><v-icon>mdi-trash-can</v-icon></v-btn>
+                </v-col>
+                </v-row>
               </v-expansion-panel-content>
             </v-expansion-panel>
             <v-expansion-panel>
-              <v-expansion-panel-header :disabled="backend.Destinations.length == 0">Datensenken ({{ backend.Destinations.length }})</v-expansion-panel-header>
+              <v-expansion-panel-header :disabled="backend.Destinations.length == 0">
+                Datensenken ({{ backend.Destinations.length }})
+                <v-spacer></v-spacer>
+                <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
+                   @click.native.stop="addSink()">+</v-btn>
+              </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Destinations" :key="i">
-                {{ name }}
-                <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                <v-row>
+                <v-col>{{ name }}</v-col>
+                <v-spacer></v-spacer>
+                <v-col>
+                  <v-btn icon><v-icon>mdi-pencil</v-icon></v-btn>
+                  <v-btn icon><v-icon>mdi-trash-can</v-icon></v-btn>
+                </v-col>
+                </v-row>
               </v-expansion-panel-content>
             </v-expansion-panel>
             </v-expansion-panels>

@@ -85,10 +85,14 @@ axios.interceptors.response.use(function (response) {
 }, function (error) {
   // Do something with response error
   console.log(error)
-  if (error.response.status === 401) {
-    store.commit('setError', 'Benutzer oder Passwort falsch.')
+  if (typeof error.response !== 'undefined') {
+    if (error.response.status === 401) {
+      store.commit('setError', 'Benutzer oder Passwort falsch.')
+    } else {
+      store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText)
+    }
   } else {
-    store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText)
+    store.commit('setError', 'Unbekannter Fehler: ' + error.message)
   }
   return Promise.reject(error)
 })
