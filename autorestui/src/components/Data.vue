@@ -27,12 +27,46 @@
         ></v-select>
       </v-col>
     </v-row>
+      <v-card>
+    <v-card-title>
+      {{ backend.Name }}#{{ model }}
+      <v-spacer></v-spacer>
+      <v-text-field
+        v-model="search"
+        append-icon="mdi-magnify"
+        label="Suche"
+        single-line
+        hide-details
+        @click:append="doSearch()"
+        v-on:keyup.enter="doSearch()"
+      ></v-text-field>
+    </v-card-title>
     <v-data-table
     :headers="headers"
     :items="desserts"
     :items-per-page="5"
+    item-key="name"
     class="elevation-1"
-  ></v-data-table>
+    show-select
+    :loading="loading"
+    loading-text="Lade Daten... Bitte warten"
+    show-expand
+    dense
+    :footer-props="{
+      showFirstLastPage: true,
+      firstIcon: 'mdi-arrow-left-circle-outline',
+      lastIcon: 'mdi-arrow-right-circle-outline',
+      prevIcon: 'mdi-minus-circle-outline',
+      nextIcon: 'mdi-plus-circle-outline',
+      itemsPerPageAllText: 'alle Zeilen',
+      itemsPerPageText: 'Zeilen pro Seite',
+    }"
+    >
+    <template v-slot:expanded-item="{ headers, item }">
+      <td :colspan="headers.length">More info about {{ item.name }}</td>
+    </template>
+  </v-data-table>
+    </v-card>
   </v-container>
 </template>
 
@@ -61,9 +95,21 @@ export default {
       return this.backend.Models
     }
   },
+  methods: {
+    doSearch () {
+      this.loading = true
+      var self = this
+      setTimeout(function () {
+        self.loading = false
+      }, 5000)
+    }
+  },
   data: () => ({
+    search: '',
+    loading: false,
     backend: {},
     backendList: [],
+    model: {},
     headers: [{
       text: 'Dessert (100g serving)',
       align: 'start',
@@ -74,7 +120,8 @@ export default {
     { text: 'Fat (g)', value: 'fat' },
     { text: 'Carbs (g)', value: 'carbs' },
     { text: 'Protein (g)', value: 'protein' },
-    { text: 'Iron (%)', value: 'iron' }
+    { text: 'Iron (%)', value: 'iron' },
+    { text: '', value: 'data-table-expand' }
     ],
     desserts: [
       {
