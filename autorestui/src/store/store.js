@@ -12,7 +12,7 @@ const store = new Vuex.Store({
     credentials: {},
     error: { showerror: false, errortext: '' },
     section: '',
-    jsonBox: { show: false, json: '', title: '' }
+    jsonBox: { show: false, json: '', title: '', jsonStruct: {} }
   },
   mutations: {
     increment (state) {
@@ -44,6 +44,7 @@ const store = new Vuex.Store({
       state.section = sectionName
     },
     showJson (state, jsonStruct) {
+      state.jsonBox.jsonStruct = jsonStruct
       state.jsonBox.title = jsonStruct.title
       state.jsonBox.json = jsonStruct.text
       var url = jsonStruct.url
@@ -96,7 +97,10 @@ const store = new Vuex.Store({
       }
       state.jsonBox.show = true
     },
-    setJsonBox (state, jsonStruct) {
+    setJsonBoxData (state, jsonData) {
+      state.jsonBox.jsonsaved = jsonData
+    },
+    saveJsonBox (state, jsonStruct) {
       // state.jsonBox.json = jsonStruct
     },
     resetJsonBox (state) {

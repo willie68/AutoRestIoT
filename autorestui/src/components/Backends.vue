@@ -22,7 +22,7 @@
                 <div><v-icon>mdi-alpha-m-circle-outline</v-icon> Modelle ({{ backend.Models.length }}) </div>
                 <v-spacer></v-spacer>
                 <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
-                   @click.native.stop="addModel()">+</v-btn>
+                   @click.native.stop="addModel(backend.Name)">+</v-btn>
               </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Models" :key="i">
                 <v-row>
@@ -41,7 +41,7 @@
                 <div><v-icon>mdi-alpha-r-circle-outline</v-icon> Regeln ({{ backend.Rules.length }})</div>
                 <v-spacer></v-spacer>
                 <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
-                   @click.native.stop="addRule()">+</v-btn>
+                   @click.native.stop="addRule(backend.Name)">+</v-btn>
               </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Rules" :key="i">
                 <v-row>
@@ -60,7 +60,7 @@
                 <div><v-icon>mdi-alpha-q-circle-outline</v-icon> Datenquellen ({{ backend.Datasources.length }})</div>
                 <v-spacer></v-spacer>
                 <v-btn fab class="button-addmodel" elevation ="0" max-width="24" max-height="24"
-                   @click.native.stop="addSource()">+</v-btn>
+                   @click.native.stop="addSource(backend.Name)">+</v-btn>
               </v-expansion-panel-header>
               <v-expansion-panel-content v-for="(name, i) in backend.Datasources" :key="i">
                 <v-row>
@@ -172,8 +172,8 @@ export default {
       var jsonStruct = { title: 'Regel löschen', text: 'https://ashfkdjafhk + ' + backend + '#' + model }
       this.$store.commit('showJson', jsonStruct)
     },
-    addSource () {
-      var jsonStruct = { title: 'Datenquelle', text: 'This is a text' }
+    addSource (backend) {
+      var jsonStruct = { title: 'Datenquelle', url: 'http', backend: backend, modelType: 'source' }
       this.$store.commit('showJson', jsonStruct)
     },
     showSource (backend, model) {
