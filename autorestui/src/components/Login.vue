@@ -51,7 +51,7 @@ export default {
           this.$store.commit('resetError')
           this.$store.commit('setNames', userinfo)
           this.$store.commit('setLoggedIn', true)
-          router.push({ name: 'Backends' })
+          router.push({ name: 'Data' })
           // console.log(this.info.data);
         })
     }

@@ -10,11 +10,14 @@
         </template>
 
         <v-list>
+            <v-list-item v-on:click="route('Data')">
+            <v-list-item-title ><v-icon>mdi-table</v-icon> Daten</v-list-item-title>
+            </v-list-item>
             <v-list-item v-on:click="route('Backends')">
-            <v-list-item-title >Backends</v-list-item-title>
+            <v-list-item-title ><v-icon>mdi-database</v-icon> Backends</v-list-item-title>
             </v-list-item>
             <v-list-item v-on:click="route('Users')">
-            <v-list-item-title >Benutzer</v-list-item-title>
+            <v-list-item-title ><v-icon>mdi-account</v-icon> Benutzer</v-list-item-title>
             </v-list-item>
             <v-list-item v-on:click="route('HelloWorld')">
             <v-list-item-title >HelloWorld</v-list-item-title>

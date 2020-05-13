@@ -4,6 +4,7 @@ import Backends from '@/components/Backends'
 import Users from '@/components/Users'
 import Login from '@/components/Login'
 import HelloWorld from '@/components/HelloWorld'
+import Data from '@/components/Data'
 
 Vue.use(Router)
 
@@ -19,6 +20,11 @@ export default new Router({
       path: '/login',
       name: 'Login',
       component: Login
+    },
+    {
+      path: '/data',
+      name: 'Data',
+      component: Data
     },
     {
       path: '/backends',
