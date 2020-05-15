@@ -1,6 +1,6 @@
 ##### BUILDER #####
 
-FROM golang:1.13-alpine3.11 as builder
+FROM golang:1.14-alpine3.11 as builder
 
 ## Task: Install build deps
 
@@ -15,7 +15,6 @@ RUN set -eux; \
 
 COPY . /src
 WORKDIR /src
-
 ## Task: fetch project deps
 
 RUN go mod download

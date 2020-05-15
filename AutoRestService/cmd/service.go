@@ -94,6 +94,7 @@ func routes() *chi.Mux {
 	)
 
 	router.Route("/", func(r chi.Router) {
+
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/models", api.ModelRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/files", api.FilesRoutes())
 		r.With(api.BasicAuth(servicename)).Mount(baseURL+"/users", api.UsersRoutes())
@@ -101,6 +102,18 @@ func routes() *chi.Mux {
 
 		r.Mount("/health", health.Routes())
 	})
+
+	staticDir := serviceConfig.WebRoot
+	if staticDir != "" {
+		workDir, _ := os.Getwd()
+		staticFiles, err := filepath.Abs(filepath.Join(workDir, staticDir))
+		if err != nil {
+			log.Alertf("can't serve static files: %s", err.Error())
+			panic(1)
+		}
+		filesDir := http.Dir(staticFiles)
+		FileServer(router, "/files", filesDir)
+	}
 	return router
 }
 
@@ -459,4 +472,25 @@ func registerBackend(bemodel model.Backend) error {
 	backendName := model.BackendList.Add(bemodel)
 	log.Infof("registering backend %s successfully.", backendName)
 	return nil
+}
+
+// FileServer conveniently sets up a http.FileServer handler to serve
+// static files from a http.FileSystem.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if strings.ContainsAny(path, "{}*") {
+		panic("FileServer does not permit any URL parameters.")
+	}
+
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", 301).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, r)
+	})
 }

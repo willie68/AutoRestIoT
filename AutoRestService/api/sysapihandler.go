@@ -35,7 +35,7 @@ func NewSysAPIHandler(systemID string, apikey string) *SysAPIKey {
 func (s *SysAPIKey) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		path := strings.TrimSuffix(request.URL.Path, "/")
-		if !strings.HasPrefix(path, "/health") {
+		if !strings.HasPrefix(path, "/health") && !strings.HasPrefix(path, "/files") {
 			if s.SystemID != request.Header.Get(SystemHeader) {
 				render.Render(response, request, ErrInvalidRequest(errors.New("either system id or apikey not correct")))
 				return

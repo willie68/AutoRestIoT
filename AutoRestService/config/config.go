@@ -16,6 +16,8 @@ type Config struct {
 
 	SecretFile string `yaml:"secretfile"`
 
+	WebRoot string `yaml:"webRoot"`
+
 	AllowAnonymousBackend bool `yaml:"allowAnonymousBackend"`
 
 	Logging Logging `yaml:"logging"`

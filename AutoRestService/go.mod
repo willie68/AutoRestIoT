@@ -23,6 +23,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.3 // indirect
 	github.com/stretchr/testify v1.5.1
+	github.com/willie68/kazaam v3.4.8+incompatible // indirect
 	go.mongodb.org/mongo-driver v1.3.2
 	golang.org/x/crypto v0.0.0-20191106202628-ed6320f186d4
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
@@ -30,5 +31,3 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
 )
-
-replace github.com/qntfy/kazaam => ..\..\kazaam
