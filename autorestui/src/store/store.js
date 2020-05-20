@@ -9,7 +9,7 @@ const store = new Vuex.Store({
     count: 0,
     userinfo: {},
     loggedIn: false,
-    credentials: {},
+    credentials: { username: 'editor', password: 'editor' },
     error: { showerror: false, errortext: '' },
     section: '',
     jsonBox: { show: false, json: '', title: '', jsonStruct: {} }
