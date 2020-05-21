@@ -30,7 +30,7 @@
     </v-row>
       <v-card>
     <v-card-title>
-      {{ backend.Name }}#{{ model }}
+      <v-text-field v-model="modelReference"></v-text-field>
       <v-spacer></v-spacer>
       <v-text-field
         v-model="search"
@@ -110,29 +110,33 @@ export default {
   methods: {
     doSearch () {
       this.loading = true
-      // var self = this
-      var getModelUrl = 'http://127.0.0.1:9080/api/v1/admin/backends/' + this.backend.Name + '/models/' + this.model
-      axios
-        .get(getModelUrl, {
-          headers: { 'Access-Control-Allow-Origin': '*' },
-          auth: this.$store.state.credentials
-        })
-        .then(response => {
-          var modelDefinition = response.data
-          var fields = modelDefinition.fields
-          this.headers = []
-          fields.forEach(element => {
-            var header = {
-              text: element.name,
-              align: 'start',
-              sortable: false,
-              value: element.name
-            }
-            this.headers.push(header)
+      if ((this.backend.Name !== '') && (this.model !== '')) {
+        this.modelReference = this.backend.Name + '#' + this.model
+
+        // var self = this
+        var getModelUrl = 'http://127.0.0.1:9080/api/v1/admin/backends/' + this.backend.Name + '/models/' + this.model
+        axios
+          .get(getModelUrl, {
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            auth: this.$store.state.credentials
           })
-          console.log('fld:' + fields)
-        })
-      this.getDataFromApi()
+          .then(response => {
+            var modelDefinition = response.data
+            var fields = modelDefinition.fields
+            this.headers = []
+            fields.forEach(element => {
+              var header = {
+                text: element.name,
+                align: 'start',
+                sortable: false,
+                value: element.name
+              }
+              this.headers.push(header)
+            })
+            console.log('fld:' + fields)
+          })
+        this.getDataFromApi()
+      }
     },
     getDataFromApi () {
       this.loading = true
@@ -180,7 +184,8 @@ export default {
     options: {},
     modelItems: [],
     totalItems: 0,
-    modelDefinition: {}
+    modelDefinition: {},
+    modelReference: ''
   })
 }
 </script>
