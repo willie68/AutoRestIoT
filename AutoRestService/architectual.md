@@ -39,6 +39,11 @@ logging:
 healthcheck:
     # automatically check the health of this service every ## seconds
     period: 30
+# background tasks configuration
+backgroundtasks:
+    deleteOrphanedFiles: true # automatically delete orphaned files
+    period: 86400  #once a day
+
 # configuration of the mongo storage
 mongodb:
     host: 127.0.0.1 #mongo host ip (comma seperated ip's with a cluster installation )
