@@ -30,17 +30,7 @@
     </v-row>
       <v-card>
     <v-card-title>
-      <v-text-field v-model="modelReference"></v-text-field>
       <v-spacer></v-spacer>
-      <v-text-field
-        v-model="search"
-        append-icon="mdi-magnify"
-        label="Suche"
-        single-line
-        hide-details
-        @click:append="doSearch()"
-        v-on:keyup.enter="doSearch()"
-      ></v-text-field>
     </v-card-title>
     <v-data-table
     :headers="headers"
@@ -65,6 +55,28 @@
       itemsPerPageText: 'Zeilen pro Seite',
     }"
     >
+    <template v-slot:top>
+      <v-toolbar flat color="white">
+        <v-toolbar-title v-model="modelReference">{{ modelReference }}</v-toolbar-title>
+        <v-divider
+          class="mx-4"
+          inset
+          vertical
+        ></v-divider>
+        <v-spacer></v-spacer>
+        <v-text-field
+          v-model="search"
+          append-icon="mdi-magnify"
+          label="Suche"
+          single-line
+          hide-details
+          @click:append="doSearch()"
+          v-on:keyup.enter="doSearch()"
+          ></v-text-field>
+        <v-btn icon ><v-icon>mdi-plus-circle</v-icon></v-btn>
+        <v-btn icon ><v-icon>mdi-trash-can</v-icon></v-btn>
+      </v-toolbar>
+    </template>
     <template v-slot:expanded-item="{ headers, item }">
       <td :colspan="headers.length">JSON: {{ item }}</td>
     </template>

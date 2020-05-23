@@ -24,7 +24,7 @@ healthcheck:
     period: 30
 
 backgroundtasks:
-    period: 3
+    period: 86400
     deleteOrphanedFiles: true
 
 mongodb:

@@ -16,3 +16,5 @@
 
 **/vendor/
 *_bin
+**/node_modules/
+**/dist/
