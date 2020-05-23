@@ -48,7 +48,7 @@ func InitHealthSystem(config CheckConfig) {
 	doCheck()
 	go func() {
 		background := time.NewTicker(time.Second * time.Duration(period))
-		for _ = range background.C {
+		for range background.C {
 			doCheck()
 		}
 	}()

@@ -24,6 +24,8 @@ type Config struct {
 
 	HealthCheck HealthCheck `yaml:"healthcheck"`
 
+	BackgroundTasks BackgroundTasks `yaml:"backgroundtasks"`
+
 	MongoDB MongoDB `yaml: "mongodb"`
 }
 
@@ -35,6 +37,11 @@ type Logging struct {
 
 //HealthCheck configuration for the healthcheck system
 type HealthCheck struct {
+	Period int `yaml:"period"`
+}
+
+//BackgroundTasks configuration for the background tasks system
+type BackgroundTasks struct {
 	Period int `yaml:"period"`
 }
 

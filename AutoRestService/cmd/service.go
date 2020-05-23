@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -175,6 +174,7 @@ func main() {
 	initGraylog()
 
 	healthCheckConfig := health.CheckConfig(serviceConfig.HealthCheck)
+	backgroundTasksConfig := worker.BackgroundConfig(serviceConfig.BackgroundTasks)
 
 	defer log.Close()
 
@@ -206,6 +206,8 @@ func main() {
 	dao.SetIDM(idm)
 
 	health.InitHealthSystem(healthCheckConfig)
+	worker.InitBackgroundTasks(backgroundTasksConfig)
+
 	apikey = getApikey()
 	log.Infof("systemid: %s", serviceConfig.SystemID)
 	log.Infof("apikey: %s", apikey)
@@ -459,15 +461,15 @@ func initAutoRest() {
 func registerBackend(bemodel model.Backend) error {
 	bemodel, err := worker.PrepareBackend(bemodel)
 	if err != nil {
-		return errors.New(fmt.Sprintf("validating backend %s, getting error: %v", bemodel.Backendname, err))
+		return fmt.Errorf("validating backend %s, getting error: %v", bemodel.Backendname, err)
 	}
 	err = worker.ValidateBackend(bemodel)
 	if err != nil {
-		return errors.New(fmt.Sprintf("validating backend %s, getting error: %v", bemodel.Backendname, err))
+		return fmt.Errorf("validating backend %s, getting error: %v", bemodel.Backendname, err)
 	}
 	err = worker.RegisterBackend(bemodel)
 	if err != nil {
-		return errors.New(fmt.Sprintf("error registering backend %s. %v", bemodel.Backendname, err))
+		return fmt.Errorf("error registering backend %s. %v", bemodel.Backendname, err)
 	}
 	backendName := model.BackendList.Add(bemodel)
 	log.Infof("registering backend %s successfully.", backendName)

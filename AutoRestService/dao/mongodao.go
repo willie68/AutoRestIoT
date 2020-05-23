@@ -72,7 +72,31 @@ func (m *MongoDAO) InitDAO(MongoConfig config.MongoDB) {
 	m.initialised = true
 }
 
-// AddFile adding a file to the storage, stream like
+//ProcessFiles adding a file to the storage, stream like
+func (m *MongoDAO) ProcessFiles(RemoveCallback func(filename, id, backend string) bool) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cursor, err := m.bucket.Find(bson.M{}, &options.GridFSFindOptions{})
+	if err != nil {
+		fmt.Printf("error: %s\n", err.Error())
+		return err
+	}
+	defer cursor.Close(ctx)
+	count := 0
+	for cursor.Next(ctx) {
+		var file bson.M
+		if err = cursor.Decode(&file); err != nil {
+			log.Alertf("%v", err)
+			continue
+		}
+		metadata := file["metadata"].(bson.M)
+		RemoveCallback(file["filename"].(string), file["_id"].(primitive.ObjectID).Hex(), metadata["backend"].(string))
+		count++
+	}
+	return nil
+}
+
+//AddFile adding a file to the storage, stream like
 func (m *MongoDAO) AddFile(backend string, filename string, reader io.Reader) (string, error) {
 	uploadOpts := options.GridFSUpload().SetMetadata(bson.D{{Key: "backend", Value: backend}})
 
