@@ -25,6 +25,7 @@ healthcheck:
 
 backgroundtasks:
     period: 3
+    deleteOrphanedFiles: true
 
 mongodb:
     host: 192.168.178.14

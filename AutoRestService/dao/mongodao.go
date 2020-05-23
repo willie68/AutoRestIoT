@@ -73,7 +73,7 @@ func (m *MongoDAO) InitDAO(MongoConfig config.MongoDB) {
 }
 
 //ProcessFiles adding a file to the storage, stream like
-func (m *MongoDAO) ProcessFiles(RemoveCallback func(filename, id, backend string) bool) error {
+func (m *MongoDAO) ProcessFiles(RemoveCallback func(fileInfo model.FileInfo) bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cursor, err := m.bucket.Find(bson.M{}, &options.GridFSFindOptions{})
@@ -90,7 +90,12 @@ func (m *MongoDAO) ProcessFiles(RemoveCallback func(filename, id, backend string
 			continue
 		}
 		metadata := file["metadata"].(bson.M)
-		RemoveCallback(file["filename"].(string), file["_id"].(primitive.ObjectID).Hex(), metadata["backend"].(string))
+		info := model.FileInfo{}
+		info.Filename = file["filename"].(string)
+		info.Backend = metadata["backend"].(string)
+		info.ID = file["_id"].(primitive.ObjectID).Hex()
+		info.UploadDate = file["uploadDate"].(primitive.DateTime).Time()
+		RemoveCallback(info)
 		count++
 	}
 	return nil

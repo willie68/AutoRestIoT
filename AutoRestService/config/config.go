@@ -42,7 +42,8 @@ type HealthCheck struct {
 
 //BackgroundTasks configuration for the background tasks system
 type BackgroundTasks struct {
-	Period int `yaml:"period"`
+	Period              int  `yaml:"period"`
+	DeleteOrphanedFiles bool `yaml:"deleteOrphanedFiles"`
 }
 
 //MongoDB configuration for the mongodb stoirage

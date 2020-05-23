@@ -13,7 +13,7 @@ const FulltextIndexName = "$fulltext"
 StorageDao this is the interface which all method implementation of a storage engine has to fulfill
 */
 type StorageDao interface {
-	ProcessFiles(RemoveCallback func(filename, id, backend string) bool) error
+	ProcessFiles(RemoveCallback func(file model.FileInfo) bool) error
 	AddFile(backend string, filename string, reader io.Reader) (string, error)
 	GetFilename(backend string, fileid string) (string, error)
 	GetFile(backend string, fileid string, stream io.Writer) error
