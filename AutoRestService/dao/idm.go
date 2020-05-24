@@ -1,5 +1,10 @@
 package dao
 
+/*
+  This is the identity management system for the AutoRest service. Here you will find all methods regarding the identity of a user,
+  authentication and authorisation.
+*/
+
 import (
 	"crypto/sha1"
 	"errors"
@@ -12,10 +17,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-/*
-  This is the identity management system for the AutoRest service. Here you will find all methods regarding the identity of a user,
-  authentication and authorisation.
-*/
+//IDM the idm cache struct with users and salts
 type IDM struct {
 	users map[string]string
 	salts map[string][]byte
@@ -28,6 +30,7 @@ const userReloadPeriod = 1 * time.Hour
 
 var idm IDM
 
+//NewIDM creating a new idm object
 func NewIDM() IDM {
 	return IDM{
 		users: make(map[string]string),
@@ -35,10 +38,12 @@ func NewIDM() IDM {
 	}
 }
 
+//GetIDM getting the actual idm object
 func GetIDM() IDM {
 	return idm
 }
 
+//SetIDM setting the actual idm object
 func SetIDM(newIdm IDM) {
 	idm = newIdm
 }
