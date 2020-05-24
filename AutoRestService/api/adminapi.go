@@ -18,7 +18,6 @@ var log logging.ServiceLogger
 
 const AdminPrefix = "admin"
 const BackendsPrefix = "backends"
-const SystemBackend = "_system"
 
 //AdminRoutes getting all routes for the config endpoint
 func AdminRoutes() *chi.Mux {

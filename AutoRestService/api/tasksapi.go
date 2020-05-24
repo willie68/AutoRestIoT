@@ -6,11 +6,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/willie68/AutoRestIoT/dao"
-	"github.com/willie68/AutoRestIoT/model"
 	"github.com/willie68/AutoRestIoT/worker"
 )
-
-const TaskModelName = "tasks"
 
 //AdminRoutes getting all routes for the config endpoint
 func TasksRoutes() *chi.Mux {
@@ -22,10 +19,7 @@ func TasksRoutes() *chi.Mux {
 // GetAdminTasksHandler getting server info
 func GetAdminTasksHandler(response http.ResponseWriter, request *http.Request) {
 	log.Infof("GET: path: %s", request.URL.Path)
-	route := model.Route{
-		Backend: SystemBackend,
-		Model:   TaskModelName,
-	}
+	route := worker.GetTaskRoute()
 
 	log.Infof("GET many: path: %s, route: %s", request.URL.Path, route.String())
 
