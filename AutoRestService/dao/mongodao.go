@@ -452,7 +452,7 @@ func (m *MongoDAO) QueryModel(route model.Route, query string, offset int, limit
 	docs := 0
 	for cursor.Next(ctx) {
 		if count >= offset {
-			if docs < limit {
+			if (docs < limit) || (limit <= 0) {
 				var model model.JSONMap
 				if err = cursor.Decode(&model); err != nil {
 					log.Alertf("%v", err)

@@ -1204,6 +1204,70 @@ Payload:
 }
 ```
 
+### Tasks API
+
+Security: Ja
+
+#### Taskliste
+
+Request**: **GET**: https://127.0.0.1:9443/api/v1/admin/tasks
+
+**Beschreibung**: Liste der Service Tasks
+
+**Security role**: admin
+
+**Request**: **GET**: https://127.0.0.1:9443/api/v1/admin/tasks
+
+**Response**:
+
+```json
+{
+    "count": 1,
+    "data": [
+        {
+            "_id": "5eca0c72cfe02b227085e242",
+            "tdata": "reporting",
+            "tfile": "1234456789",
+            "tstatus": "finished",
+            "ttype": "report"
+        }
+    ],
+    "found": 1,
+    "limit": 0,
+    "offset": 0,
+    "query": ""
+}
+```
+
+#### Starten eines Servicetask
+
+**Request**: **POST**: https://127.0.0.1:9443/api/v1/admin/tasks
+
+**Beschreibung**: Starten eines Service tasks
+
+**Security role**: admin
+
+**Request**: **POST**: https://127.0.0.1:9443/api/v1/admin/tasks/
+
+​	**Payload**: 
+
+```json
+{
+  	"ttype": "report",
+    "tdata": "[optional data for the task, if necessary]"
+}
+```
+
+**Response**:
+
+```JSON
+{
+    "tasksid": "5ea92df4d015d95201f6b4b8"
+}
+```
+
+​	**Headers**: `Location: /api/v1/admin/tasks/5ea92df4d015d95201f6b4b8`
+
 ### Files API
 
 Security: Ja

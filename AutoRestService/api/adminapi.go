@@ -18,10 +18,12 @@ var log logging.ServiceLogger
 
 const AdminPrefix = "admin"
 const BackendsPrefix = "backends"
+const SystemBackend = "_system"
 
 //AdminRoutes getting all routes for the config endpoint
 func AdminRoutes() *chi.Mux {
 	router := chi.NewRouter()
+	router.Mount("/tasks", TasksRoutes())
 	router.With(RoleCheck([]string{"admin"})).Get("/info", GetAdminInfoHandler)
 	router.With(RoleCheck([]string{"admin", "edit", "read"})).Get(fmt.Sprintf("/%s/", BackendsPrefix), GetAdminBackendsHandler)
 	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/", BackendsPrefix), PostAdminBackendHandler)
