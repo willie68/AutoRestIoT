@@ -115,7 +115,7 @@ export default {
   mounted () {
     this.$store.commit('setSection', 'Backends')
     axios
-      .get('http://127.0.0.1:9080/api/v1/admin/backends/', {
+      .get(this.$store.state.baseURL + 'admin/backends/', {
         headers: { 'Access-Control-Allow-Origin': '*' },
         auth: this.$store.state.credentials
       })

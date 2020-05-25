@@ -93,7 +93,7 @@ export default {
   mounted () {
     this.$store.commit('setSection', 'Data')
     axios
-      .get('http://127.0.0.1:9080/api/v1/admin/backends/', {
+      .get(this.$store.state.baseURL + 'admin/backends/', {
         headers: { 'Access-Control-Allow-Origin': '*' },
         auth: this.$store.state.credentials
       })
@@ -126,7 +126,7 @@ export default {
         this.modelReference = this.backend.Name + '#' + this.model
 
         // var self = this
-        var getModelUrl = 'http://127.0.0.1:9080/api/v1/admin/backends/' + this.backend.Name + '/models/' + this.model
+        var getModelUrl = this.$store.state.baseURL + 'admin/backends/' + this.backend.Name + '/models/' + this.model
         axios
           .get(getModelUrl, {
             headers: { 'Access-Control-Allow-Origin': '*' },
@@ -155,7 +155,7 @@ export default {
       const { page, itemsPerPage } = this.options
       // sortBy, sortDesc,
 
-      var getModelUrl = 'http://127.0.0.1:9080/api/v1/models/' + this.backend.Name + '/' + this.model
+      var getModelUrl = this.$store.state.baseURL + 'models/' + this.backend.Name + '/' + this.model
 
       var offset = 0
       var limit = 10
@@ -177,6 +177,10 @@ export default {
           var modelData = response.data
           this.modelItems = modelData.data
           this.totalItems = modelData.found
+          this.loading = false
+        })
+        .catch(function (error) {
+          console.log(error)
           this.loading = false
         })
     }

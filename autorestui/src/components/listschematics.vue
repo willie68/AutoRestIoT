@@ -41,7 +41,7 @@ export default {
   }),
   mounted () {
     axios
-      .get('https://127.0.0.1:9443/api/v1/users/me',{
+      .get(this.$store.state.baseURL + 'users/me',{
          httpsAgent: agent,
         headers: { "Access-Control-Allow-Origin": "*"},
         auth: {

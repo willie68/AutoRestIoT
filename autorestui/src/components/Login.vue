@@ -41,7 +41,7 @@ export default {
       var credentials = { username: this.username, password: this.password }
       this.$store.commit('setUser', credentials)
       axios
-        .get('http://127.0.0.1:9080/api/v1/users/me', {
+        .get(this.$store.state.baseURL + 'users/me', {
           headers: { 'Access-Control-Allow-Origin': '*' },
           auth: this.$store.state.credentials
         })
