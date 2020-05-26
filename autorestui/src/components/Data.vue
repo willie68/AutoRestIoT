@@ -73,12 +73,42 @@
           @click:append="doSearch()"
           v-on:keyup.enter="doSearch()"
           ></v-text-field>
-        <v-btn icon ><v-icon>mdi-plus-circle</v-icon></v-btn>
+        <v-dialog v-model="dialog" max-width="500px">
+          <template v-slot:activator="{ on }">
+            <v-btn icon v-on="on"><v-icon>mdi-plus-circle</v-icon></v-btn>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">{{ formTitle }}</span>
+            </v-card-title>
+
+            <v-card-text>
+              <v-container>
+                <JsonEditor
+                  :options="{
+                    confirmText: 'speichern',
+                    cancelText: 'abbrechen',
+                  }"
+                  :objData="newModel"
+                  v-model="newModel"> </JsonEditor>
+              </v-container>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="close">Abbrechen</v-btn>
+              <v-btn color="blue darken-1" text @click="save">Speichern</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
         <v-btn icon ><v-icon>mdi-trash-can</v-icon></v-btn>
       </v-toolbar>
     </template>
     <template v-slot:expanded-item="{ headers, item }">
       <td :colspan="headers.length">JSON: {{ item }}</td>
+    </template>
+    <template v-slot:item.file="{ item }">
+      <v-chip :color="red"><a v-bind:href="item._href">{{ item.file }}</a></v-chip>
     </template>
   </v-data-table>
     </v-card>
@@ -117,16 +147,27 @@ export default {
         this.getDataFromApi()
       },
       deep: true
+    },
+    dialog (val) {
+      val || this.close()
     }
   },
   methods: {
+    setModelReference () {
+      if ((this.backend.Name !== '') && (this.model !== '')) {
+        this.modelReference = this.backend.Name + '#' + this.model
+        this.formTitle = 'Neues Model anlegen: ' + this.modelReference
+      } else {
+        this.modelReference = ''
+      }
+    },
     doSearch () {
       this.loading = true
       if ((this.backend.Name !== '') && (this.model !== '')) {
-        this.modelReference = this.backend.Name + '#' + this.model
-
+        this.setModelReference()
         // var self = this
         var getModelUrl = this.$store.state.baseURL + 'admin/backends/' + this.backend.Name + '/models/' + this.model
+        this.imageFieldName = ''
         axios
           .get(getModelUrl, {
             headers: { 'Access-Control-Allow-Origin': '*' },
@@ -136,14 +177,68 @@ export default {
             var modelDefinition = response.data
             var fields = modelDefinition.fields
             this.headers = []
-            fields.forEach(element => {
+            this.newModel = {}
+            fields.forEach(field => {
               var header = {
-                text: element.name,
+                text: field.name,
                 align: 'start',
                 sortable: false,
-                value: element.name
+                value: field.name
               }
               this.headers.push(header)
+              if (field.type === 'file') {
+                header.value = 'file'
+                this.imageFieldName = field.name
+              }
+              switch (field.type) {
+                case 'string':
+                  if (field.collection) {
+                    this.newModel[field.name] = ['']
+                  } else {
+                    this.newModel[field.name] = ''
+                  }
+                  break
+                case 'int':
+                  if (field.collection) {
+                    this.newModel[field.name] = [0]
+                  } else {
+                    this.newModel[field.name] = 0
+                  }
+                  break
+                case 'float':
+                  if (field.collection) {
+                    this.newModel[field.name] = [1.0]
+                  } else {
+                    this.newModel[field.name] = 1.0
+                  }
+                  break
+                case 'time':
+                  if (field.collection) {
+                    this.newModel[field.name] = ['']
+                  } else {
+                    this.newModel[field.name] = ''
+                  }
+                  break
+                case 'bool':
+                  if (field.collection) {
+                    this.newModel[field.name] = [false]
+                  } else {
+                    this.newModel[field.name] = false
+                  }
+                  break
+                case 'map':
+                  this.newModel[field.name] = {}
+                  break
+                case 'file':
+                  if (field.collection) {
+                    this.newModel[field.name] = ['']
+                  } else {
+                    this.newModel[field.name] = ''
+                  }
+                  break
+                default:
+                  break
+              }
             })
             console.log('fld:' + fields)
           })
@@ -151,7 +246,7 @@ export default {
       }
     },
     getDataFromApi () {
-      this.loading = true
+      this.setLoading(true)
       const { page, itemsPerPage } = this.options
       // sortBy, sortDesc,
 
@@ -163,7 +258,7 @@ export default {
         offset = (page - 1) * itemsPerPage
         limit = itemsPerPage
       }
-
+      var myDataPage = this
       getModelUrl = getModelUrl + '/?offset=' + offset + '&limit=' + limit
       if (this.search !== '') {
         getModelUrl = getModelUrl + '&query={"$fulltext": "' + this.search + '"}'
@@ -177,12 +272,34 @@ export default {
           var modelData = response.data
           this.modelItems = modelData.data
           this.totalItems = modelData.found
-          this.loading = false
+          this.modelItems.forEach(item => {
+            item.file = item[this.imageFieldName]
+            item._href = this.$store.state.baseURL + 'files/' + this.backend.Name + '/' + item.file
+          })
+          myDataPage.setLoading(false)
         })
         .catch(function (error) {
           console.log(error)
-          this.loading = false
+          myDataPage.setLoading(false)
         })
+    },
+    setLoading (loading) {
+      this.loading = loading
+    },
+    deleteItem (item) {
+      const index = this.desserts.indexOf(item)
+      confirm('Are you sure you want to delete this item?') && this.desserts.splice(index, 1)
+    },
+    close () {
+      this.dialog = false
+    },
+    save () {
+      if (this.editedIndex > -1) {
+        Object.assign(this.desserts[this.editedIndex], this.editedItem)
+      } else {
+        this.desserts.push(this.editedItem)
+      }
+      this.close()
     }
   },
   data: () => ({
@@ -201,7 +318,11 @@ export default {
     modelItems: [],
     totalItems: 0,
     modelDefinition: {},
-    modelReference: ''
+    modelReference: '',
+    imageFieldName: '',
+    formTitle: '',
+    newModel: {},
+    dialog: false
   })
 }
 </script>

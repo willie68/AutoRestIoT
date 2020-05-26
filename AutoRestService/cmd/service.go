@@ -80,7 +80,7 @@ func cors(next http.Handler) http.Handler {
 }
 
 func routes() *chi.Mux {
-	myHandler := api.NewSysAPIHandler(serviceConfig.SystemID, apikey)
+	// sysApiHandler := api.NewSysAPIHandler(serviceConfig.SystemID, apikey)
 	baseURL := fmt.Sprintf("/api/v%s", apiVersion)
 	router := chi.NewRouter()
 	router.Use(
@@ -89,7 +89,7 @@ func routes() *chi.Mux {
 		middleware.Logger,
 		middleware.Compress(5),
 		middleware.Recoverer,
-		myHandler.Handler,
+		//sysApiHandler.Handler,
 	)
 
 	router.Route("/", func(r chi.Router) {
