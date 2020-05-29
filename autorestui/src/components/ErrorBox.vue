@@ -1,7 +1,8 @@
 <template>
-  <v-snackbar v-model="showerror" :timeout=0 color="red">
-    {{ errortext }}
-    <v-btn color="white" text @click="close()">Schliessen</v-btn>
+  <v-snackbar v-model="showerror" :timeout=0 vertical color="red">
+        {{ errortext }} <br/>
+        {{ errordescription }}
+        <v-btn color="white" text @click="close()">Schliessen</v-btn>
   </v-snackbar>
 </template>
 
@@ -14,6 +15,9 @@ export default {
     },
     errortext () {
       return this.$store.state.error.errortext
+    },
+    errordescription () {
+      return this.$store.state.error.errordescription
     }
   },
   methods: {

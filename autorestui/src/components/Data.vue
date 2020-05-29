@@ -294,10 +294,21 @@ export default {
       this.dialog = false
     },
     save () {
+      var myDataPage = this
       if (this.editedIndex > -1) {
         Object.assign(this.desserts[this.editedIndex], this.editedItem)
       } else {
-        this.desserts.push(this.editedItem)
+        myDataPage.setLoading(true)
+        var postModelUrl = this.$store.state.baseURL + 'models/' + this.backend.Name + '/' + this.model + '/'
+        axios
+          .post(postModelUrl, this.newModel, {
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            auth: this.$store.state.credentials
+          })
+          .then(response => {
+
+          })
+        this.doSearch()
       }
       this.close()
     }

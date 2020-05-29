@@ -96,7 +96,7 @@ axios.interceptors.response.use(function (response) {
       this.$store.commit('resetNames')
       router.push({ name: 'Login' })
     } else {
-      store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText)
+      store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText + '$' + error.response.data.error)
     }
   } else {
     store.commit('setError', 'Unbekannter Fehler: ' + error.message)

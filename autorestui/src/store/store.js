@@ -10,7 +10,7 @@ const store = new Vuex.Store({
     userinfo: {},
     loggedIn: false,
     credentials: { username: 'editor', password: 'editor' },
-    error: { showerror: false, errortext: '' },
+    error: { showerror: false, errortext: '', errordescription: '' },
     section: '',
     jsonBox: { show: false, json: '', title: '', jsonStruct: {} },
     baseURL: 'http://127.0.0.1:9080/api/v1/'
@@ -38,7 +38,9 @@ const store = new Vuex.Store({
     },
     setError (state, errortext) {
       state.error.showerror = true
-      state.error.errortext = errortext
+      var res = errortext.split('$', 2)
+      state.error.errortext = res[0]
+      state.error.errordescription = res[1]
     },
     resetError (state) {
       state.error.showerror = false
