@@ -110,6 +110,14 @@
     <template v-slot:item.file="{ item }">
       <v-chip :color="red"><a v-bind:href="item._href">{{ item.file }}</a></v-chip>
     </template>
+    <template v-slot:item.actions="{ item }">
+      <v-icon small class="mr-2" @click="editItem(item)" >
+        mdi-pencil
+      </v-icon>
+      <v-icon small @click="deleteItem(item)" >
+        mdi-delete
+      </v-icon>
+    </template>
   </v-data-table>
     </v-card>
   </v-container>
@@ -240,6 +248,12 @@ export default {
                   break
               }
             })
+            var header = {
+              text: 'Actions',
+              sortable: false,
+              value: 'actions'
+            }
+            this.headers.push(header)
             console.log('fld:' + fields)
           })
         this.getDataFromApi()
@@ -287,8 +301,8 @@ export default {
       this.loading = loading
     },
     deleteItem (item) {
-      const index = this.desserts.indexOf(item)
-      confirm('Are you sure you want to delete this item?') && this.desserts.splice(index, 1)
+      const index = this.modelItems.indexOf(item)
+      confirm('Are you sure you want to delete this item?') && this.modelItems.splice(index, 1)
     },
     close () {
       this.dialog = false
@@ -296,7 +310,7 @@ export default {
     save () {
       var myDataPage = this
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem)
+        Object.assign(this.modelItems[this.editedIndex], this.editedItem)
       } else {
         myDataPage.setLoading(true)
         var postModelUrl = this.$store.state.baseURL + 'models/' + this.backend.Name + '/' + this.model + '/'

@@ -96,7 +96,18 @@ axios.interceptors.response.use(function (response) {
       this.$store.commit('resetNames')
       router.push({ name: 'Login' })
     } else {
-      store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText + '$' + error.response.data.error)
+      var description = ''
+      if (typeof error.response.data.status !== 'undefined') {
+        description = description + error.response.data.status + ' '
+      }
+      if (typeof error.response.data.error !== 'undefined') {
+        description = description + error.response.data.error
+      }
+      if (description !== '') {
+        store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText + '$' + description)
+      } else {
+        store.commit('setError', 'Unbekannter Fehler: ' + error.response.status + '  ' + error.response.statusText)
+      }
     }
   } else {
     store.commit('setError', 'Unbekannter Fehler: ' + error.message)

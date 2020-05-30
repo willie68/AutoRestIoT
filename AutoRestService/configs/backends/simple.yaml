@@ -37,7 +37,3 @@ models:
       - name: array
         fields:
           - array
-      - name: foreignid
-        unique: true
-        fields:
-          - foreignid

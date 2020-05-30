@@ -38,9 +38,14 @@ const store = new Vuex.Store({
     },
     setError (state, errortext) {
       state.error.showerror = true
-      var res = errortext.split('$', 2)
-      state.error.errortext = res[0]
-      state.error.errordescription = res[1]
+      if (errortext.indexOf('$') > 0) {
+        var res = errortext.split('$', 2)
+        state.error.errortext = res[0]
+        state.error.errordescription = res[1]
+      } else {
+        state.error.errortext = errortext
+        state.error.errordescription = ''
+      }
     },
     resetError (state) {
       state.error.showerror = false
