@@ -13,7 +13,7 @@ const store = new Vuex.Store({
     error: { showerror: false, errortext: '', errordescription: '' },
     section: '',
     jsonBox: { show: false, json: '', title: '', jsonStruct: {} },
-    baseURL: 'http://127.0.0.1:9080/api/v1/'
+    baseURL: 'https://127.0.0.1:9443/api/v1/'
   },
   mutations: {
     increment (state) {
@@ -63,7 +63,7 @@ const store = new Vuex.Store({
         var modelType = jsonStruct.modelType
         if ('model'.localeCompare(modelType) === 0) {
           axios
-            .get(this.$store.state.baseURL + 'admin/backends/' + jsonStruct.backend + '/models/' + jsonStruct.model, {
+            .get(state.baseURL + 'admin/backends/' + jsonStruct.backend + '/models/' + jsonStruct.model, {
               headers: { 'Access-Control-Allow-Origin': '*' },
               auth: state.credentials
             })
@@ -74,7 +74,7 @@ const store = new Vuex.Store({
         }
         if ('rule'.localeCompare(modelType) === 0) {
           axios
-            .get(this.$store.state.baseURL + 'admin/backends/' + jsonStruct.backend + '/rules/' + jsonStruct.model, {
+            .get(state.baseURL + 'admin/backends/' + jsonStruct.backend + '/rules/' + jsonStruct.model, {
               headers: { 'Access-Control-Allow-Origin': '*' },
               auth: state.credentials
             })
@@ -85,7 +85,7 @@ const store = new Vuex.Store({
         }
         if ('source'.localeCompare(modelType) === 0) {
           axios
-            .get(this.$store.state.baseURL + 'admin/backends/' + jsonStruct.backend + '/datasources/' + jsonStruct.model, {
+            .get(state.baseURL + 'admin/backends/' + jsonStruct.backend + '/datasources/' + jsonStruct.model, {
               headers: { 'Access-Control-Allow-Origin': '*' },
               auth: state.credentials
             })
@@ -96,7 +96,7 @@ const store = new Vuex.Store({
         }
         if ('sink'.localeCompare(modelType) === 0) {
           axios
-            .get(this.$store.state.baseURL + 'admin/backends/' + jsonStruct.backend + '/destinations/' + jsonStruct.model, {
+            .get(state.baseURL + 'admin/backends/' + jsonStruct.backend + '/destinations/' + jsonStruct.model, {
               headers: { 'Access-Control-Allow-Origin': '*' },
               auth: state.credentials
             })
