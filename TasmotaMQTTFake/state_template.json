@@ -1,0 +1,20 @@
+{
+    "Time":"2020-07-07T11:33:41",
+    "Uptime":"0T00:13:09",
+    "UptimeSec":789,
+    "Heap":28,
+    "SleepMode":"Dynamic",
+    "Sleep":50,
+    "LoadAvg":19,
+    "MqttCount":1,
+    "Wifi":{
+        "AP":1,
+        "SSId":"93w8562k",
+        "BSSId":"44:4E:6D:AE:F5:32",
+        "Channel":1,
+        "RSSI":54,
+        "Signal":-73,
+        "LinkCount":1,
+        "Downtime":"0T00:00:03"
+    }
+}

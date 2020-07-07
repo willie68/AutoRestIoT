@@ -1,0 +1,13 @@
+{
+    "Time":"2020-07-07T11:21:11",
+    "DS18B20":{
+        "Id":"041701CD67FF",
+        "Temperature":26.4
+    },
+    "SI7021":{
+        "Temperature":26.2,
+        "Humidity":38.3,
+        "DewPoint":10.9
+    },
+    "TempUnit":"C"
+}
