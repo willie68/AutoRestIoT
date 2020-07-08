@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,6 +25,7 @@ func AdminRoutes() *chi.Mux {
 	router := chi.NewRouter()
 	router.Mount("/tasks", TasksRoutes())
 	router.With(RoleCheck([]string{"admin"})).Get("/info", GetAdminInfoHandler)
+	router.With(RoleCheck([]string{"admin"})).Post("/test/rule", PostAdminTestRuleHandler)
 	router.With(RoleCheck([]string{"admin", "edit", "read"})).Get(fmt.Sprintf("/%s/", BackendsPrefix), GetAdminBackendsHandler)
 	router.With(RoleCheck([]string{"admin"})).Post(fmt.Sprintf("/%s/", BackendsPrefix), PostAdminBackendHandler)
 	router.With(RoleCheck([]string{"admin", "edit", "read"})).Get(fmt.Sprintf("/%s/{bename}", BackendsPrefix), GetAdminBackendHandler)
@@ -345,4 +347,38 @@ func GetAdminDestinationHandler(response http.ResponseWriter, request *http.Requ
 		return
 	}
 	render.JSON(response, request, destination)
+}
+
+// PostAdminTestRuleHandler test a new rule with data
+func PostAdminTestRuleHandler(response http.ResponseWriter, request *http.Request) {
+	log.Infof("POST: path: %s", request.URL.Path)
+
+	data := &model.TestRuleDTO{}
+	if err := render.Decode(request, data); err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	jsonStr, err := json.Marshal(data.Rule.Transform)
+	if err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	k, err := worker.NewRule(string(jsonStr))
+	if err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	jsonStr, err = json.Marshal(data.Data)
+	if err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	out, err := k.TransformInPlace(jsonStr)
+	if err != nil {
+		render.Render(response, request, ErrInvalidRequest(err))
+		return
+	}
+	response.Header().Add("Content-Type", "application/json")
+	response.Write(out)
+	//	render.JSON(response, request, data)
 }

@@ -41,6 +41,15 @@ func (r *RuleList) GetRulelist() []string {
 	return list
 }
 
+func NewRule(config string) (*kazaam.Kazaam, error) {
+	k, err := kazaam.New(config, kazaamConfig)
+	if err != nil {
+		log.Alertf("Unable to transform message %v", err)
+		return nil, err
+	}
+	return k, nil
+}
+
 func (r *RuleList) Register(backendName, rulename string, config string) error {
 	name := GetRuleNsName(backendName, rulename)
 	k, err := kazaam.New(config, kazaamConfig)

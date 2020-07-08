@@ -82,6 +82,11 @@ type Rule struct {
 	Transform   interface{} `yaml:"transform" json:"transform"`
 }
 
+type TestRuleDTO struct {
+	Rule Rule        `yaml:"rule" json:"rule"`
+	Data interface{} `yaml:"data" json:"data"`
+}
+
 //ErrModelDefinitionNotFound model definition not found
 var ErrModelDefinitionNotFound = errors.New("model defintion not found")
 
