@@ -14,7 +14,7 @@ RUN set -eux; \
 ## Task: copy source files
 
 COPY . /src
-WORKDIR /src
+WORKDIR /src/AutoRestService
 ## Task: fetch project deps
 
 RUN go mod download
@@ -29,7 +29,7 @@ RUN go build -ldflags="-s -w" -o autorestsrv cmd/service.go
 
 ## Task: set permissions
 
-RUN chmod 0755 /src/autorestsrv
+RUN chmod 0755 /src/AutoRestService/autorestsrv
 
 ## Task: runtime dependencies
 
@@ -64,15 +64,15 @@ FROM alpine:3.11
 ARG RELEASE
 ENV IMG_VERSION="${RELEASE}"
 
-COPY --from=builder /src/autorestsrv /usr/local/bin/
-COPY --from=builder /src/configs/service.yaml /config/
+COPY --from=builder /src/AutoRestService/autorestsrv /usr/local/bin/
+COPY --from=builder /src/AutoRestService/configs/service_prod.yaml /config/
 COPY --from=builder /usr/share/rundeps /usr/share/rundeps
 
 RUN set -eux; \
     xargs -a /usr/share/rundeps apk add --no-progress --quiet --no-cache --upgrade --virtual .run-deps
 
 ENTRYPOINT ["/usr/local/bin/autorestsrv"]
-CMD ["--config","/config/service.yaml"]
+CMD ["--config","/config/service_prod.yaml"]
 
 EXPOSE 8080 8443
 

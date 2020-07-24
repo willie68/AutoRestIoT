@@ -1,0 +1,34 @@
+# port of the http server
+port: 8080 
+# port of the https server
+sslport: 8443
+# this is the servicURL from outside
+serviceURL: http://127.0.0.1:8080
+# this is the registry URL from inside this service for consul as service registry
+registryURL: 
+# this is the system id of this service. services in a cluster mode should have the same system id.
+systemID: autorest-srv
+#sercret file for storing usernames and passwords
+secretfile: /tmp/storage/config/secret.yaml
+#where the configuration files of the backends are
+backendpath: configs/backends
+#allow data saving without a registered backend
+allowAnonymousBackend: true
+
+# configuration of the gelf logging server
+logging:
+    gelf-url: 
+    gelf-port: 
+
+# healthcheck configuration
+healthcheck:
+    # automatically check the health of this service every ## seconds
+    period: 30
+# configuration of the mongo storage
+mongodb:
+    host: 127.0.0.1 #mongo host ip (comma seperated ip's with a cluster installation )
+    port: 27017 # mongo host port
+    username: #username for the database (should be at last dbadmin, and read/write access)
+    password: #password for the user
+    authdb: backend1 # database to authenticate against
+    database: backend1 # database for the data

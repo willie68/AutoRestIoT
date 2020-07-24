@@ -33,4 +33,4 @@ require (
 )
 
 
-replace github.com/qntfy/kazaam => ../../kazaam
+replace github.com/qntfy/kazaam => ../kazaam
