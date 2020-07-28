@@ -20,12 +20,12 @@ datasources:
       - mqtt_output
     rule: openweather
     config: 
-      url: https://api.openweathermap.org/data/2.5/weather?q=Hattingen,de&APPID=efcb6fc9d39a5b3b4a45249e3458b924
+      url: https://api.openweathermap.org/data/2.5/weather?q=Hattingen,de&APPID=
       auth: basic
       username: temp
       password: temp
       headers: 
-          apikey: efcb6fc9d39a5b3b4a45249e3458b924
+          apikey: 
           city: "Hattingen,de"
       
 rules:
