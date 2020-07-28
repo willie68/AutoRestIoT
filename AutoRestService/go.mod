@@ -19,6 +19,7 @@ require (
 	github.com/prometheus/client_golang v1.5.1 // indirect
 	github.com/qntfy/jsonparser v1.0.2 // indirect
 	github.com/qntfy/kazaam v3.4.8+incompatible
+	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/rs/zerolog v1.18.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.6.3 // indirect
@@ -31,6 +32,5 @@ require (
 	gopkg.in/yaml.v2 v2.3.0
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
-
 
 replace github.com/qntfy/kazaam => ../kazaam

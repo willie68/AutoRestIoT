@@ -350,6 +350,8 @@ github.com/qntfy/jsonparser v1.0.2/go.mod h1:F+LCdwPnFBsubQ+ugnBczIP9RWv5wSCqnUm
 github.com/qntfy/kazaam v3.4.8+incompatible h1:UB8fXIel0m+YCEPYi7KK+5jjbVLTkNNL632/y7PAC2c=
 github.com/qntfy/kazaam v3.4.8+incompatible/go.mod h1:aN8m9eOLEtyeypys9YtGYm0rFjKWlobu18ez6GcBtsg=
 github.com/renier/xmlrpc v0.0.0-20170708154548-ce4a1a486c03/go.mod h1:gRAiPF5C5Nd0eyyRdqIu9qTiFSoZzpTq727b5B8fkkU=
+github.com/robfig/cron/v3 v3.0.0 h1:kQ6Cb7aHOHTSzNVNEhmp8EcWKLb4CbiMW9h9VyIhO4E=
+github.com/robfig/cron/v3 v3.0.0/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/go-internal v1.1.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.2.2/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=

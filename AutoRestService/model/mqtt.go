@@ -12,3 +12,12 @@ type DataSourceConfigMQTT struct {
 	SimpleValueAttribute     string `yaml:"simpleValueAttribute" json:"simpleValueAttribute"`
 	SimpleValueAttributeType string `yaml:"simpleValueAttributeType" json:"simpleValueAttributeType"`
 }
+
+//DataSourceConfigREST definition of the special configuration of a rest datasource
+type DataSourceConfigREST struct {
+	URL      string                 `yaml:"url" json:"url"`
+	Auth     string                 `yaml:"auth" json:"auth"`
+	Username string                 `yaml:"username" json:"username"`
+	Password string                 `yaml:"password" json:"password"`
+	Headers  map[string]interface{} `yaml:"headers" json:"headers"`
+}

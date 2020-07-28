@@ -12,6 +12,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const DataSourceTypeMQTT = "mqtt"
+const DataSourceTypeREST = "rest"
+
+const DataSinkTypeMQTT = "mqtt"
+
 var BackendStorageRoute model.Route
 
 func init() {
@@ -33,8 +38,14 @@ func PrepareBackend(backend model.Backend) (model.Backend, error) {
 	for i, dataSource := range backend.DataSources {
 		configJSON, err := json.Marshal(dataSource.Config)
 		switch dataSource.Type {
-		case "mqtt":
+		case DataSourceTypeMQTT:
 			var config model.DataSourceConfigMQTT
+			if err = json.Unmarshal(configJSON, &config); err != nil {
+				return backend, errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", backend.Backendname, dataSource.Type))
+			}
+			backend.DataSources[i].Config = config
+		case DataSourceTypeREST:
+			var config model.DataSourceConfigREST
 			if err = json.Unmarshal(configJSON, &config); err != nil {
 				return backend, errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", backend.Backendname, dataSource.Type))
 			}
@@ -46,7 +57,7 @@ func PrepareBackend(backend model.Backend) (model.Backend, error) {
 	for i, destination := range backend.Destinations {
 		configJSON, err := json.Marshal(destination.Config)
 		switch destination.Type {
-		case "mqtt":
+		case DataSinkTypeMQTT:
 			var config model.DataSourceConfigMQTT
 			if err = json.Unmarshal(configJSON, &config); err != nil {
 				return backend, errors.New(fmt.Sprintf("backend: %s, unmarshall mqtt config: %q", backend.Backendname, destination.Type))

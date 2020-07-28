@@ -1,0 +1,57 @@
+backendname: ext_rest
+description: requesting a external rest endpoint on a time based level
+models:
+  - name: weather
+    fields:
+      - name: city
+        type: string
+        mandatory: false
+        collection: false
+      - name: source
+        type: string
+        mandatory: false
+        collection: false
+datasources:
+  - name: weather-forecast
+    type: rest
+    timedefinition: "@hourly" #Run once an hour, beginning of hour = 0 * * * *
+    destinations: 
+      - $model.weather
+      - mqtt_output
+    rule: openweather
+    config: 
+      url: https://api.openweathermap.org/data/2.5/weather?q=Hattingen,de&APPID=efcb6fc9d39a5b3b4a45249e3458b924
+      auth: basic
+      username: temp
+      password: temp
+      headers: 
+          apikey: efcb6fc9d39a5b3b4a45249e3458b924
+          city: "Hattingen,de"
+      
+rules:
+  - name: openweather
+    description: converting the openweather endpoint result to our structure
+    transform: 
+      - operation: shift
+        spec: 
+          Temperature: DS18B20.Temperature
+          TempUnit: TempUnit
+          Datetime: Time
+          Timestamp: Time
+          Msg: $
+      - operation: timestamp
+        spec:
+          Timestamp: {
+            inputFormat: 2006-01-02T15:04:05,
+            outputFormat: $unixext
+          }
+destinations:
+  - name: mqtt_output
+    type: mqtt
+    config: 
+      broker: 192.168.178.14:1883
+      topic: cmnd/display/weather
+      qos: 0
+      payload: application/json
+      username: temp
+      password: temp
